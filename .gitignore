@@ -3,3 +3,6 @@
 
 # Python HTTP server cache
 __pycache__/
+
+# Local AI assistant settings
+.claude/
