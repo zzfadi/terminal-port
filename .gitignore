@@ -1,0 +1,5 @@
+# OS artifacts
+.DS_Store
+
+# Python HTTP server cache
+__pycache__/

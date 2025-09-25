@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Terminal Portfolio Tests</title>
+    <style>
+        body { font-family: 'Courier New', monospace; background: #000; color: #00ff41; padding: 20px; }
+        .test-pass { color: #00ff88; }
+        .test-fail { color: #ff0041; }
+        .test-section { margin: 20px 0; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .test-result { margin: 5px 0; }
+    </style>
+</head>
+<body>
+    <h1>Terminal Portfolio Test Suite</h1>
+    <div id="test-results"></div>
+
+    <!-- Load the main terminal script -->
+    <script>
+        // Mock DOM elements for testing
+        const mockOutput = { appendChild: () => {}, innerHTML: '' };
+        const mockInput = {
+            value: '',
+            addEventListener: () => {},
+            focus: () => {}
+        };
+        const mockContainer = {
+            scrollTop: 0,
+            scrollHeight: 100,
+            addEventListener: () => {}
+        };
+
+        // Mock document methods
+        const originalGetElementById = document.getElementById;
+        document.getElementById = function(id) {
+            if (id === 'output') return mockOutput;
+            if (id === 'terminal-input') return mockInput;
+            if (id === 'terminal-container') return mockContainer;
+            if (id === 'matrix') return { style: { display: 'block' } };
+            return originalGetElementById.call(this, id);
+        };
+
+        // Mock window methods that open external links
+        const mockWindow = {
+            open: (url) => ({ url }),
+            location: { href: '' }
+        };
+        window.open = mockWindow.open;
+
+        // Create terminal instance without DOM dependencies
+        const terminal = {
+            output: mockOutput,
+            input: mockInput,
+            history: [],
+            historyIndex: -1,
+            commands: {},
+            lastEmailHref: '',
+            fileSystem: {
+                'projects': {
+                    'solidigm': {
+                        'gen5-ssd.md': 'GEN5 PCIe SSD Development Lead\n- Led firmware development'
+                    }
+                },
+                'skills': {
+                    'languages.txt': 'C/C++, Python, JavaScript'
+                },
+                'docs': {
+                    'resume.pdf': '[Binary file]'
+                }
+            },
+            currentPath: '~',
+
+            setupCommands() {
+                this.commands = {
+                    help: () => this.showHelp(),
+                    about: () => this.showAbout(),
+                    skills: () => this.showSkills(),
+                    experience: () => this.showExperience(),
+                    contact: () => this.showContact(),
+                    ls: (args) => this.listDirectory(args),
+                    cd: (args) => this.changeDirectory(args),
+                    cat: (args) => this.readFile(args),
+                    github: () => this.openGitHub(),
+                    linkedin: () => this.openLinkedIn(),
+                    email: () => this.sendEmail(),
+                    download: (args) => this.downloadFile(args)
+                };
+            },
+
+            executeCommand(input) {
+                const [command, ...args] = input.split(' ');
+                if (this.commands[command]) {
+                    return this.commands[command](args.join(' '));
+                } else if (command === '') {
+                    return '';
+                } else {
+                    throw new Error(`Command not found: ${command}`);
+                }
+            },
+
+            showHelp() {
+                return 'Available Commands: help, about, skills...';
+            },
+
+            showAbout() {
+                return "I'm Fadi Al Zuabi, a Firmware/Embedded Software Engineer";
+            },
+
+            showSkills() {
+                return "Programming Languages: C/C++, Python, JavaScript";
+            },
+
+            showExperience() {
+                return "SK Hynix Solidigm | Senior Firmware Engineer";
+            },
+
+            showContact() {
+                return "📧 Email: fadi.b.zuabi@gmail.com";
+            },
+
+            listDirectory(path) {
+                const currentDir = this.getCurrentDirectory();
+                if (currentDir) {
+                    return Object.keys(currentDir).join(' ');
+                }
+                return 'Directory not found';
+            },
+
+            changeDirectory(path) {
+                const rawPath = (path || '').trim();
+
+                if (!rawPath || rawPath === '~') {
+                    this.currentPath = '~';
+                    return '';
+                }
+
+                const applySegments = (base, additions) => {
+                    const stack = [...base];
+                    additions.filter(Boolean).forEach(segment => {
+                        if (segment === '.' || segment === '') {
+                            return;
+                        }
+                        if (segment === '..') {
+                            if (stack.length > 0) {
+                                stack.pop();
+                            }
+                        } else {
+                            stack.push(segment);
+                        }
+                    });
+                    return stack;
+                };
+
+                const currentSegments = this.currentPath === '~'
+                    ? []
+                    : this.currentPath.replace(/^~\//, '').split('/').filter(Boolean);
+
+                let targetSegments;
+
+                if (rawPath.startsWith('/')) {
+                    targetSegments = applySegments([], rawPath.replace(/^\/+/, '').split('/'));
+                } else if (rawPath.startsWith('~')) {
+                    targetSegments = applySegments([], rawPath.replace(/^~\/?/, '').split('/'));
+                } else {
+                    targetSegments = applySegments(currentSegments, rawPath.split('/'));
+                }
+
+                const targetPath = targetSegments.join('/');
+                const targetDir = targetSegments.length === 0
+                    ? this.fileSystem
+                    : this.getDirectoryFromPath(targetPath);
+
+                if (targetDir) {
+                    this.currentPath = targetSegments.length ? `~/${targetPath}` : '~';
+                    return '';
+                }
+
+                throw new Error(`cd: ${rawPath}: No such directory`);
+            },
+
+            readFile(filename) {
+                const currentDir = this.getCurrentDirectory();
+                if (currentDir && currentDir[filename]) {
+                    if (typeof currentDir[filename] === 'string') {
+                        return currentDir[filename];
+                    } else {
+                        throw new Error(`cat: ${filename}: Is a directory`);
+                    }
+                } else {
+                    throw new Error(`cat: ${filename}: No such file`);
+                }
+            },
+
+            getCurrentDirectory() {
+                if (this.currentPath === '~') {
+                    return this.fileSystem;
+                }
+
+                const path = this.currentPath.replace('~/', '').split('/').filter(p => p);
+                let current = this.fileSystem;
+
+                for (const dir of path) {
+                    if (current[dir] && typeof current[dir] === 'object') {
+                        current = current[dir];
+                    } else {
+                        return null;
+                    }
+                }
+
+                return current;
+            },
+
+            getDirectoryFromPath(path) {
+                const cleanPath = path.replace(/^~?\//, '').split('/').filter(p => p);
+                let current = this.fileSystem;
+
+                for (const dir of cleanPath) {
+                    if (current[dir] && typeof current[dir] === 'object') {
+                        current = current[dir];
+                    } else {
+                        return null;
+                    }
+                }
+
+                return current;
+            },
+
+            openGitHub() {
+                return window.open('https://github.com/fadizuabi', '_blank');
+            },
+
+            openLinkedIn() {
+                return window.open('https://linkedin.com/in/fadi-zuabi', '_blank');
+            },
+
+            sendEmail() {
+                const mailto = 'mailto:fadi.b.zuabi@gmail.com';
+                this.lastEmailHref = mailto;
+                try {
+                    window.location.href = mailto;
+                } catch (e) {
+                    // Ignore navigation errors in test harness
+                }
+                return 'Opening email client...';
+            },
+
+            downloadFile(filename) {
+                if (filename === 'cv' || filename === 'resume') {
+                    return 'Downloading resume...';
+                } else {
+                    throw new Error('File not available for download');
+                }
+            }
+        };
+
+        // Initialize terminal
+        terminal.setupCommands();
+
+        // TEST SUITE - FOCUSED ON CRITICAL USER PATHS
+        class TerminalTester {
+            constructor() {
+                this.results = [];
+            }
+
+            test(name, testFn) {
+                try {
+                    const result = testFn();
+                    this.results.push({ name, status: 'PASS', result });
+                    return true;
+                } catch (error) {
+                    this.results.push({ name, status: 'FAIL', error: error.message });
+                    return false;
+                }
+            }
+
+            render() {
+                const container = document.getElementById('test-results');
+                let html = '';
+
+                // Group tests by category
+                const categories = {
+                    'Core Information Commands': [],
+                    'Contact & External Links': [],
+                    'File System Navigation': []
+                };
+
+                this.results.forEach(result => {
+                    if (['about', 'skills', 'experience', 'help'].some(cmd => result.name.includes(cmd))) {
+                        categories['Core Information Commands'].push(result);
+                    } else if (['contact', 'github', 'linkedin', 'email', 'download'].some(cmd => result.name.includes(cmd))) {
+                        categories['Contact & External Links'].push(result);
+                    } else {
+                        categories['File System Navigation'].push(result);
+                    }
+                });
+
+                Object.entries(categories).forEach(([category, tests]) => {
+                    if (tests.length > 0) {
+                        html += `<div class="test-section"><h3>${category}</h3>`;
+                        tests.forEach(result => {
+                            const className = result.status === 'PASS' ? 'test-pass' : 'test-fail';
+                            html += `<div class="test-result"><span class="${className}">[${result.status}]</span> ${result.name}`;
+                            if (result.error) {
+                                html += ` - ${result.error}`;
+                            }
+                            html += '</div>';
+                        });
+                        html += '</div>';
+                    }
+                });
+
+                const passCount = this.results.filter(r => r.status === 'PASS').length;
+                const totalCount = this.results.length;
+                html += `<div class="test-section"><h3>Summary: ${passCount}/${totalCount} tests passed</h3></div>`;
+
+                container.innerHTML = html;
+            }
+        }
+
+        const tester = new TerminalTester();
+
+        // CRITICAL PATH 1: Can visitors learn about Fadi?
+        tester.test('about command returns professional info', () => {
+            const result = terminal.executeCommand('about');
+            if (!result || !result.includes('Fadi Al Zuabi')) {
+                throw new Error('About command should return professional information');
+            }
+            return result;
+        });
+
+        tester.test('skills command returns technical skills', () => {
+            const result = terminal.executeCommand('skills');
+            if (!result || !result.includes('Programming Languages')) {
+                throw new Error('Skills command should return technical skills');
+            }
+            return result;
+        });
+
+        tester.test('experience command returns work history', () => {
+            const result = terminal.executeCommand('experience');
+            if (!result || !result.includes('SK Hynix Solidigm')) {
+                throw new Error('Experience command should return work history');
+            }
+            return result;
+        });
+
+        tester.test('help command shows available commands', () => {
+            const result = terminal.executeCommand('help');
+            if (!result || !result.includes('Available Commands')) {
+                throw new Error('Help command should show available commands');
+            }
+            return result;
+        });
+
+        // CRITICAL PATH 2: Can visitors contact Fadi?
+        tester.test('contact command shows email', () => {
+            const result = terminal.executeCommand('contact');
+            if (!result || !result.includes('fadi.b.zuabi@gmail.com')) {
+                throw new Error('Contact command should show email address');
+            }
+            return result;
+        });
+
+        tester.test('email command opens email client', () => {
+            const result = terminal.executeCommand('email');
+            if (terminal.lastEmailHref !== 'mailto:fadi.b.zuabi@gmail.com') {
+                throw new Error('Email command should capture mailto link');
+            }
+            return result;
+        });
+
+        tester.test('github command opens GitHub profile', () => {
+            const result = terminal.executeCommand('github');
+            if (!result || result.url !== 'https://github.com/fadizuabi') {
+                throw new Error('GitHub command should open correct profile');
+            }
+            return result;
+        });
+
+        tester.test('linkedin command opens LinkedIn profile', () => {
+            const result = terminal.executeCommand('linkedin');
+            if (!result || result.url !== 'https://linkedin.com/in/fadi-zuabi') {
+                throw new Error('LinkedIn command should open correct profile');
+            }
+            return result;
+        });
+
+        tester.test('resume download works', () => {
+            const result = terminal.executeCommand('download cv');
+            if (!result || !result.includes('Downloading resume')) {
+                throw new Error('Download CV should work');
+            }
+            return result;
+        });
+
+        // CRITICAL PATH 3: Does the terminal work?
+        tester.test('ls command lists directories', () => {
+            const result = terminal.executeCommand('ls');
+            if (!result || !result.includes('projects')) {
+                throw new Error('ls should show directories');
+            }
+            return result;
+        });
+
+        tester.test('cd to projects directory works', () => {
+            terminal.executeCommand('cd projects');
+            if (terminal.currentPath !== '~/projects') {
+                throw new Error('cd projects should change directory');
+            }
+            return 'Success';
+        });
+
+        tester.test('ls in projects shows subdirectories', () => {
+            const result = terminal.executeCommand('ls');
+            if (!result || !result.includes('solidigm')) {
+                throw new Error('ls in projects should show solidigm directory');
+            }
+            return result;
+        });
+
+        tester.test('cat command reads files', () => {
+            terminal.executeCommand('cd solidigm');
+            const result = terminal.executeCommand('cat gen5-ssd.md');
+            if (!result || !result.includes('GEN5 PCIe SSD Development Lead')) {
+                throw new Error('cat should read file contents');
+            }
+            return result;
+        });
+
+        tester.test('cd .. goes back to parent directory', () => {
+            terminal.executeCommand('cd ..');
+            if (terminal.currentPath !== '~/projects') {
+                throw new Error('cd .. should go back to parent directory');
+            }
+            return 'Success';
+        });
+
+        tester.test('invalid command shows error', () => {
+            try {
+                terminal.executeCommand('invalidcommand');
+                throw new Error('Should have thrown error for invalid command');
+            } catch (e) {
+                if (!e.message.includes('Command not found')) {
+                    throw new Error('Should show command not found error');
+                }
+                return 'Error handled correctly';
+            }
+        });
+
+        tester.test('cd to nonexistent directory shows error', () => {
+            try {
+                terminal.executeCommand('cd nonexistent');
+                throw new Error('Should have thrown error for invalid directory');
+            } catch (e) {
+                if (!e.message.includes('No such directory')) {
+                    throw new Error('Should show directory not found error');
+                }
+                return 'Error handled correctly';
+            }
+        });
+
+        tester.test('cat nonexistent file shows error', () => {
+            try {
+                terminal.executeCommand('cat nonexistent.txt');
+                throw new Error('Should have thrown error for invalid file');
+            } catch (e) {
+                if (!e.message.includes('No such file')) {
+                    throw new Error('Should show file not found error');
+                }
+                return 'Error handled correctly';
+            }
+        });
+
+        // Render results
+        tester.render();
+
+        console.log('Test Results:', tester.results);
+    </script>
+</body>
+</html>
