@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Fadi Al Zuabi - AI Terminal Portfolio. Ask questions about experience, skills, and projects.">
+    <meta name="author" content="Fadi Al Zuabi">
+
+    <!-- Security -->
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        script-src 'self' 'unsafe-inline' 'unsafe-eval';
+        style-src 'self' 'unsafe-inline';
+        font-src 'self' data:;
+        img-src 'self' data: blob:;
+        connect-src 'self' https://generativelanguage.googleapis.com;
+        worker-src 'self' blob:;
+    ">
+
+    <title>Fadi Al Zuabi - AI Terminal</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+</head>
+<body>
+    <div id="root"></div>
+    <noscript>
+        <div style="color: #00ff00; background: #0d0d0d; padding: 20px; font-family: monospace;">
+            This AI terminal requires JavaScript. Please enable it to interact with Fadi's portfolio.
+        </div>
+    </noscript>
+    <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

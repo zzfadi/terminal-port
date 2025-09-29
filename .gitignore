@@ -6,3 +6,19 @@ __pycache__/
 
 # Local AI assistant settings
 .claude/
+
+# Environment variables (contains API keys)
+.env
+.env.local
+.env.*.local
+
+# Docs
+fadi-info/archive/
+fadi-info/data/
+/.obsidian
+/.vscode
+/.playwright-mcp
+/example-code-ref
+/fadi-info
+/v2/playwright-report
+/v2/dist
