@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Rnd } from 'react-rnd';
 import { GeminiClient } from './GeminiClient';
 
 interface Message {
@@ -18,6 +19,13 @@ export function Terminal() {
   const [wasMaximizedBeforeMinimize, setWasMaximizedBeforeMinimize] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
   const [isTransitioningToNormal, setIsTransitioningToNormal] = useState(false);
+  // Window position and size state
+  const [windowState, setWindowState] = useState({
+    x: typeof window !== 'undefined' ? window.innerWidth / 2 - 460 : 100,
+    y: typeof window !== 'undefined' ? window.innerHeight / 2 - 300 : 100,
+    width: 920,
+    height: 600
+  });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -179,6 +187,21 @@ export function Terminal() {
       setTimeout(() => {
         setIsTransitioningToNormal(false);
       }, 300); // Match CSS animation duration
+      // Restore previous size
+      setWindowState({
+        x: window.innerWidth / 2 - 460,
+        y: window.innerHeight / 2 - 300,
+        width: 920,
+        height: 600
+      });
+    } else if (!isMaximized && newMaximizedState) {
+      // Maximize to full window
+      setWindowState({
+        x: 0,
+        y: 0,
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
     }
 
     setIsMaximized(newMaximizedState);
@@ -199,6 +222,7 @@ export function Terminal() {
     }, 500);
   };
 
+
   return (
     <>
       {/* Minimized Dock Button */}
@@ -209,9 +233,33 @@ export function Terminal() {
         </div>
       )}
 
-      {/* Terminal Window */}
-      <div className={`terminal-container ${isMinimized ? 'minimized' : ''} ${isMaximized ? 'maximized' : ''} ${isRestoring ? 'restoring' : ''} ${isTransitioningToNormal ? 'transitioning-to-normal' : ''}`}>
-        <div className="terminal-header">
+      {/* Terminal Window with React-RND */}
+      {!isMinimized && (
+        <Rnd
+          position={{ x: windowState.x, y: windowState.y }}
+          size={{ width: windowState.width, height: windowState.height }}
+          onDragStop={(e, d) => {
+            setWindowState(prev => ({ ...prev, x: d.x, y: d.y }));
+          }}
+          onResizeStop={(e, direction, ref, delta, position) => {
+            setWindowState({
+              width: parseInt(ref.style.width),
+              height: parseInt(ref.style.height),
+              ...position
+            });
+          }}
+          minWidth={400}
+          minHeight={300}
+          bounds="window"
+          dragHandleClassName="terminal-header"
+          disableDragging={isMaximized}
+          enableResizing={!isMaximized}
+        >
+        <div className={`terminal-container ${isMaximized ? 'maximized' : ''} ${isRestoring ? 'restoring' : ''} ${isTransitioningToNormal ? 'transitioning-to-normal' : ''}`}>
+        <div
+          className="terminal-header"
+          style={{ touchAction: 'none' }}
+        >
           <div className="terminal-controls">
             <span
               className="control close"
@@ -291,7 +339,9 @@ export function Terminal() {
         <div className="terminal-footer">
           <span className="status">Connected to Gemini AI | Type your question | Ctrl+L to clear</span>
         </div>
-      </div>
+        </div>
+        </Rnd>
+      )}
     </>
   );
 }

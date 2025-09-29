@@ -15,23 +15,36 @@
   --terminal-green-glow: rgba(0, 255, 65, 0.6);
   --terminal-green-soft: rgba(0, 255, 65, 0.3);
 
-  /* Glass Effects */
-  --glass-bg: rgba(0, 0, 0, 0.88);
+  /* Apple Vision Pro Glass Materials */
+  /* EASY TRANSPARENCY CONTROL - Adjust these values to control glass transparency */
+  --glass-opacity: 0.75;  /* Main glass opacity (0.0 = fully transparent, 1.0 = opaque) */
+  --glass-bg-opacity: 0.65;  /* Background layer opacity */
+  --glass-content-opacity: 0.85;  /* Content area opacity */
+
+  --glass-bg: rgba(0, 0, 0, var(--glass-opacity));
   --glass-border: rgba(255, 255, 255, 0.08);
   --glass-highlight: rgba(255, 255, 255, 0.03);
   --glass-shadow: 0 25px 80px rgba(0, 0, 0, 0.4),
                   0 10px 25px rgba(0, 0, 0, 0.3),
                   inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  --glass-blur: 20px;
+  --glass-blur: 40px;  /* Apple standard blur */
+  --glass-saturation: 180%;
+  --glass-refraction-index: 1.52;  /* Real glass IOR */
+  --chromatic-shift: 0.5px;
 
   /* Typography */
   --font-mono: 'SF Mono', ui-monospace, 'Cascadia Code', 'Fira Code', 'Monaco', monospace;
   --font-size: 14px;
   --line-height: 1.6;
 
-  /* Animation Timing */
+  /* Apple-like Spring Physics & Animation Curves */
   --transition-smooth: cubic-bezier(0.4, 0.0, 0.2, 1);
   --transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --spring-gentle: cubic-bezier(0.32, 0.72, 0, 1);
+  --spring-wobbly: cubic-bezier(0.68, -0.6, 0.32, 1.6);
+  --spring-swift: cubic-bezier(0.46, 0.03, 0.52, 0.96);
+  --liquid-morph: cubic-bezier(0.36, 0, 0.66, -0.56);
+  --magnetic-snap: cubic-bezier(0.87, 0, 0.13, 1);
 }
 
 * {
@@ -144,33 +157,50 @@ body {
 
 /* Premium Glass Terminal Container */
 .terminal-container {
-  width: 90%;
-  max-width: 920px;
-  height: 600px;
-  max-height: 80vh;
-  position: relative;
+  width: 100%;  /* Full width within Rnd container */
+  height: 100%;  /* Full height within Rnd container */
+  position: relative;  /* Relative positioning within Rnd */
   overflow: hidden;
 
-  /* Multi-layer glass effect */
+  /* Advanced multi-layer liquid glass with TRUE transparency */
   background:
+    /* Fresnel layer - brighter at edges */
+    radial-gradient(ellipse at center,
+      transparent 0%,
+      transparent 40%,
+      rgba(255, 255, 255, 0.02) 70%,
+      rgba(255, 255, 255, 0.04) 100%),
+    /* Light dispersion gradient */
     linear-gradient(135deg,
-      rgba(255, 255, 255, 0.01) 0%,
+      rgba(255, 255, 255, 0.03) 0%,
       transparent 20%,
       transparent 80%,
-      rgba(0, 0, 0, 0.02) 100%),
-    var(--glass-bg);
+      rgba(0, 0, 0, 0.04) 100%),
+    /* Subtle prismatic effect */
+    linear-gradient(45deg,
+      rgba(0, 255, 255, 0.01) 0%,
+      transparent 33%,
+      rgba(255, 0, 255, 0.01) 66%,
+      transparent 100%),
+    /* Base glass layer with REAL transparency - much lighter */
+    linear-gradient(180deg,
+      rgba(20, 20, 20, 0.45) 0%,
+      rgba(15, 15, 15, 0.40) 50%,
+      rgba(10, 10, 10, 0.45) 100%);
 
-  /* Advanced backdrop filter stack */
+  /* Apple-grade multi-layer backdrop filter */
   backdrop-filter:
     blur(var(--glass-blur))
-    saturate(180%)
+    saturate(var(--glass-saturation))
     contrast(105%)
-    brightness(98%);
+    brightness(98%)
+    hue-rotate(0.5deg);  /* Subtle color shift */
   -webkit-backdrop-filter:
     blur(var(--glass-blur))
-    saturate(180%)
+    saturate(var(--glass-saturation))
     contrast(105%)
-    brightness(98%);
+    brightness(98%)
+    hue-rotate(0.5deg);
 
   /* Premium border and shadow */
   border: 0.5px solid var(--glass-border);
@@ -187,16 +217,29 @@ body {
   will-change: transform;
   contain: layout style paint;
 
-  /* Subtle float animation - reduced movement */
-  animation: glassFloat 20s ease-in-out infinite;
+  /* Liquid glass float with magnetic physics */
+  animation: liquidFloat 25s var(--spring-gentle) infinite;
+  transition: all 0.6s var(--spring-swift);
 }
 
-@keyframes glassFloat {
-  0%, 100% { transform: translateY(0) translateZ(0); }
-  50% { transform: translateY(-1px) translateZ(0); }
+@keyframes liquidFloat {
+  0%, 100% {
+    transform: translateY(0) translateZ(0) scale(1);
+    filter: hue-rotate(0deg);
+  }
+  25% {
+    transform: translateY(-2px) translateZ(0) scale(1.001);
+  }
+  50% {
+    transform: translateY(-1px) translateZ(0) scale(1.002);
+    filter: hue-rotate(0.5deg);
+  }
+  75% {
+    transform: translateY(-1.5px) translateZ(0) scale(1.001);
+  }
 }
 
-/* Glass shine and refraction effects */
+/* Advanced glass refraction and liquid shine */
 .terminal-container::before {
   content: '';
   position: absolute;
@@ -205,44 +248,97 @@ body {
   width: 100%;
   height: 100%;
   background:
-    radial-gradient(circle at 30% 30%,
-      rgba(255, 255, 255, 0.08) 0%,
+    /* Fresnel effect for angle-dependent reflection */
+    radial-gradient(ellipse 800px 600px at 30% 30%,
+      rgba(255, 255, 255, 0.12) 0%,
+      rgba(255, 255, 255, 0.06) 20%,
       transparent 50%),
+    /* Light caustics simulation */
+    radial-gradient(circle at 70% 70%,
+      rgba(0, 255, 65, 0.02) 0%,
+      transparent 40%),
+    /* Specular highlight sweep */
     linear-gradient(105deg,
       transparent 40%,
-      rgba(255, 255, 255, 0.02) 45%,
-      rgba(255, 255, 255, 0.04) 50%,
-      rgba(255, 255, 255, 0.02) 55%,
+      rgba(255, 255, 255, 0.03) 45%,
+      rgba(255, 255, 255, 0.06) 48%,
+      rgba(255, 255, 255, 0.08) 50%,
+      rgba(255, 255, 255, 0.06) 52%,
+      rgba(255, 255, 255, 0.03) 55%,
       transparent 60%);
   border-radius: 14px;
   pointer-events: none;
-  animation: glassShine 15s ease-in-out infinite;
+  animation: liquidShine 20s var(--liquid-morph) infinite;
+  mix-blend-mode: screen;
 }
 
-@keyframes glassShine {
-  0%, 100% { transform: translateX(0); opacity: 0.6; }
-  50% { transform: translateX(1px); opacity: 0.8; }
+@keyframes liquidShine {
+  0%, 100% {
+    transform: translateX(0) translateY(0) scale(1);
+    opacity: 0.6;
+  }
+  20% {
+    transform: translateX(2px) translateY(-1px) scale(1.01);
+    opacity: 0.7;
+  }
+  40% {
+    transform: translateX(-1px) translateY(1px) scale(0.99);
+    opacity: 0.75;
+  }
+  60% {
+    transform: translateX(1px) translateY(0) scale(1.005);
+    opacity: 0.8;
+  }
+  80% {
+    transform: translateX(-2px) translateY(-0.5px) scale(0.995);
+    opacity: 0.65;
+  }
 }
 
-/* Chromatic aberration for glass edge */
+/* Advanced chromatic aberration & light dispersion */
 .terminal-container::after {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  top: calc(var(--chromatic-shift) * -1);
+  left: calc(var(--chromatic-shift) * -1);
+  right: calc(var(--chromatic-shift) * 1);
+  bottom: calc(var(--chromatic-shift) * 1);
   border-radius: 14px;
-  border: 1px solid;
-  border-image: linear-gradient(
-    135deg,
-    rgba(0, 255, 65, 0.1),
-    rgba(0, 255, 255, 0.05),
-    rgba(255, 0, 255, 0.05),
-    rgba(0, 255, 65, 0.1)
-  ) 1;
+  /* Triple-layer chromatic separation */
+  box-shadow:
+    /* Red channel shift */
+    0 0 0 0.5px rgba(255, 0, 0, 0.08),
+    /* Green channel shift */
+    calc(var(--chromatic-shift) * 0.5) calc(var(--chromatic-shift) * 0.5) 0 0.5px rgba(0, 255, 0, 0.08),
+    /* Blue channel shift */
+    calc(var(--chromatic-shift) * -0.5) calc(var(--chromatic-shift) * -0.5) 0 0.5px rgba(0, 0, 255, 0.08),
+    /* Edge light dispersion */
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.15),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.2);
   pointer-events: none;
-  opacity: 0.3;
+  opacity: 0.6;
+  animation: chromaticPulse 8s var(--spring-wobbly) infinite;
+}
+
+/* Chromatic aberration pulse animation */
+@keyframes chromaticPulse {
+  0%, 100% {
+    opacity: 0.6;
+    filter: blur(0px);
+  }
+  25% {
+    opacity: 0.65;
+    filter: blur(0.2px);
+  }
+  50% {
+    opacity: 0.7;
+    filter: blur(0.3px);
+  }
+  75% {
+    opacity: 0.65;
+    filter: blur(0.1px);
+  }
 }
 
 /* Terminal Header - Premium Glass Bar */
@@ -258,7 +354,11 @@ body {
       rgba(0, 0, 0, 0.35));
   border-bottom: 0.5px solid rgba(255, 255, 255, 0.06);
   border-radius: 14px 14px 0 0;
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
+  cursor: move;  /* Indicate draggable area */
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .terminal-title {
@@ -302,9 +402,11 @@ body {
   border-radius: 50%;
   border: 0.5px solid rgba(0, 0, 0, 0.2);
   cursor: pointer;
-  transition: all 0.3s var(--transition-smooth);
+  transition: all 0.3s var(--spring-swift);
   position: relative;
   overflow: hidden;
+  /* Magnetic hover effect */
+  will-change: transform;
 }
 
 .control::before {
@@ -319,9 +421,13 @@ body {
 }
 
 .control:hover {
-  transform: scale(1.1);
-  filter: brightness(1.3);
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+  transform: scale(1.15) translateY(-1px);
+  filter: brightness(1.35) saturate(1.2);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.15),
+    0 0 12px rgba(255, 255, 255, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  transition: all 0.2s var(--magnetic-snap);
 }
 
 .control:focus {
@@ -343,7 +449,7 @@ body {
   background: linear-gradient(135deg, #27C93F, #1AAB29);
 }
 
-/* OLED Display - True Black with Perfect Contrast */
+/* OLED Display - True Black with Perfect Contrast (Inside stays OLED) */
 .terminal-body {
   flex: 1;
   background: var(--oled-black);
@@ -718,8 +824,8 @@ body {
       rgba(127, 173, 169, 0.95),
       rgba(106, 154, 150, 0.95)),
     rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
   border: 0.5px solid rgba(255, 255, 255, 0.15);
   border-radius: 18px;
   box-shadow:
@@ -738,11 +844,13 @@ body {
 }
 
 .dock-button:hover {
-  transform: translateX(-50%) translateY(-5px) scale(1.1);
+  transform: translateX(-50%) translateY(-8px) scale(1.12);
   box-shadow:
-    0 15px 50px rgba(0, 0, 0, 0.4),
-    0 10px 25px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    0 20px 60px rgba(0, 0, 0, 0.45),
+    0 15px 35px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.3s var(--spring-wobbly);
 }
 
 .dock-button:active {
@@ -786,6 +894,49 @@ body {
   50% {
     filter: drop-shadow(0 0 20px var(--terminal-green-glow));
   }
+}
+
+/* Interactive liquid glass hover and focus effects */
+.terminal-container:hover:not(.dragging) {
+  box-shadow:
+    0 30px 90px rgba(0, 0, 0, 0.48),
+    0 15px 40px rgba(0, 0, 0, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.08);
+  transition: all 0.4s var(--magnetic-snap);
+}
+
+/* Dragging state */
+.terminal-container.dragging {
+  cursor: move;
+  box-shadow:
+    0 35px 100px rgba(0, 0, 0, 0.55),
+    0 20px 50px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.1);
+  transform: scale(1.01) !important;
+  transition: box-shadow 0.2s var(--spring-swift), transform 0.2s var(--spring-swift) !important;
+}
+
+/* Subtle depress on click for tactile feedback */
+.terminal-container:active:not(.dragging) {
+  transform: scale(0.999);
+  transition: all 0.1s var(--spring-swift);
+}
+
+/* React-RND Styles for dragging and resizing */
+.react-draggable-dragging .terminal-container {
+  transition: none !important;
+  cursor: grabbing !important;
+}
+
+/* Ensure Rnd container is properly styled */
+.react-draggable {
+  position: fixed !important;
+}
+
+.react-resizable {
+  position: relative;
 }
 
 /* Terminal State Transitions */
