@@ -2,26 +2,27 @@
 
 ## Overview
 
-OnePromptPortfolio V2 is an AI-powered terminal portfolio that combines a minimalist terminal aesthetic with natural language processing through Google's Gemini API. The system features intelligent context management and comprehensive portfolio data integration in a streamlined single-provider architecture.
+OnePromptPortfolio V2 is a luxury AI-powered terminal portfolio featuring a premium aluminum slate design with glass-morphic UI elements. The system combines cutting-edge visual aesthetics with natural language processing through Google's Gemini API, intelligent context management, and comprehensive portfolio data integration.
 
 ## Current Architecture (2025)
 
 ### Core Stack
 - **Framework**: React 18 with TypeScript
 - **Build Tool**: Vite 7
-- **AI Integration**: Google Gemini API (gemini-2.0-flash-exp)
-- **Styling**: Pure CSS with terminal aesthetics
+- **AI Integration**: Google Gemini API (gemini-2.5-flash)
+- **Styling**: Advanced CSS with glass-morphism and aluminum textures
 - **State Management**: React hooks (useState, useEffect)
+- **Animation**: GPU-accelerated CSS transitions and keyframes
 
 ### Project Structure
 ```
 v2/
 ├── src/
 │   ├── main.ts                    # React app entry point (20 lines)
-│   ├── Terminal.tsx               # Main terminal UI component (188 lines)
-│   ├── GeminiClient.ts           # Gemini API integration (98 lines)
-│   ├── portfolio.ts              # Portfolio data (161 lines)
-│   ├── styles.css                # Terminal aesthetics (220 lines)
+│   ├── Terminal.tsx               # Main terminal UI component (~250 lines)
+│   ├── GeminiClient.ts           # Gemini API integration (99 lines)
+│   ├── portfolio.ts              # Legacy portfolio data (161 lines)
+│   ├── styles.css                # Luxury terminal design (~870 lines)
 │   │
 │   ├── ai/                       # AI Context System
 │   │   ├── core/
@@ -29,175 +30,206 @@ v2/
 │   │   │   └── ContextBuilder.ts        # Context optimization (371 lines)
 │   │   │
 │   │   └── commands/
-│   │       └── AICommands.ts            # Command helpers (182 lines)
+│   │       └── AICommands.ts            # Simplified command helpers (183 lines)
 │   │
 │   └── data/
-│       └── portfolio-data.ts            # Comprehensive portfolio data (662 lines)
+│       └── portfolio-data.ts            # Unified portfolio data (722 lines)
 │
 ├── dist/                         # Production build output
-├── index.html                    # Minimal HTML entry
-├── package.json                  # Dependencies (minimal)
-├── vite.config.ts               # Build configuration
+├── index.html                    # Minimal HTML entry with meta tags
+├── package.json                  # Minimal dependencies
+├── vite.config.ts               # Optimized build configuration
 └── tsconfig.json                # TypeScript configuration
 ```
 
-## Key Components
+## Luxury UI Design System
 
-### 1. Terminal UI Layer
+### Visual Architecture
 
-#### Terminal.tsx (~188 lines)
-- Single React component managing entire UI
-- Message history with typing animation
-- Three message types: user, ai, system
-- Mobile responsive design
-- Keyboard shortcuts (Ctrl+L to clear)
-- Direct Gemini API integration
+#### 1. Aluminum Slate Background
+- **Color Palette**: Light greenish-blue (#7FADA9) with gradient variations
+- **Texture Layers**:
+  - Multi-layer radial gradients for depth
+  - Anisotropic brushed metal texture (3 directional patterns)
+  - Premium noise texture overlay
+  - Subtle shimmer animation (opacity-based)
+- **Performance**: GPU-accelerated with `translateZ(0)` and `will-change`
 
-### 2. AI System Architecture
+#### 2. Glass-Morphic Terminal
+- **Glass Effects**:
+  - 20px backdrop blur with 180% saturation
+  - Multi-layer glass refraction
+  - Chromatic aberration on edges
+  - Floating animation (subtle 1px movement)
+- **Shadow System**:
+  - Multiple box-shadow layers for depth
+  - Inset shadows for glass thickness
+  - Dynamic shadows on hover/focus
 
-#### GeminiClient.ts (Core Integration)
-- **Purpose**: Direct Gemini API communication
+#### 3. OLED Display Technology
+- **Display Characteristics**:
+  - True black background (#000000)
+  - Phosphor green text (#00FF41) with multi-layer glow
+  - CRT-style subtle scanlines
+  - Deep black enhancement with inset shadows
+- **Typography**:
+  - SF Mono primary with cascading fallbacks
+  - Subpixel antialiasing for crispness
+  - Variable font weight (450)
+  - Ligatures and contextual alternates enabled
+
+### Window Control System
+
+#### Mac-Style Controls
+- **Layout**: Left-aligned (Mac position)
+- **Controls**:
+  - 🔴 Close: Clears chat and minimizes
+  - 🟡 Minimize: Preserves state and minimizes
+  - 🟢 Maximize: Toggles between normal (920×600) and full (96vw×92vh)
+- **Interactions**:
+  - Hover: 1.3x brightness with glow shadow
+  - Focus: Green outline for accessibility
+  - Keyboard: Enter key activation
+
+#### Dock Button (Minimized State)
+- **Design**:
+  - Glass-morphic button with aluminum gradient
+  - 80×80px with 18px border radius
+  - Backdrop blur and saturation filters
+- **Animations**:
+  - Bounce-in entrance (0.8s elastic)
+  - Hover lift and scale
+  - Pulsing icon glow (2s cycle)
+
+### Animation System
+
+#### Core Animations
+```css
+- metalShimmer: Subtle opacity pulse for aluminum
+- glassFloat: Gentle floating effect
+- glassShine: Light reflection movement
+- dockBounceIn: Elastic entrance for dock
+- minimizeTerminal: Scale and blur to bottom
+- maximizeTerminal: Smooth size transition
+- restoreTerminal: Fade and scale from bottom
+- messageAppear: Blur and slide for messages
+- cursorBlink: Terminal cursor pulse
+- loadingPulse: AI response indicators
+```
+
+#### State Transitions
+- **Minimize**: 0.4s smooth scale to dock
+- **Maximize**: 0.3s size transition
+- **Restore**: 0.5s fade-in from bottom
+- **Message**: 0.4s appear with blur
+
+## Component Architecture
+
+### Terminal.tsx
+- **State Management**:
+  - Message history
+  - Window states (minimized, maximized)
+  - State memory for restoration
+  - Loading and transition flags
+- **Event Handlers**:
+  - Global keyboard shortcuts (Ctrl+L to clear)
+  - Tab focus management
+  - Window control interactions
+  - Form submission
+- **Accessibility**:
+  - ARIA labels on all controls
+  - Keyboard navigation support
+  - Focus management
+  - Screen reader compatibility
+
+### GeminiClient.ts
+- **Configuration**:
+  - Model: gemini-2.5-flash
+  - Context window: 1500 tokens
+  - Response streaming: Simulated typing
+- **Context Management**:
+  - Portfolio data integration
+  - Conversation history (20 messages)
+  - Smart context optimization
+- **Error Handling**:
+  - Graceful API failures
+  - User-friendly error messages
+
+### PortfolioDataStore.ts
+- **Data Sources**:
+  - Unified portfolio-data.ts (722 lines)
+  - 11 semantic sections
+  - Rich metadata and context
 - **Features**:
-  - Single model: gemini-2.0-flash-exp
-  - Portfolio context in system prompt
-  - Conversation history (last 20 messages)
-  - Simple error handling
-  - Async/await pattern
-
-#### PortfolioDataStore (Data Layer)
-- **Purpose**: Centralized portfolio data management
-- **Features**:
-  - Single source from portfolio-data.ts
-  - Semantic sections for context
   - Efficient data retrieval
-  - Rich context generation
+  - Context generation
+  - Section relevance scoring
 
-#### ContextBuilder (Optimization Layer)
-- **Purpose**: Smart context assembly
-- **Features**:
+### ContextBuilder.ts
+- **Optimization**:
   - Query classification
-  - Section selection based on relevance
-  - Token optimization
-  - Focused context generation
-
-### 3. Data Flow
-
-#### Query Processing
-```
-User Input → GeminiClient → Context Building → Gemini API → Response
-      ↓            ↓              ↓               ↓
-   Terminal    Portfolio    ContextBuilder   Streaming
-   Display      Context      Optimization     Response
-```
-
-#### Context Assembly
-- Portfolio data loaded from portfolio-data.ts
-- Relevant sections selected by ContextBuilder
-- System prompt includes full context
-- Conversation history maintained
-
-### 4. Portfolio Data Structure
-
-#### portfolio-data.ts
-- Comprehensive professional information
-- Experience with quantified achievements
-- Skills categorized by domain
-- Projects with impact metrics
-- AI leadership initiatives
-
-### 5. Natural Language Interface
-
-#### Conversation Flow
-- No command parsing - pure natural language
-- AI interprets user intent from context
-- Portfolio data always available
-- Contextual responses based on query type
-
-#### Example Interactions
-```
-"Tell me about Fadi's experience"
-"What projects has he worked on?"
-"Explain his AI initiatives"
-"What are his technical skills?"
-"How can I contact him?"
-```
-
-## Data Flow
-
-### Query Processing Pipeline
-```
-User Input
-    ↓
-Terminal Component
-    ↓
-GeminiClient.sendMessage()
-    ↓
-Context Assembly (portfolio + history)
-    ↓
-Gemini API Request
-    ↓
-Response Generation
-    ↓
-History Update
-    ↓
-Typing Animation
-    ↓
-User Display
-```
-
-### Context Strategy
-
-#### Current Implementation
-- Full portfolio context included
-- ~1000-1500 tokens per request
-- Conversation history (last 20 messages)
-- Gemini-2.0-flash-exp model
-- Fast response times (1-3 seconds)
+  - Token budget management
+  - Smart section selection
+  - 5-minute cache TTL
 
 ## Performance Characteristics
 
-### Token Usage
-- **Average Context**: ~1000-1500 tokens
-- **With History**: ~2000 tokens max
-- **Gemini Flash Model**: Optimized for speed
+### Bundle Size
+- **Total**: ~320KB (production)
+- **Main**: ~220KB
+- **Gemini SDK**: ~86KB (code-split)
+- **CSS**: ~14KB
 
-### Response Times
+### Load Performance
+- **Time to Interactive**: <2 seconds
+- **Initial Paint**: <500ms
+- **Animation FPS**: 60fps (GPU-accelerated)
+
+### Runtime Performance
 - **Context Building**: <50ms
 - **API Response**: 1-3 seconds
-- **Typing Animation**: Configurable
-- **Total Time**: 2-4 seconds
+- **Typing Animation**: 30ms/word
+- **State Transitions**: Hardware-accelerated
 
-### Bundle Size
-- **Development**: ~280KB total
-- **Production**: ~195KB (optimized)
-- **Gemini SDK**: ~87KB (code-split)
-- **Main Bundle**: ~108KB
-- **Time to Interactive**: <2 seconds
+## Responsive Design
 
-## Portfolio Data Integration
+### Desktop (>768px)
+- Terminal: 920×600px (normal), 96vw×92vh (maximized)
+- Centered layout with aluminum background
+- Full animation effects
 
-### Core Sections
-1. **Profile**: Professional summary and contact
-2. **Experience**: Work history with achievements
-3. **Skills**: Technical expertise by category
-4. **Projects**: Key initiatives and impact
-5. **Education**: Academic background
-6. **AI Leadership**: Transformation initiatives
-7. **Technical Expertise**: Deep technical knowledge
+### Mobile (<768px)
+- Terminal: 96%×92vh (normal), 100vw×100vh (maximized)
+- Reduced padding and font size (13px)
+- Touch-optimized controls
+- Simplified animations
 
-### Data Structure (portfolio-data.ts)
-- Single comprehensive data file
-- Structured TypeScript interfaces
-- Quantified achievements
-- Rich contextual information
-- AI-optimized descriptions
+### High DPI Support
+- 0.5px borders for Retina displays
+- Enhanced antialiasing
+- Finer scanline effects
 
-## Security & Configuration
+## Accessibility Features
 
-### Environment Variables
-```env
-VITE_GEMINI_API_KEY=your_key_here      # Required (only configuration needed)
-```
+### Keyboard Navigation
+- **Ctrl+L**: Clear terminal globally
+- **Tab**: Cycle through controls
+- **Enter**: Activate focused control
+- **Arrow Keys**: Navigate input
+
+### Screen Reader Support
+- ARIA labels on all controls
+- Semantic HTML structure
+- Role attributes
+- Focus indicators
+
+### Visual Accessibility
+- High contrast phosphor green
+- Clear focus outlines
+- Reduced motion support
+- Print styles
+
+## Security Configuration
 
 ### Content Security Policy
 ```
@@ -207,138 +239,113 @@ style-src 'self' 'unsafe-inline';
 connect-src 'self' https://generativelanguage.googleapis.com;
 ```
 
-## Development Workflow
-
-### Commands
-```bash
-# Install dependencies
-npm install
-
-# Development server (port 3002)
-npm run dev
-
-# Production build
-npm run build
-
-# Preview production
-npm run preview
-
-# Type checking
-npm run type-check
-
-# Linting
-npm run lint
-
-# Format code
-npm run format
+### Environment Variables
+```env
+VITE_GEMINI_API_KEY=your_key_here  # Required
 ```
 
-### Build Process
-1. TypeScript compilation (tsc)
-2. Vite bundling and optimization
-3. Code splitting (main, ai, vendor chunks)
-4. Asset optimization
-5. Output to `dist/` folder
+## Build Configuration
+
+### Vite Settings
+- Code splitting for Gemini SDK
+- Terser minification
+- Source maps disabled in production
+- CSS optimization
+
+### Development Workflow
+```bash
+npm install          # Install dependencies
+npm run dev         # Start dev server (port 3002)
+npm run build       # Production build
+npm run preview     # Preview production
+npm run type-check  # TypeScript validation
+npm run lint        # Code linting
+npm run format      # Code formatting
+```
 
 ## Architecture Decisions
 
-### Why React + TypeScript?
-- Type safety for AI integration
-- Simple component architecture
-- Fast development iteration
-- Minimal complexity
+### Why Luxury Design?
+- Differentiates portfolio significantly
+- Demonstrates advanced CSS capabilities
+- Creates memorable user experience
+- Shows attention to detail
+
+### Why Glass-Morphism?
+- Modern, premium aesthetic
+- Depth and layering
+- Smooth transitions
+- Apple-quality feel
 
 ### Why Gemini Only?
-- Simplicity over complexity
-- Single API to maintain
-- Fast response times with Flash model
-- Cost-effective for portfolio use
-- No fallback complexity needed
-
-### Why Natural Language?
-- No command learning curve
-- More accessible to all users
-- AI handles intent interpretation
-- Focus on conversation
+- Simplified architecture
+- Reduced complexity
+- Lower maintenance
+- Consistent performance
 
 ### Why Single Component?
-- Entire app ~400 lines of core code
-- No routing needed
-- Easier to understand and modify
-- Faster development
+- Small codebase (~2,500 lines total)
+- Easy to understand
+- Fast iteration
+- Minimal dependencies
 
 ## Future Enhancements
 
 ### Potential Additions
-- Streaming responses (Gemini supports it)
-- Export conversation as PDF
+- WebGL aluminum shaders
 - Voice input/output
-- Dark/light theme toggle
-- Conversation save/load
-- Response regeneration
-- Copy code blocks
+- Response streaming
+- Conversation export
+- Theme variations
+- Multi-language support
 
-### Maintaining Simplicity
-- Keep single-provider architecture
-- Avoid complex state management
-- No backend requirements
-- Focus on user experience
+### Performance Optimizations
+- Lazy load animations
+- Virtual scrolling for messages
+- Web Workers for heavy processing
+- Service Worker caching
 
-## Key Metrics
-
-### Performance Targets
-- **Response Time**: <3 seconds
-- **Bundle Size**: <300KB total
-- **Time to Interactive**: <2 seconds
-- **Error Rate**: <1%
-
-### Optimization Strategy
-- Code splitting (Gemini SDK separate)
-- Minimal dependencies
-- Direct API calls
-- Efficient React rendering
-
-## Testing Approach
+## Testing Strategy
 
 ### Manual Testing
-- API key configuration
-- Message sending/receiving
-- Error handling
-- Mobile responsiveness
-- Keyboard shortcuts
+- Cross-browser compatibility
+- Responsive breakpoints
+- Animation performance
+- Accessibility validation
+- Keyboard navigation
 
-### Key Test Cases
-- Portfolio queries
-- Conversation context
-- Error states
-- Loading states
-- Clear functionality (Ctrl+L)
+### Automated Testing
+- Build verification
+- TypeScript compilation
+- Linting checks
+- Bundle size monitoring
 
 ## Deployment
+
+### Static Hosting
+- Vercel/Netlify ready
+- GitHub Pages compatible
+- CDN-friendly assets
+- Environment variable support
 
 ### Production Build
 ```bash
 npm run build
-# Outputs to dist/ folder
-# - index.html (~2KB)
-# - assets/index-*.js (~108KB)
-# - assets/index-*.css (~3KB)
-# - assets/ai-*.js (~87KB) - Gemini SDK
+# Outputs to dist/
+# - index.html (~1.6KB)
+# - assets/index-*.css (~14KB)
+# - assets/index-*.js (~220KB)
+# - assets/ai-*.js (~86KB)
 ```
-
-### Deployment Options
-- Static hosting (Vercel, Netlify, GitHub Pages)
-- No backend required
-- Environment variables for API key
-- CDN-friendly assets
 
 ## Conclusion
 
-V2 Architecture represents a minimalist approach to AI-powered portfolios:
-- **Simple is better**: Single provider, single component
-- **Natural language first**: No command memorization
-- **Fast and focused**: Gemini Flash for speed
-- **Easy to maintain**: ~2,500 lines total codebase
-- **Zero complexity**: No backends, no databases, no complexity
+V2 Architecture represents a sophisticated evolution combining:
+- **Luxury aesthetics** with aluminum and glass design
+- **Premium interactions** with smooth animations
+- **AI intelligence** through Gemini integration
+- **Accessibility** with full keyboard and screen reader support
+- **Performance** with GPU acceleration and optimization
+- **Simplicity** in architecture and maintenance
 
-The architecture prioritizes user experience and maintainability over architectural complexity, delivering a fast, intuitive portfolio experience with minimal code.
+The result is a portfolio that stands out through both technical excellence and visual sophistication, delivering an Apple-quality experience while maintaining clean, maintainable code.

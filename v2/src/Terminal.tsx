@@ -13,6 +13,11 @@ export function Terminal() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [geminiClient, setGeminiClient] = useState<GeminiClient | null>(null);
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [isMaximized, setIsMaximized] = useState(false);
+  const [wasMaximizedBeforeMinimize, setWasMaximizedBeforeMinimize] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
+  const [isTransitioningToNormal, setIsTransitioningToNormal] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -44,10 +49,24 @@ export function Terminal() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Focus input on load
+  // Focus input on load and setup global keyboard listeners
   useEffect(() => {
     inputRef.current?.focus();
-  }, []);
+
+    // Global keyboard handler for Ctrl+L
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'l' && e.ctrlKey) {
+        e.preventDefault();
+        setMessages([]);
+        if (geminiClient) {
+          geminiClient.clearHistory();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, [geminiClient]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,29 +133,116 @@ export function Terminal() {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    // Add command history navigation later if needed
-    if (e.key === 'l' && e.ctrlKey) {
+    // Tab handling for focus management
+    if (e.key === 'Tab') {
       e.preventDefault();
-      setMessages([]);
-      if (geminiClient) {
-        geminiClient.clearHistory();
-      }
+      // Simple focus cycle: input -> close -> minimize -> maximize -> input
+      const focusableElements = [
+        inputRef.current,
+        document.querySelector('.control.close'),
+        document.querySelector('.control.minimize'),
+        document.querySelector('.control.maximize')
+      ].filter(Boolean) as HTMLElement[];
+
+      const currentIndex = focusableElements.indexOf(document.activeElement as HTMLElement);
+      const nextIndex = (currentIndex + 1) % focusableElements.length;
+      focusableElements[nextIndex]?.focus();
     }
   };
 
+  // Window control handlers
+  const handleClose = () => {
+    setMessages([]);
+    if (geminiClient) {
+      geminiClient.clearHistory();
+    }
+    // Close always resets to normal state
+    setIsMaximized(false);
+    setWasMaximizedBeforeMinimize(false);
+    setIsTransitioningToNormal(false);
+    setIsMinimized(true);
+  };
+
+  const handleMinimize = () => {
+    // Remember maximized state before minimizing
+    setWasMaximizedBeforeMinimize(isMaximized);
+    setIsMinimized(true);
+  };
+
+  const handleMaximize = () => {
+    const newMaximizedState = !isMaximized;
+
+    // If going from maximized to normal, trigger transition animation
+    if (isMaximized && !newMaximizedState) {
+      setIsTransitioningToNormal(true);
+      // Remove transition class after animation completes
+      setTimeout(() => {
+        setIsTransitioningToNormal(false);
+      }, 300); // Match CSS animation duration
+    }
+
+    setIsMaximized(newMaximizedState);
+  };
+
+  const handleRestore = () => {
+    setIsRestoring(true);
+    setIsMinimized(false);
+    // Restore previous maximized state
+    setIsMaximized(wasMaximizedBeforeMinimize);
+    setWasMaximizedBeforeMinimize(false); // Clear the memory
+
+    // Remove restoring class after animation completes
+    setTimeout(() => {
+      setIsRestoring(false);
+      // Re-focus input after restore animation
+      inputRef.current?.focus();
+    }, 500);
+  };
+
   return (
-    <div className="terminal-container">
-      <div className="terminal-header">
-        <div className="terminal-title">
-          <span className="terminal-icon">⚡</span>
-          fadi@zuabi:~$ AI Terminal
+    <>
+      {/* Minimized Dock Button */}
+      {isMinimized && (
+        <div className="dock-button" onClick={handleRestore}>
+          <div className="dock-icon">⚡</div>
+          <div className="dock-label">Terminal</div>
         </div>
-        <div className="terminal-controls">
-          <span className="control minimize"></span>
-          <span className="control maximize"></span>
-          <span className="control close"></span>
+      )}
+
+      {/* Terminal Window */}
+      <div className={`terminal-container ${isMinimized ? 'minimized' : ''} ${isMaximized ? 'maximized' : ''} ${isRestoring ? 'restoring' : ''} ${isTransitioningToNormal ? 'transitioning-to-normal' : ''}`}>
+        <div className="terminal-header">
+          <div className="terminal-controls">
+            <span
+              className="control close"
+              onClick={handleClose}
+              tabIndex={0}
+              role="button"
+              aria-label="Close terminal"
+              onKeyDown={(e) => e.key === 'Enter' && handleClose()}
+            ></span>
+            <span
+              className="control minimize"
+              onClick={handleMinimize}
+              tabIndex={0}
+              role="button"
+              aria-label="Minimize terminal"
+              onKeyDown={(e) => e.key === 'Enter' && handleMinimize()}
+            ></span>
+            <span
+              className="control maximize"
+              onClick={handleMaximize}
+              tabIndex={0}
+              role="button"
+              aria-label={isMaximized ? 'Restore window size' : 'Maximize window'}
+              onKeyDown={(e) => e.key === 'Enter' && handleMaximize()}
+            ></span>
+          </div>
+          <div className="terminal-title">
+            <span className="terminal-icon">⚡</span>
+            fadi@zuabi:~$ AI Terminal
+          </div>
         </div>
-      </div>
 
       <div className="terminal-body">
         <div className="messages">
@@ -175,15 +281,17 @@ export function Terminal() {
               placeholder="Ask about Fadi's experience, skills, or projects..."
               autoComplete="off"
               spellCheck={false}
+              aria-label="Terminal input"
             />
             <span className={`cursor ${input ? '' : 'blink'}`}>█</span>
           </div>
         </form>
       </div>
 
-      <div className="terminal-footer">
-        <span className="status">Connected to Gemini AI | Type your question | Ctrl+L to clear</span>
+        <div className="terminal-footer">
+          <span className="status">Connected to Gemini AI | Type your question | Ctrl+L to clear</span>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
