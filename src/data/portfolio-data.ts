@@ -93,8 +93,8 @@ export const portfolioData = {
   // Education
   education: {
     degree: "Bachelor of Science",
-    major: "Computer Engineering",
-    university: "California State University, Sacramento",
+    major: "Electrical Engineering",
+    university: "University of Illinois at Urbana-Champaign, Urbana, IL",
     graduationYear: 2019,
     gpa: 3.67,
     gpaScale: 4.0,

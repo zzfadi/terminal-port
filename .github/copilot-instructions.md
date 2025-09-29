@@ -1,29 +1,223 @@
 # Copilot Instructions for OnePromptPortfolio
 
-## Repo snapshot
-- Production portfolio lives in `terminal-portfolio.html` (v1). It is a single HTML file with inline CSS/JS; never split it or add build tooling.
-- The new conversational prototype is under `v2/` and currently consists of just five files in `src/` (`main.ts`, `Terminal.tsx`, `GeminiClient.ts`, `portfolio.ts`, `styles.css`). Docs in `v2/ARCHITECTURE.md` and `v2/README.md` describe an older command-heavy build—ignore those when editing code.
-- Serve the legacy experience via `python3 -m http.server 8001` and open `/terminal-portfolio.html`. React/Vite dev server for v2 runs with `npm run dev` inside `v2/` (expects Node ≥18 and listens on port 3002).
+## Project Overview
 
-## Working on v1 (`terminal-portfolio.html`)
-- `terminal.init()` wires input events, history/autocomplete, and calls `startupSequence()` plus `initMatrixRain()`. Keep the boot log + ASCII intro lightweight so the timed sequence stays readable.
-- Commands are registered in `setupCommands()` and must print through `printLine()` or `typeWriter()` with HTML spans like `<span class="success">` to preserve styling. Update `showHelp()` and the in-browser tests when you add or rename commands.
-- The virtual filesystem (`terminal.fileSystem`) drives `ls/cd/cat/tree`; modify the tree, `listDirectory()`, and any scripted expectations in `Tests/test-terminal.html` together to avoid drift.
-- `handleContactAction()` centralizes outbound links; extend its switch when adding contact targets so both click and keyboard activation work.
-- Manual regression checklist after changes: `help`, `about`, `experience`, `projects`, navigation commands, and outbound links in both desktop and mobile breakpoints (CSS switches at 768px).
+AI-powered terminal portfolio built with React, TypeScript, and Google Gemini AI. The entire app is a conversational interface where users ask questions about professional experience in natural language.
 
-## Working on v2 (React AI terminal)
-- `main.ts` simply mounts `<Terminal />` and pulls in `styles.css`. The UI and logic live entirely inside `Terminal.tsx`; keep it self-contained and favor hooks over new global state.
-- `Terminal.tsx` maintains `messages`, `input`, `isLoading`, and a `GeminiClient` instance. Responses render sequentially with a word-by-word typing effect—if you change output formatting, keep `messages` immutable and preserve the `scrollIntoView` + `Ctrl+L` clear behaviour.
-- `GeminiClient` wraps `@google/genai` with model `gemini-2.0-flash-exp`, injecting portfolio context via `formatPortfolioForAI()`. Provide `VITE_GEMINI_API_KEY` (set in `.env`) before calling `sendMessage`; when adding prompts, keep replies plain-text (no Markdown) and under ~512 tokens.
-- Conversation memory lives in `conversationHistory`; trim or reshape it there if you need different summarisation. Call `geminiClient.clearHistory()` when resetting transcripts.
-- Portfolio content for AI answers resides in `portfolio.ts`. Update this file—and v1 content functions—together so bios, skills, and experience stay in sync across versions.
-- `styles.css` defines the entire aesthetic. Respect the existing palette (#0a0a0a background, neon green accents) and responsive rules when adding UI affordances.
+## Repository Structure
 
-## Testing & tooling
-- Legacy test harnesses are browser pages under `Tests/`; open them after serving v1 to verify command outputs and journeys.
-- The v2 `package.json` still lists the historic Jest/Playwright stack, but the current five-file build has no tests. Run `npm run build` after edits to ensure Vite + TypeScript succeed, and trim scripts only once you update the tooling.
+```
+OnePromptPortfolio/
+├── src/
+│   ├── Terminal.tsx              # Main React component (347 lines)
+│   ├── GeminiClient.ts           # AI integration with context optimization
+│   ├── main.ts                   # React app entry point
+│   ├── styles.css                # Luxury glass-morphic terminal styling
+│   ├── portfolio.ts              # Legacy portfolio data (to be deprecated)
+│   ├── ai/
+│   │   ├── core/
+│   │   │   ├── ContextBuilder.ts      # Smart context assembly (371 lines)
+│   │   │   └── PortfolioDataStore.ts  # Unified data source (685 lines)
+│   │   └── commands/
+│   │       └── AICommands.ts
+│   └── data/
+│       └── portfolio-data.ts     # Single source of truth for content (722 lines)
+├── public/
+│   └── textures/                 # UI texture assets
+├── index.html                    # Minimal entry point
+├── package.json
+├── vite.config.ts
+└── tsconfig.json
+```
 
-## Source of truth
-- Keep messaging consistent with `CLAUDE.md` and `Docs/PORTFOLIO_CONTENT.md`; both still track Fadi’s official bio. Update contact links in `showContact()` and `portfolio.ts` together.
-- Flag obviously stale docs (e.g., `v2/ARCHITECTURE.md`) when touching them rather than quietly relying on them—they predate the conversational rewrite.
+## Development Workflow
+
+```bash
+npm install         # Install dependencies
+npm run dev         # Dev server on port 3002
+npm run build       # Production build
+npm run type-check  # TypeScript validation
+npm run lint        # ESLint
+npm run format      # Prettier
+```
+
+## Architecture Patterns
+
+### Single Component Design
+- `Terminal.tsx` handles all UI: messages, window controls, keyboard shortcuts
+- State managed with React hooks (useState, useEffect)
+- No routing or complex state libraries needed
+- Keep component self-contained
+
+### AI Integration Flow
+```
+User Input → Terminal.tsx
+  ↓
+GeminiClient.sendMessage()
+  ↓
+ContextBuilder.buildContext(query) ← PortfolioDataStore
+  ↓
+Gemini API with optimized context
+  ↓
+Typed response animation → Display
+```
+
+### Smart Context Assembly
+- **ContextBuilder.ts** classifies queries (experience, skills, projects, AI, contact, etc.)
+- Selects relevant portfolio sections based on intent
+- Enforces 1500 token budget with caching (5 min TTL)
+- Only includes necessary data to reduce costs and latency
+
+### Data Management
+- **portfolio-data.ts** is the single source of truth (722 lines)
+- **PortfolioDataStore.ts** transforms raw data into semantic sections
+- Each section has relevance score, token estimate, formatted content
+- Changes to portfolio-data.ts automatically propagate through the system
+
+## Key Implementation Details
+
+### Terminal.tsx
+- Message types: `user`, `ai`, `system`
+- Window states: normal (920×600px), minimized (dock button), maximized (96vw×92vh)
+- State persistence: remembers maximized state when minimizing
+- Keyboard: Ctrl+L clears history, Tab cycles controls, Enter activates
+- Typing animation: 30ms delay per word for AI responses
+
+### GeminiClient.ts
+- Model: `gemini-2.5-flash` for speed and cost efficiency
+- System prompt instructs AI on tone, format, and boundaries
+- Conversation history: last 20 messages for context
+- Error handling: friendly messages, no stack traces to user
+
+### ContextBuilder.ts (Lines 123-231)
+- Query classification by keywords
+- Section selection strategy per query type
+- Token budget management
+- Cache prevents redundant processing
+
+### PortfolioDataStore.ts
+- 11 semantic sections (overview, experience, skills, projects, achievements, vision, AI leadership, technical leadership, learning, career progression, context prompts)
+- Formatting methods for different contexts
+- V1 export capability (if needed for backwards compatibility)
+
+### Styling (styles.css)
+- Luxury glass-morphic design with backdrop blur
+- Aluminum slate background with brushed metal textures
+- OLED-style display: true black (#000) with phosphor green (#00FF41)
+- GPU-accelerated animations (transform, opacity only)
+- Responsive: <768px switches to mobile layout
+
+## Common Tasks
+
+### Update Portfolio Content
+1. Edit `src/data/portfolio-data.ts`
+2. Changes automatically flow to PortfolioDataStore → ContextBuilder → AI
+3. No need to touch multiple files
+
+### Modify AI Behavior
+- System prompt: `src/GeminiClient.ts` lines 27-46
+- Query classification: `src/ai/core/ContextBuilder.ts` lines 123-163
+- Section selection: `src/ai/core/ContextBuilder.ts` lines 168-231
+
+### Adjust UI/UX
+- Colors and animations: `src/styles.css`
+- Window behavior: `src/Terminal.tsx` lines 162-223
+- Message rendering: `src/Terminal.tsx` lines 296-315
+
+### Add New Portfolio Section
+1. Add data to `src/data/portfolio-data.ts`
+2. Create formatting method in `PortfolioDataStore.ts`
+3. Add section in `buildSections()` method (around line 326)
+4. Update query classification in `ContextBuilder.ts` if needed
+
+## Important Constraints
+
+### Keep It Simple
+- App is intentionally minimal (~2500 lines total)
+- No complex state management or routing
+- Direct Gemini API integration (no backend)
+- Single component architecture
+
+### Performance Priorities
+- Bundle size: ~280KB total is acceptable
+- Context optimization: reduce token usage
+- GPU acceleration: only transform/opacity animations
+- Code splitting: Gemini SDK in separate chunk
+
+### Professional Representation
+- This is a live portfolio showcasing real work
+- Maintain technical accuracy
+- Professional yet personable tone
+- No exaggeration or marketing fluff
+
+## Environment Setup
+
+Required `.env`:
+```env
+VITE_GEMINI_API_KEY=your_key_here
+```
+
+Get API key from: https://aistudio.google.com/app/apikey
+
+## Testing & Validation
+
+```bash
+npm run build       # Must succeed without errors
+npm run type-check  # Must pass TypeScript checks
+```
+
+No automated tests currently. Manual testing covers:
+- Desktop and mobile responsive breakpoints
+- Window controls (minimize/maximize/close)
+- Keyboard navigation
+- AI response accuracy
+- Error states (no API key, network failure)
+
+## Debugging Tips
+
+Browser console:
+```javascript
+localStorage.clear()  // Clear cached data
+// GeminiClient logs context stats in dev mode
+// Check ContextBuilder optimization metrics
+```
+
+## Source of Truth
+
+- Portfolio content: `src/data/portfolio-data.ts`
+- Architecture guidance: `CLAUDE.md` (root)
+- User-facing docs: `README.md` (root)
+- This file: Development patterns and practices
+
+## What NOT to Do
+
+- Don't split Terminal.tsx into multiple components (keep simple)
+- Don't add backend/API proxy (direct Gemini API is intentional)
+- Don't add command parsing (pure conversational interface)
+- Don't ignore TypeScript errors
+- Don't use CSS-in-JS (pure CSS for performance)
+- Don't break the GPU-accelerated animation patterns
+
+## Deployment
+
+Static hosting ready:
+```bash
+npm run build  # Output to dist/
+```
+
+Deploy `dist/` to Vercel, Netlify, GitHub Pages, etc.
+
+Ensure hosting sets `VITE_GEMINI_API_KEY` environment variable.
+
+## Future Enhancements
+
+Potential additions (maintain simplicity):
+- Streaming responses (Gemini supports it)
+- Voice input/output
+- Conversation export (PDF/JSON)
+- Multiple language support
+- Theme variations
+
+---
+
+Keep the codebase clean, performant, and focused on delivering an exceptional conversational portfolio experience.

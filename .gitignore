@@ -1,24 +1,29 @@
-# OS artifacts
-.DS_Store
+# Dependencies
+node_modules/
 
-# Python HTTP server cache
-__pycache__/
-
-# Local AI assistant settings
-.claude/
+# Build output
+dist/
 
 # Environment variables (contains API keys)
 .env
 .env.local
 .env.*.local
 
-# Docs
-fadi-info/archive/
-fadi-info/data/
-/.obsidian
-/.vscode
-/.playwright-mcp
-/example-code-ref
-/fadi-info
-/v2/playwright-report
-/v2/dist
+# OS artifacts
+.DS_Store
+
+# Editor/IDE
+.vscode/
+.idea/
+
+# Local AI assistant settings
+.claude/
+
+# Test artifacts
+playwright-report/
+test-results/
+
+# Logs
+*.log
+npm-debug.log*
+build.log

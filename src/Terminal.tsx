@@ -78,7 +78,7 @@ export function Terminal() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || isLoading || !geminiClient) return;
+    if (!input.trim() || isLoading) return;
 
     const userMessage = input;
     setInput('');
@@ -91,6 +91,17 @@ export function Terminal() {
       timestamp: new Date()
     };
     setMessages(prev => [...prev, userMsg]);
+
+    // Check if Gemini client is available
+    if (!geminiClient) {
+      setMessages(prev => [...prev, {
+        id: (Date.now() + 1).toString(),
+        type: 'system',
+        content: 'Error: Cannot process request. Gemini API key not configured. Please set VITE_GEMINI_API_KEY in your .env file.',
+        timestamp: new Date()
+      }]);
+      return;
+    }
 
     // Show loading state
     setIsLoading(true);
@@ -238,10 +249,10 @@ export function Terminal() {
         <Rnd
           position={{ x: windowState.x, y: windowState.y }}
           size={{ width: windowState.width, height: windowState.height }}
-          onDragStop={(e, d) => {
+          onDragStop={(_e, d) => {
             setWindowState(prev => ({ ...prev, x: d.x, y: d.y }));
           }}
-          onResizeStop={(e, direction, ref, delta, position) => {
+          onResizeStop={(_e, _direction, ref, _delta, position) => {
             setWindowState({
               width: parseInt(ref.style.width),
               height: parseInt(ref.style.height),
