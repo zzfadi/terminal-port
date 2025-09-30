@@ -851,11 +851,15 @@ body {
   font-weight: 450;
   text-shadow: 0 0 3px var(--terminal-green-soft);
   caret-color: var(--terminal-green-bright);
+  min-width: 0; /* Allow input to shrink below content width */
 }
 
 .terminal-input::placeholder {
   color: rgba(0, 255, 65, 0.25);
   font-style: italic;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .terminal-input:focus {

@@ -529,7 +529,16 @@ export function Terminal() {
           bounds="window"
           dragHandleClassName="terminal-header"
           disableDragging={isMaximized}
-          enableResizing={!isMaximized}
+          enableResizing={!isMaximized ? {
+            top: true,
+            right: true,
+            bottom: true,
+            left: true,
+            topRight: true,
+            bottomRight: true,
+            bottomLeft: true,
+            topLeft: true
+          } : false}
         >
         <div className={`terminal-container ${isMaximized ? 'maximized' : ''} ${isRestoring ? 'restoring' : ''} ${isTransitioningToNormal ? 'transitioning-to-normal' : ''}`}>
         <div className="terminal-header">
