@@ -6,6 +6,8 @@ interface Message {
   id: string;
   type: 'user' | 'ai' | 'system';
   content: string;
+  imageData?: string;      // Base64 image data
+  imageMimeType?: string;  // MIME type (image/png, image/jpeg, etc.)
   timestamp: Date;
 }
 
@@ -107,14 +109,16 @@ export function Terminal() {
     setIsLoading(true);
 
     try {
-      // Get AI response
+      // Get AI response (now includes optional image data)
       const response = await geminiClient.sendMessage(userMessage);
 
       // Add AI response with typing effect
       const aiMsg: Message = {
         id: (Date.now() + 1).toString(),
         type: 'ai',
-        content: response,
+        content: response.text,
+        imageData: response.imageData,
+        imageMimeType: response.imageMimeType,
         timestamp: new Date()
       };
 
@@ -122,7 +126,7 @@ export function Terminal() {
       setMessages(prev => [...prev, { ...aiMsg, content: '' }]);
 
       let displayedText = '';
-      const words = response.split(' ');
+      const words = response.text.split(' ');
 
       for (let i = 0; i < words.length; i++) {
         displayedText += (i === 0 ? '' : ' ') + words[i];
@@ -312,7 +316,16 @@ export function Terminal() {
                  msg.type === 'ai' ? '$ ' :
                  '# '}
               </span>
-              <span className="content">{msg.content}</span>
+              <div className="message-wrapper">
+                <span className="content">{msg.content}</span>
+                {msg.imageData && msg.imageMimeType && (
+                  <img
+                    src={`data:${msg.imageMimeType};base64,${msg.imageData}`}
+                    alt="AI generated content"
+                    className="terminal-image"
+                  />
+                )}
+              </div>
             </div>
           ))}
           {isLoading && (

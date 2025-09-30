@@ -601,6 +601,52 @@ body {
   to { border-color: transparent; }
 }
 
+/* Message wrapper for content + images */
+.message-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 100%;
+}
+
+/* Terminal image styling */
+.terminal-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin-top: 8px;
+  border: 1px solid rgba(0, 255, 65, 0.2);
+  box-shadow:
+    0 0 20px rgba(0, 255, 65, 0.15),
+    0 4px 12px rgba(0, 0, 0, 0.3);
+  animation: imageAppear 0.6s var(--transition-smooth);
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  backdrop-filter: blur(20px);
+}
+
+@keyframes imageAppear {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+.terminal-image:hover {
+  border-color: rgba(0, 255, 65, 0.4);
+  box-shadow:
+    0 0 30px rgba(0, 255, 65, 0.25),
+    0 6px 16px rgba(0, 0, 0, 0.4);
+  transform: scale(1.02);
+  transition: all 0.3s var(--transition-smooth);
+}
+
 /* Enhanced Loading Animation */
 .message-loading {
   color: var(--terminal-green);

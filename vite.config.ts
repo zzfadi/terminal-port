@@ -9,7 +9,9 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src'),
       '@ai': path.resolve(__dirname, './src/ai'),
-      '@data': path.resolve(__dirname, './src/data')
+      '@data': path.resolve(__dirname, './src/data'),
+      '@prompts': path.resolve(__dirname, './src/prompts'),
+      '@utils': path.resolve(__dirname, './src/utils')
     }
   },
 

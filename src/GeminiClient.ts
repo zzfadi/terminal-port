@@ -1,5 +1,6 @@
 import { GoogleGenAI } from '@google/genai';
 import { portfolioData } from './data/portfolio-data';
+import { loadSystemPrompt } from './utils/PromptLoader';
 
 /**
  * Simplified Gemini Client - Direct approach without over-engineering
@@ -7,7 +8,7 @@ import { portfolioData } from './data/portfolio-data';
  */
 export class GeminiClient {
   private ai: GoogleGenAI;
-  private model = 'gemini-2.5-flash';
+  private model = 'gemini-2.5-flash-image-preview';
   private conversationHistory: Array<{ role: string; content: string }> = [];
 
   constructor(apiKey: string) {
@@ -16,8 +17,13 @@ export class GeminiClient {
 
   /**
    * Send a message to Gemini with full portfolio context
+   * Returns both text and optional image data
    */
-  async sendMessage(userMessage: string): Promise<string> {
+  async sendMessage(userMessage: string): Promise<{
+    text: string;
+    imageData?: string;
+    imageMimeType?: string;
+  }> {
     try {
       // Build the complete system prompt with all portfolio context
       const systemPrompt = this.buildSystemPrompt();
@@ -37,14 +43,29 @@ export class GeminiClient {
         model: this.model,
         contents: fullPrompt,
         config: {
-          maxOutputTokens: 512,
-          temperature: 0.7
+          maxOutputTokens: 2048,
+          temperature: 0.9
         }
       });
 
-      const aiResponse = response.text || 'I apologize, but I encountered an issue generating a response. Please try again.';
+      // Extract text and image data from response
+      const parts = response.candidates?.[0]?.content?.parts || [];
+      let textContent = '';
+      let imageData: string | undefined = undefined;
+      let imageMimeType: string | undefined = undefined;
 
-      // Update conversation history
+      for (const part of parts) {
+        if (part.text) {
+          textContent += part.text;
+        } else if (part.inlineData) {
+          imageData = part.inlineData.data;
+          imageMimeType = part.inlineData.mimeType;
+        }
+      }
+
+      const aiResponse = textContent || response.text || 'I apologize, but I encountered an issue generating a response. Please try again.';
+
+      // Update conversation history (text only)
       this.conversationHistory.push({ role: 'User', content: userMessage });
       this.conversationHistory.push({ role: 'Assistant', content: aiResponse });
 
@@ -53,16 +74,22 @@ export class GeminiClient {
         this.conversationHistory = this.conversationHistory.slice(-20);
       }
 
-      return aiResponse;
+      return {
+        text: aiResponse,
+        imageData,
+        imageMimeType
+      };
     } catch (error) {
       console.error('Error calling Gemini API:', error);
-      return 'I apologize, but I\'m having trouble connecting right now. Please check your connection and try again.';
+      return {
+        text: 'I apologize, but I\'m having trouble connecting right now. Please check your connection and try again.'
+      };
     }
   }
 
   /**
    * Build the complete system prompt with portfolio context
-   * Simple approach: include all portfolio data at once
+   * Now uses externalized prompts from markdown files
    */
   private buildSystemPrompt(): string {
     const personal = portfolioData.personal;
@@ -72,25 +99,12 @@ export class GeminiClient {
     // Build comprehensive portfolio context
     const portfolioContext = this.formatPortfolioContext();
 
-    return `You are an AI assistant representing ${fullName}'s professional portfolio.
-You're running in a terminal-style interface and should respond in a conversational, technical, yet friendly manner.
-
-Your responses should be:
-- Concise and informative (2-4 sentences for simple questions, more detail when asked)
-- Technical but accessible
-- Formatted for terminal display (no markdown, use plain text)
-- Based on ${firstName}'s actual experience and skills
-
-${portfolioContext}
-
-When answering questions:
-- Draw from the specific experiences and projects provided above
-- Provide concrete examples from the work described
-- Be accurate about skills and timeline
-- If asked about something not in the background, politely redirect to actual expertise
-- You can suggest relevant projects or experiences that might interest the person asking
-
-Remember: You're representing ${firstName} professionally, so maintain a balance between being personable and professional.`;
+    // Load system prompt from markdown file and process variables
+    return loadSystemPrompt({
+      fullName,
+      firstName,
+      portfolioContext
+    });
   }
 
   /**
