@@ -39,9 +39,17 @@ export function Terminal() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   // State for the modal
-  const [modalImage, setModalImage] = useState<{ src: string; alt: string } | null>(
-    null
-  );
+  const [modalImage, setModalImage] = useState<{ 
+    src: string; 
+    alt: string;
+    context?: string;
+  } | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [isCopying, setIsCopying] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const firstButtonRef = useRef<HTMLButtonElement>(null);
 
   // Initialize Gemini client
   useEffect(() => {
@@ -90,6 +98,25 @@ export function Terminal() {
     return () => window.removeEventListener('keydown', handleGlobalKeyDown);
   }, [geminiClient]);
 
+  // Modal keyboard handler and focus management
+  useEffect(() => {
+    if (modalImage) {
+      // Focus first button when modal opens
+      setTimeout(() => firstButtonRef.current?.focus(), 100);
+      
+      const handleModalKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          closeModal();
+        }
+      };
+
+      window.addEventListener('keydown', handleModalKeyDown);
+      return () => window.removeEventListener('keydown', handleModalKeyDown);
+    }
+    return undefined;
+  }, [modalImage]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
@@ -134,24 +161,32 @@ export function Terminal() {
         timestamp: new Date()
       };
 
-      // Simulate typing effect
-      setMessages(prev => [...prev, { ...aiMsg, content: '' }]);
+      // Check if response contains HTML code blocks - skip typing animation for large code blocks
+      const hasHTMLBlock = /```html[\s\S]*```/i.test(response.text);
 
-      let displayedText = '';
-      const words = response.text.split(' ');
+      if (hasHTMLBlock) {
+        // Show full response immediately for HTML content (typing animation too slow for code)
+        setMessages(prev => [...prev, aiMsg]);
+      } else {
+        // Simulate typing effect for regular text
+        setMessages(prev => [...prev, { ...aiMsg, content: '' }]);
 
-      for (let i = 0; i < words.length; i++) {
-        displayedText += (i === 0 ? '' : ' ') + words[i];
-        const currentText = displayedText;
+        let displayedText = '';
+        const words = response.text.split(' ');
 
-        setMessages(prev => {
-          const newMessages = [...prev];
-          newMessages[newMessages.length - 1] = { ...aiMsg, content: currentText };
-          return newMessages;
-        });
+        for (let i = 0; i < words.length; i++) {
+          displayedText += (i === 0 ? '' : ' ') + words[i];
+          const currentText = displayedText;
 
-        // Small delay between words for typing effect
-        await new Promise(resolve => setTimeout(resolve, 30));
+          setMessages(prev => {
+            const newMessages = [...prev];
+            newMessages[newMessages.length - 1] = { ...aiMsg, content: currentText };
+            return newMessages;
+          });
+
+          // Small delay between words for typing effect
+          await new Promise(resolve => setTimeout(resolve, 30));
+        }
       }
     } catch (error) {
       console.error('Error getting AI response:', error);
@@ -251,15 +286,99 @@ export function Terminal() {
 
   const handleImageClick = (msg: Message) => {
     if (msg.imageData && msg.imageMimeType) {
+      // Generate contextual alt text from the message content
+      const contextualAlt = msg.content 
+        ? `AI generated image: ${msg.content.substring(0, 100)}...`
+        : 'AI generated content';
+      
       setModalImage({
         src: `data:${msg.imageMimeType};base64,${msg.imageData}`,
-        alt: 'AI generated content',
+        alt: contextualAlt,
+        context: msg.content,
       });
+      setImageLoading(true);
+      setImageError(false);
     }
   };
 
   const closeModal = () => {
     setModalImage(null);
+    setImageLoading(true);
+    setImageError(false);
+    inputRef.current?.focus(); // Return focus to input
+  };
+
+  const handleDownload = async () => {
+    if (!modalImage) return;
+    setIsDownloading(true);
+    
+    try {
+      const link = document.createElement('a');
+      link.href = modalImage.src;
+      link.download = `fadi-portfolio-${Date.now()}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Download failed:', error);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const handleCopy = async () => {
+    if (!modalImage) return;
+    setIsCopying(true);
+    
+    try {
+      const response = await fetch(modalImage.src);
+      const blob = await response.blob();
+      await navigator.clipboard.write([
+        new ClipboardItem({ [blob.type]: blob })
+      ]);
+    } catch (error) {
+      console.error('Copy failed:', error);
+      // Fallback: copy the data URL as text
+      try {
+        await navigator.clipboard.writeText(modalImage.src);
+      } catch (fallbackError) {
+        console.error('Fallback copy failed:', fallbackError);
+      }
+    } finally {
+      setIsCopying(false);
+    }
+  };
+
+  const handleZoom = () => {
+    if (!modalImage) return;
+    // Open image in new tab for native browser zoom
+    const win = window.open();
+    if (win) {
+      win.document.write(`
+        <html>
+          <head>
+            <title>Image Viewer</title>
+            <style>
+              body { margin: 0; background: #000; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+              img { max-width: 100%; max-height: 100vh; object-fit: contain; }
+            </style>
+          </head>
+          <body>
+            <img src="${modalImage.src}" alt="${modalImage.alt}" />
+          </body>
+        </html>
+      `);
+      win.document.close();
+    }
+  };
+
+  const handleImageLoad = () => {
+    setImageLoading(false);
+  };
+
+  const handleImageError = () => {
+    setImageLoading(false);
+    setImageError(true);
   };
 
   const formatAIResponse = (content: string) => {
@@ -277,6 +396,31 @@ export function Terminal() {
       ALLOWED_ATTR: ['href', 'target', 'rel', 'src', 'alt'],
       ALLOWED_URI_REGEXP: /^(?:https?:|mailto:)/i  // Block javascript:, data:, etc.
     });
+  };
+
+  const extractHTML = (content: string): string | null => {
+    // Detect HTML code blocks: ```html...``` or raw <html>...</html>
+    const codeBlockMatch = content.match(/```html\n([\s\S]*?)```/i);
+    if (codeBlockMatch) {
+      const html = codeBlockMatch[1].trim();
+      // Inject CSP meta tag to allow inline scripts if not already present
+      if (html.includes('<head>') && !html.includes('Content-Security-Policy')) {
+        return html.replace('<head>', '<head>\n<meta http-equiv="Content-Security-Policy" content="script-src \'unsafe-inline\'; style-src \'unsafe-inline\';">');
+      }
+      return html;
+    }
+
+    const htmlTagMatch = content.match(/<html[\s\S]*<\/html>/i);
+    if (htmlTagMatch) {
+      const html = htmlTagMatch[0];
+      // Inject CSP meta tag if not already present
+      if (html.includes('<head>') && !html.includes('Content-Security-Policy')) {
+        return html.replace('<head>', '<head>\n<meta http-equiv="Content-Security-Policy" content="script-src \'unsafe-inline\'; style-src \'unsafe-inline\';">');
+      }
+      return html;
+    }
+
+    return null;
   };
 
   return (
@@ -372,6 +516,14 @@ export function Terminal() {
                     onClick={() => handleImageClick(msg)}
                   />
                 )}
+                {msg.type === 'ai' && extractHTML(msg.content) && (
+                  <iframe
+                    srcDoc={extractHTML(msg.content)!}
+                    className="terminal-html-preview"
+                    sandbox="allow-scripts allow-forms allow-modals allow-same-origin"
+                    title="HTML Preview"
+                  />
+                )}
               </div>
             </div>
           ))}
@@ -415,20 +567,80 @@ export function Terminal() {
       )}
 
       {modalImage && (
-        <div className="image-modal-overlay" onClick={closeModal}>
-          <div className="image-modal-content" onClick={(e) => e.stopPropagation()}>
-            <img src={modalImage.src} alt={modalImage.alt} className="modal-image" />
-            <div className="modal-toolbar">
-              <button title="Download">
-                <Download size={18} />
+        <div 
+          className="image-modal-overlay" 
+          onClick={closeModal}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Image viewer"
+        >
+          <div 
+            ref={modalRef}
+            className="image-modal-content" 
+            onClick={(e) => e.stopPropagation()}
+          >
+            {imageLoading && (
+              <div className="image-loading-skeleton" aria-live="polite">
+                <div className="skeleton-shimmer"></div>
+                <span className="sr-only">Loading image...</span>
+              </div>
+            )}
+            
+            {imageError ? (
+              <div className="image-error" role="alert">
+                <span className="error-icon">⚠️</span>
+                <p>Failed to load image</p>
+              </div>
+            ) : (
+              <img 
+                src={modalImage.src} 
+                alt={modalImage.alt} 
+                className="modal-image"
+                onLoad={handleImageLoad}
+                onError={handleImageError}
+                style={{ display: imageLoading ? 'none' : 'block' }}
+              />
+            )}
+            
+            <div className="modal-toolbar" role="toolbar" aria-label="Image actions">
+              <button 
+                ref={firstButtonRef}
+                title="Download image"
+                onClick={handleDownload}
+                disabled={isDownloading || imageError}
+                aria-label="Download image"
+              >
+                {isDownloading ? (
+                  <span className="spinner">⟳</span>
+                ) : (
+                  <Download size={18} />
+                )}
               </button>
-              <button title="Copy">
-                <Copy size={18} />
+              <button 
+                title="Copy to clipboard"
+                onClick={handleCopy}
+                disabled={isCopying || imageError}
+                aria-label="Copy image to clipboard"
+              >
+                {isCopying ? (
+                  <span className="spinner">⟳</span>
+                ) : (
+                  <Copy size={18} />
+                )}
               </button>
-              <button title="Zoom">
+              <button 
+                title="Open in new tab"
+                onClick={handleZoom}
+                disabled={imageError}
+                aria-label="Open image in new tab for zoom"
+              >
                 <ZoomIn size={18} />
               </button>
-              <button title="Close" onClick={closeModal}>
+              <button 
+                title="Close (ESC)"
+                onClick={closeModal}
+                aria-label="Close image viewer"
+              >
                 <X size={18} />
               </button>
             </div>
