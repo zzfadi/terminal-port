@@ -8,7 +8,7 @@ import { loadSystemPrompt } from './utils/PromptLoader';
  */
 export class GeminiClient {
   private ai: GoogleGenAI;
-  private model = 'gemini-2.5-flash-image-preview';
+  private model = 'gemini-flash-latest';
   private conversationHistory: Array<{ role: string; content: string }> = [];
 
   constructor(apiKey: string) {

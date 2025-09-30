@@ -11,12 +11,20 @@ AI-powered interactive terminal portfolio showcasing Fadi Al Zuabi's engineering
 ```
 OnePromptPortfolio/
 ├── src/
-│   ├── Terminal.tsx              # Main React component (347 lines)
-│   ├── GeminiClient.ts           # Simplified AI integration (209 lines)
+│   ├── Terminal.tsx              # Main React component (811 lines)
+│   ├── GeminiClient.ts           # Simplified AI integration (237 lines)
 │   ├── main.ts                   # React app entry point
 │   ├── styles.css                # Luxury glass-morphic terminal styling
-│   └── data/
-│       └── portfolio-data.ts     # Central portfolio data (single source of truth)
+│   ├── data/
+│   │   └── portfolio-data.ts     # Central portfolio data (662 lines, single source of truth)
+│   ├── prompts/                  # AI prompt templates (markdown)
+│   │   ├── system.md
+│   │   ├── response-guidelines.md
+│   │   └── context-sections.md
+│   ├── utils/
+│   │   └── PromptLoader.ts       # Loads prompts from markdown files
+│   └── types/
+│       └── prompts.d.ts
 ├── public/
 │   └── textures/                 # UI texture assets
 ├── .github/
@@ -67,25 +75,34 @@ npm run preview
 
 **Key Components:**
 
-1. **Terminal.tsx** (347 lines) - Single component handling:
+1. **Terminal.tsx** (811 lines) - Single component handling:
    - Message history with typing animations
    - Window controls (minimize/maximize/close)
    - Keyboard navigation and shortcuts
+   - Image modal with zoom, download, copy
+   - HTML preview with sandboxed iframe
    - Ctrl+L to clear history
 
-2. **GeminiClient.ts** (209 lines) - Simplified AI integration:
+2. **GeminiClient.ts** (237 lines) - Simplified AI integration:
    - Direct import of portfolio data
    - Full context building (no optimization needed)
    - Conversation history (last 20 messages)
-   - System prompt with personality
-   - Model: `gemini-2.5-flash`
+   - System prompt loaded from markdown templates
+   - Model: `gemini-2.5-flash-image-preview` (supports image generation)
+   - Returns text + optional image data
 
-3. **portfolio-data.ts** (663 lines) - Single source of truth:
+3. **portfolio-data.ts** (662 lines) - Single source of truth:
    - Personal info and contact
    - Professional experience with metrics
    - Skills organized by category
    - Projects (professional and personal)
    - AI initiatives and leadership roles
+
+4. **Prompt System** (`src/prompts/*.md`) - AI behavior templates:
+   - System prompt with personality and capabilities
+   - Response formatting guidelines
+   - Template variables ({{fullName}}, {{portfolioContext}})
+   - Loaded at build time via PromptLoader
 
 ### Data Flow (Simplified)
 
@@ -103,7 +120,7 @@ Typed response → Terminal display
 
 ### Architecture Simplification (2025-09-29)
 
-The AI architecture was simplified from **1,155 lines across 3 files** to **209 lines in 1 file** (81% reduction).
+The AI architecture was simplified from **1,155 lines across 3 files** to **237 lines in 1 file** (79% reduction).
 
 **Removed complexity:**
 - ContextBuilder.ts (371 lines) - Query classification, caching, token budgeting
@@ -144,17 +161,22 @@ Key sections:
 
 ### Modify AI Behavior
 
-**Edit:** `src/GeminiClient.ts`
+**System Prompt Templates:** `src/prompts/*.md`
+- `system.md` - Main system prompt with personality
+- `response-guidelines.md` - Response formatting rules
+- `context-sections.md` - Portfolio context structure
+- Uses template variables: `{{fullName}}`, `{{firstName}}`, `{{portfolioContext}}`
 
-**System Prompt** (lines 67-93):
-- Response style and tone
-- Formatting instructions
-- Professional guidelines
-
-**Context Formatting** (lines 99-200):
+**Context Formatting:** `src/GeminiClient.ts`
+- Method: `buildSystemPrompt()` (~lines 35-150)
 - Simple template-based formatting
 - Add/remove sections as needed
 - Adjust formatting for different data types
+
+**AI Capabilities:**
+- Text responses (conversational)
+- Image generation (responds to "show me", "visualize", etc.)
+- HTML generation (interactive demos wrapped in ```html)
 
 ### Adjust UI/UX
 
@@ -162,11 +184,14 @@ Key sections:
 - Terminal colors and glass-morphic effects
 - Animation timings
 - Responsive breakpoints
+- Modal styling (image/HTML viewers)
 
 **Window Behavior:** `src/Terminal.tsx`
-- Window controls: lines 162-223
-- Keyboard shortcuts: lines 143-159
-- Message rendering: lines 296-315
+- Window controls: minimize/maximize/close
+- Keyboard shortcuts: Ctrl+L, Tab, Enter, Escape
+- Message rendering with typing animation
+- Image modal: full-screen lightbox with toolbar
+- HTML preview: sandboxed iframe with security (DOMPurify)
 
 ### Add New Portfolio Section
 
@@ -182,6 +207,16 @@ Current bundle sizes:
 - Main bundle: ~251KB (gzip: 78KB)
 - AI chunk: ~86KB (gzip: 16KB)
 - CSS: ~17KB (gzip: 4KB)
+
+**Image Generation:**
+- Model: `gemini-2.5-flash-image-preview`
+- Base64-encoded images in responses
+- Full-screen modal viewer with download/copy
+
+**HTML Rendering:**
+- DOMPurify sanitization (XSS protection)
+- Sandboxed iframe for isolation
+- Interactive demos and visualizations
 
 **Performance features:**
 - Code splitting (Gemini SDK in separate chunk)
