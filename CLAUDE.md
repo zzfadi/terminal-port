@@ -12,18 +12,11 @@ AI-powered interactive terminal portfolio showcasing Fadi Al Zuabi's engineering
 OnePromptPortfolio/
 ├── src/
 │   ├── Terminal.tsx              # Main React component (347 lines)
-│   ├── GeminiClient.ts           # AI integration with context optimization
+│   ├── GeminiClient.ts           # Simplified AI integration (209 lines)
 │   ├── main.ts                   # React app entry point
 │   ├── styles.css                # Luxury glass-morphic terminal styling
-│   ├── portfolio.ts              # Legacy portfolio data (to be deprecated)
-│   ├── ai/
-│   │   ├── core/
-│   │   │   ├── ContextBuilder.ts      # Smart context assembly
-│   │   │   └── PortfolioDataStore.ts  # Unified data source
-│   │   └── commands/
-│   │       └── AICommands.ts
 │   └── data/
-│       └── portfolio-data.ts     # Central portfolio data
+│       └── portfolio-data.ts     # Central portfolio data (single source of truth)
 ├── public/
 │   └── textures/                 # UI texture assets
 ├── .github/
@@ -36,6 +29,7 @@ OnePromptPortfolio/
 ├── .gitignore
 ├── README.md
 ├── CLAUDE.md
+├── SIMPLIFICATION_SUMMARY.md     # Details of AI architecture simplification
 └── CNAME
 ```
 
@@ -73,51 +67,56 @@ npm run preview
 
 **Key Components:**
 
-1. **Terminal.tsx** - Single component handling:
+1. **Terminal.tsx** (347 lines) - Single component handling:
    - Message history with typing animations
    - Window controls (minimize/maximize/close)
    - Keyboard navigation and shortcuts
    - Ctrl+L to clear history
 
-2. **GeminiClient.ts** - AI integration with:
-   - Dynamic context optimization via ContextBuilder
+2. **GeminiClient.ts** (209 lines) - Simplified AI integration:
+   - Direct import of portfolio data
+   - Full context building (no optimization needed)
    - Conversation history (last 20 messages)
-   - Token budget management
+   - System prompt with personality
    - Model: `gemini-2.5-flash`
 
-3. **ContextBuilder.ts** - Smart context assembly:
-   - Query classification (experience, skills, projects, AI, etc.)
-   - Relevant section selection
-   - Token budget enforcement (default 1500 tokens)
-   - 5-minute context cache
-   - Supports multiple AI providers
-
-4. **PortfolioDataStore.ts** - Unified data layer:
-   - Central source of truth for all portfolio content
-   - Semantic sections with relevance scores
-   - Structured experience, skills, projects, achievements
-   - Export capability for V1 compatibility
-
-5. **portfolio-data.ts** - Raw portfolio data:
+3. **portfolio-data.ts** (663 lines) - Single source of truth:
    - Personal info and contact
    - Professional experience with metrics
    - Skills organized by category
    - Projects (professional and personal)
    - AI initiatives and leadership roles
 
-### Data Flow
+### Data Flow (Simplified)
 
 ```
 User Input → Terminal.tsx
   ↓
 GeminiClient.sendMessage()
   ↓
-ContextBuilder.buildContext(query) ← PortfolioDataStore
+Build full context from portfolio-data.ts (simple formatting)
   ↓
-Gemini API with optimized context
+Gemini API with complete portfolio context
   ↓
 Typed response → Terminal display
 ```
+
+### Architecture Simplification (2025-09-29)
+
+The AI architecture was simplified from **1,155 lines across 3 files** to **209 lines in 1 file** (81% reduction).
+
+**Removed complexity:**
+- ContextBuilder.ts (371 lines) - Query classification, caching, token budgeting
+- PortfolioDataStore.ts (685 lines) - Complex formatting, singleton patterns
+- All optimization layers that weren't needed for this use case
+
+**Why simplified:**
+- Portfolio data is small (~663 lines) and fits easily in Gemini's context
+- No need for query classification - Gemini handles it naturally
+- No need for caching - portfolio data is static
+- No need for token budgeting - well within limits
+
+See [SIMPLIFICATION_SUMMARY.md](SIMPLIFICATION_SUMMARY.md) for detailed analysis.
 
 ## Environment Configuration
 
@@ -132,8 +131,7 @@ VITE_GEMINI_API_KEY=your_api_key_here
 
 **Edit:** `src/data/portfolio-data.ts`
 
-This is the single source of truth. Changes automatically propagate through:
-- PortfolioDataStore → ContextBuilder → GeminiClient
+This is the single source of truth. Changes automatically flow to GeminiClient.
 
 Key sections:
 - `personal`: Name, title, contact, location
@@ -146,15 +144,17 @@ Key sections:
 
 ### Modify AI Behavior
 
-**Context Assembly:** `src/ai/core/ContextBuilder.ts`
-- Query classification logic (line 123-163)
-- Section selection strategy (line 168-231)
-- Token budget management (line 236-280)
+**Edit:** `src/GeminiClient.ts`
 
-**System Prompt:** `src/GeminiClient.ts:27-46`
+**System Prompt** (lines 67-93):
 - Response style and tone
 - Formatting instructions
 - Professional guidelines
+
+**Context Formatting** (lines 99-200):
+- Simple template-based formatting
+- Add/remove sections as needed
+- Adjust formatting for different data types
 
 ### Adjust UI/UX
 
@@ -171,23 +171,22 @@ Key sections:
 ### Add New Portfolio Section
 
 1. Add data to `src/data/portfolio-data.ts`
-2. Create formatting method in `src/ai/core/PortfolioDataStore.ts`
-3. Add section in `buildSections()` method
-4. Update query classification in `src/ai/core/ContextBuilder.ts` if needed
+2. Update formatting in `GeminiClient.formatPortfolioContext()` method
+3. Test the changes
 
-## Performance Optimization
+That's it! Simple and direct.
+
+## Performance
 
 Current bundle sizes:
-- Main bundle: ~195KB
-- AI chunk: ~87KB (Gemini SDK)
-- CSS: ~3KB
+- Main bundle: ~251KB (gzip: 78KB)
+- AI chunk: ~86KB (gzip: 16KB)
+- CSS: ~17KB (gzip: 4KB)
 
-**Optimization features:**
-- Dynamic context assembly (only relevant sections)
-- Context caching (5-minute TTL)
+**Performance features:**
 - Code splitting (Gemini SDK in separate chunk)
-- Token budget enforcement
 - Conversation history limiting (20 messages)
+- Simple, fast context building (no overhead)
 
 **Vite configuration** (`vite.config.ts`):
 - Manual chunks for AI libraries
@@ -211,17 +210,18 @@ npm run type-check  # Verify types
 - Easier to understand and modify
 - Faster development
 
-### Why Context Optimization?
-- Reduce token costs
-- Faster API responses
-- Stay within model context limits
-- Improve response relevance
+### Why Simplified AI Architecture?
+- Portfolio data is small (~663 lines) - no need for optimization
+- Gemini 2.5 Flash has 1M+ token context window
+- Simple = easier to maintain and enhance
+- YAGNI principle: add complexity only when needed
+- Reduced from 1,155 lines to 209 lines (81% reduction)
 
-### Why Unified Data Store?
-- Single source of truth
-- Consistency across V1/V2
-- Easy synchronization
-- Structured for AI consumption
+### Why Direct Portfolio Import?
+- Single source of truth (`portfolio-data.ts`)
+- No abstraction layers needed
+- Changes immediately available
+- Clear data flow
 
 ### No Traditional Commands
 - Natural language more accessible
@@ -239,8 +239,21 @@ npm run type-check  # Verify types
 
 ## Development Philosophy
 
-1. **Simplicity over complexity** - Direct approach preferred
-2. **Type safety** - Leverage TypeScript fully
-3. **Token efficiency** - Smart context selection
+1. **Simplicity over complexity** - Direct approach preferred, avoid over-engineering
+2. **YAGNI** (You Aren't Gonna Need It) - Add features only when needed
+3. **Type safety** - Leverage TypeScript fully
 4. **Professional representation** - This is a live portfolio
 5. **Performance first** - Fast responses critical for UX
+6. **Build up, not down** - Start simple, add complexity as problems emerge
+
+### When to Add Complexity
+
+Only add optimization/abstraction layers if you hit these problems:
+
+- **Portfolio grows to 10,000+ lines** → Then add smart context selection
+- **High API costs** → Then add caching
+- **Need semantic search** → Then add vector embeddings + RAG
+- **Need multiple AI providers** → Then add provider abstraction
+- **Response quality issues** → Then refine system prompt
+
+Current state: None of these problems exist, so keep it simple!

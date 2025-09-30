@@ -27,3 +27,7 @@ test-results/
 *.log
 npm-debug.log*
 build.log
+/.obsidian
+
+# AI Architecture Backup (old complex version)
+src/ai-old-backup/
