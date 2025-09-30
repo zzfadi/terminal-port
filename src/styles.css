@@ -356,6 +356,8 @@ body {
   cursor: move;
   user-select: none;
   touch-action: none;
+  position: relative;
+  z-index: 10; /* Lower than controls (100) to allow buttons to be clickable */
 }
 
 .terminal-title {
@@ -366,6 +368,7 @@ body {
   font-size: 13px;
   font-weight: 500;
   letter-spacing: 0.5px;
+  margin-left: 80px; /* Space for 3 Mac buttons + gaps + padding */
   text-shadow:
     0 0 20px var(--terminal-green-glow),
     0 0 10px var(--terminal-green-glow),
@@ -391,6 +394,7 @@ body {
   transform: translateY(-50%);
   display: flex;
   gap: 8px;
+  z-index: 100; /* Ensure buttons are above other elements */
 }
 
 .control {
@@ -404,6 +408,8 @@ body {
   overflow: hidden;
   /* Magnetic hover effect */
   will-change: transform;
+  opacity: 1; /* Explicitly set opacity */
+  z-index: 101; /* Stack above parent */
 }
 
 .control::before {
@@ -444,6 +450,31 @@ body {
 }
 .control.maximize {
   background: linear-gradient(135deg, #27C93F, #1AAB29);
+}
+
+/* React-RND resize handles visibility */
+.react-rnd {
+  /* Ensure resize handles are clickable */
+  pointer-events: auto !important;
+}
+
+/* Make resize handles visible and functional on all sides */
+.react-rnd > .handle {
+  z-index: 50 !important;
+  pointer-events: auto !important;
+}
+
+/* Specific handle directions for all edges and corners */
+.react-rnd > .handle-e,  /* right edge */
+.react-rnd > .handle-s,  /* bottom edge */
+.react-rnd > .handle-w,  /* left edge */
+.react-rnd > .handle-n,  /* top edge */
+.react-rnd > .handle-se, /* bottom-right corner */
+.react-rnd > .handle-sw, /* bottom-left corner */
+.react-rnd > .handle-ne, /* top-right corner */
+.react-rnd > .handle-nw  /* top-left corner */ {
+  z-index: 50 !important;
+  pointer-events: auto !important;
 }
 
 /* OLED Display - True Black with Perfect Contrast (Inside stays OLED) */
@@ -647,12 +678,16 @@ body {
   transition: all 0.3s var(--transition-smooth);
 }
 
-/* HTML Preview iframe */
+/* HTML Preview iframe wrapper */
+.terminal-html-preview-wrapper {
+  margin-top: 12px;
+  position: relative;
+}
+
 .terminal-html-preview {
   width: 100%;
   min-height: 300px;
   max-height: 600px;
-  margin-top: 12px;
   border: 1px solid rgba(0, 255, 65, 0.3);
   border-radius: 8px;
   background: rgba(0, 0, 0, 0.4);
@@ -660,13 +695,84 @@ body {
     0 0 20px rgba(0, 255, 65, 0.15),
     0 4px 12px rgba(0, 0, 0, 0.3);
   transition: all 0.3s var(--transition-smooth);
+  display: block;
 }
 
-.terminal-html-preview:hover {
+.terminal-html-preview-wrapper:hover .terminal-html-preview {
   border-color: rgba(0, 255, 65, 0.5);
   box-shadow:
     0 0 30px rgba(0, 255, 65, 0.25),
     0 6px 16px rgba(0, 0, 0, 0.4);
+  transform: scale(1.01);
+}
+
+/* Overlay to capture clicks for modal opening */
+.html-preview-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: transparent;
+  cursor: pointer;
+  z-index: 1;
+  pointer-events: all;
+}
+
+/* Clickable indicator */
+.html-preview-overlay::after {
+  content: '⛶ Click to expand';
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  font-size: 11px;
+  color: rgba(0, 255, 65, 0.5);
+  background: rgba(0, 0, 0, 0.7);
+  padding: 4px 8px;
+  border-radius: 4px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.terminal-html-preview-wrapper:hover .html-preview-overlay::after {
+  opacity: 1;
+}
+
+/* HTML Modal */
+.html-modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001; /* Above image modal */
+  animation: fadeIn 0.3s var(--transition-smooth);
+}
+
+.html-modal-content {
+  position: relative;
+  width: 90vw;
+  height: 90vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.html-modal-preview {
+  width: 100%;
+  height: 100%;
+  border: 1px solid rgba(0, 255, 65, 0.4);
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 0 50px rgba(0, 255, 65, 0.3);
 }
 
 /* Enhanced Loading Animation */

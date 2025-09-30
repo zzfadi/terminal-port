@@ -31,3 +31,4 @@ build.log
 
 # AI Architecture Backup (old complex version)
 src/ai-old-backup/
+/.playwright-mcp

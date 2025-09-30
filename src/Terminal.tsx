@@ -51,6 +51,16 @@ export function Terminal() {
   const modalRef = useRef<HTMLDivElement>(null);
   const firstButtonRef = useRef<HTMLButtonElement>(null);
 
+  // HTML Modal state
+  const [modalHTML, setModalHTML] = useState<{
+    srcDoc: string;
+    context?: string;
+  } | null>(null);
+  const [isHTMLDownloading, setIsHTMLDownloading] = useState(false);
+  const [isHTMLCopying, setIsHTMLCopying] = useState(false);
+  const htmlModalRef = useRef<HTMLDivElement>(null);
+  const firstHTMLButtonRef = useRef<HTMLButtonElement>(null);
+
   // Initialize Gemini client
   useEffect(() => {
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
@@ -100,14 +110,19 @@ export function Terminal() {
 
   // Modal keyboard handler and focus management
   useEffect(() => {
-    if (modalImage) {
+    if (modalImage || modalHTML) {
       // Focus first button when modal opens
-      setTimeout(() => firstButtonRef.current?.focus(), 100);
-      
+      if (modalImage) {
+        setTimeout(() => firstButtonRef.current?.focus(), 100);
+      } else if (modalHTML) {
+        setTimeout(() => firstHTMLButtonRef.current?.focus(), 100);
+      }
+
       const handleModalKeyDown = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {
           e.preventDefault();
-          closeModal();
+          if (modalImage) closeModal();
+          if (modalHTML) closeHTMLModal();
         }
       };
 
@@ -115,7 +130,7 @@ export function Terminal() {
       return () => window.removeEventListener('keydown', handleModalKeyDown);
     }
     return undefined;
-  }, [modalImage]);
+  }, [modalImage, modalHTML]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -161,11 +176,12 @@ export function Terminal() {
         timestamp: new Date()
       };
 
-      // Check if response contains HTML code blocks - skip typing animation for large code blocks
-      const hasHTMLBlock = /```html[\s\S]*```/i.test(response.text);
+      // Check if response contains HTML code blocks or is too large - skip typing animation
+      const hasHTMLBlock = /```html\s*\n[\s\S]*?```/i.test(response.text);
+      const isTooLarge = response.text.length > 2000; // Skip typing for responses > 2000 chars
 
-      if (hasHTMLBlock) {
-        // Show full response immediately for HTML content (typing animation too slow for code)
+      if (hasHTMLBlock || isTooLarge) {
+        // Show full response immediately (typing animation too slow for code/large responses)
         setMessages(prev => [...prev, aiMsg]);
       } else {
         // Simulate typing effect for regular text
@@ -381,6 +397,59 @@ export function Terminal() {
     setImageError(true);
   };
 
+  // HTML Modal handlers
+  const handleHTMLClick = (msg: Message) => {
+    const html = extractHTML(msg.content);
+    if (html) {
+      setModalHTML({
+        srcDoc: html,
+        context: msg.content,
+      });
+    }
+  };
+
+  const closeHTMLModal = () => {
+    setModalHTML(null);
+    inputRef.current?.focus();
+  };
+
+  const handleHTMLDownload = async () => {
+    if (!modalHTML) return;
+    setIsHTMLDownloading(true);
+    try {
+      const blob = new Blob([modalHTML.srcDoc], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `fadi-portfolio-${Date.now()}.html`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } finally {
+      setIsHTMLDownloading(false);
+    }
+  };
+
+  const handleHTMLCopy = async () => {
+    if (!modalHTML) return;
+    setIsHTMLCopying(true);
+    try {
+      await navigator.clipboard.writeText(modalHTML.srcDoc);
+    } finally {
+      setIsHTMLCopying(false);
+    }
+  };
+
+  const handleHTMLOpenInNewTab = () => {
+    if (!modalHTML) return;
+    const win = window.open();
+    if (win) {
+      win.document.write(modalHTML.srcDoc);
+      win.document.close();
+    }
+  };
+
   const formatAIResponse = (content: string) => {
     // Basic formatting: bold for important terms, links as clickable
     const formatted = content
@@ -400,7 +469,14 @@ export function Terminal() {
 
   const extractHTML = (content: string): string | null => {
     // Detect HTML code blocks: ```html...``` or raw <html>...</html>
-    const codeBlockMatch = content.match(/```html\n([\s\S]*?)```/i);
+    // Try with newline first (standard format)
+    let codeBlockMatch = content.match(/```html\s*\n([\s\S]*?)```/i);
+
+    // Fallback: try without newline requirement
+    if (!codeBlockMatch) {
+      codeBlockMatch = content.match(/```html\s*([\s\S]*?)```/i);
+    }
+
     if (codeBlockMatch) {
       const html = codeBlockMatch[1].trim();
       // Inject CSP meta tag to allow inline scripts if not already present
@@ -517,12 +593,22 @@ export function Terminal() {
                   />
                 )}
                 {msg.type === 'ai' && extractHTML(msg.content) && (
-                  <iframe
-                    srcDoc={extractHTML(msg.content)!}
-                    className="terminal-html-preview"
-                    sandbox="allow-scripts allow-forms allow-modals allow-same-origin"
-                    title="HTML Preview"
-                  />
+                  <div
+                    className="terminal-html-preview-wrapper"
+                    onClick={() => handleHTMLClick(msg)}
+                    style={{ cursor: 'pointer', position: 'relative' }}
+                  >
+                    <iframe
+                      srcDoc={extractHTML(msg.content)!}
+                      className="terminal-html-preview"
+                      sandbox="allow-scripts allow-forms allow-modals allow-same-origin"
+                      title="HTML Preview"
+                    />
+                    <div
+                      className="html-preview-overlay"
+                      title="Click to expand"
+                    />
+                  </div>
                 )}
               </div>
             </div>
@@ -640,6 +726,71 @@ export function Terminal() {
                 title="Close (ESC)"
                 onClick={closeModal}
                 aria-label="Close image viewer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {modalHTML && (
+        <div
+          className="html-modal-overlay"
+          onClick={closeHTMLModal}
+          role="dialog"
+          aria-modal="true"
+          aria-label="HTML viewer"
+        >
+          <div
+            ref={htmlModalRef}
+            className="html-modal-content"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <iframe
+              srcDoc={modalHTML.srcDoc}
+              className="html-modal-preview"
+              sandbox="allow-scripts allow-forms allow-modals allow-same-origin"
+              title="HTML Preview - Full Screen"
+            />
+
+            <div className="modal-toolbar" role="toolbar" aria-label="HTML actions">
+              <button
+                ref={firstHTMLButtonRef}
+                title="Download HTML"
+                onClick={handleHTMLDownload}
+                disabled={isHTMLDownloading}
+                aria-label="Download HTML file"
+              >
+                {isHTMLDownloading ? (
+                  <span className="spinner">⟳</span>
+                ) : (
+                  <Download size={18} />
+                )}
+              </button>
+              <button
+                title="Copy code"
+                onClick={handleHTMLCopy}
+                disabled={isHTMLCopying}
+                aria-label="Copy HTML code to clipboard"
+              >
+                {isHTMLCopying ? (
+                  <span className="spinner">⟳</span>
+                ) : (
+                  <Copy size={18} />
+                )}
+              </button>
+              <button
+                title="Open in new tab"
+                onClick={handleHTMLOpenInNewTab}
+                aria-label="Open HTML in new tab"
+              >
+                <ZoomIn size={18} />
+              </button>
+              <button
+                title="Close (ESC)"
+                onClick={closeHTMLModal}
+                aria-label="Close HTML viewer"
               >
                 <X size={18} />
               </button>
