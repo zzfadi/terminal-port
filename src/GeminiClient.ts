@@ -44,7 +44,7 @@ export class GeminiClient {
         contents: fullPrompt,
         config: {
           maxOutputTokens: 2048,
-          temperature: 0.9
+          temperature: 0.1
         }
       });
 

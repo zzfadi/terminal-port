@@ -1,6 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Rnd } from 'react-rnd';
 import { GeminiClient } from './GeminiClient';
+import DOMPurify from 'dompurify';
+import {
+  X,
+  Copy,
+  Download,
+  ZoomIn,
+} from 'lucide-react';
 
 interface Message {
   id: string;
@@ -18,7 +25,7 @@ export function Terminal() {
   const [geminiClient, setGeminiClient] = useState<GeminiClient | null>(null);
   const [isMinimized, setIsMinimized] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
-  const [wasMaximizedBeforeMinimize, setWasMaximizedBeforeMinimize] = useState(false);
+  const [wasMaximized, setWasMaximized] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
   const [isTransitioningToNormal, setIsTransitioningToNormal] = useState(false);
   // Window position and size state
@@ -30,6 +37,11 @@ export function Terminal() {
   });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // State for the modal
+  const [modalImage, setModalImage] = useState<{ src: string; alt: string } | null>(
+    null
+  );
 
   // Initialize Gemini client
   useEffect(() => {
@@ -181,14 +193,14 @@ export function Terminal() {
     }
     // Close always resets to normal state
     setIsMaximized(false);
-    setWasMaximizedBeforeMinimize(false);
+    setWasMaximized(false);
     setIsTransitioningToNormal(false);
     setIsMinimized(true);
   };
 
   const handleMinimize = () => {
     // Remember maximized state before minimizing
-    setWasMaximizedBeforeMinimize(isMaximized);
+    setWasMaximized(isMaximized);
     setIsMinimized(true);
   };
 
@@ -226,8 +238,8 @@ export function Terminal() {
     setIsRestoring(true);
     setIsMinimized(false);
     // Restore previous maximized state
-    setIsMaximized(wasMaximizedBeforeMinimize);
-    setWasMaximizedBeforeMinimize(false); // Clear the memory
+    setIsMaximized(wasMaximized);
+    setWasMaximized(false); // Clear the memory
 
     // Remove restoring class after animation completes
     setTimeout(() => {
@@ -237,6 +249,35 @@ export function Terminal() {
     }, 500);
   };
 
+  const handleImageClick = (msg: Message) => {
+    if (msg.imageData && msg.imageMimeType) {
+      setModalImage({
+        src: `data:${msg.imageMimeType};base64,${msg.imageData}`,
+        alt: 'AI generated content',
+      });
+    }
+  };
+
+  const closeModal = () => {
+    setModalImage(null);
+  };
+
+  const formatAIResponse = (content: string) => {
+    // Basic formatting: bold for important terms, links as clickable
+    const formatted = content
+      .replace(/\*(.*?)\*/g, '<strong>$1</strong>') // Bold
+      .replace(/__(.*?)__/g, '<em>$1</em>') // Italics
+      .replace(/`(.*?)`/g, '<code>$1</code>') // Inline code
+      .replace(/!\[(.*?)\]\((.*?)\)/g, '<img alt="$1" src="$2" />') // Images
+      .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>'); // Links
+
+    // Sanitize HTML to prevent XSS attacks
+    return DOMPurify.sanitize(formatted, {
+      ALLOWED_TAGS: ['strong', 'em', 'code', 'a', 'img'],
+      ALLOWED_ATTR: ['href', 'target', 'rel', 'src', 'alt'],
+      ALLOWED_URI_REGEXP: /^(?:https?:|mailto:)/i  // Block javascript:, data:, etc.
+    });
+  };
 
   return (
     <>
@@ -271,10 +312,7 @@ export function Terminal() {
           enableResizing={!isMaximized}
         >
         <div className={`terminal-container ${isMaximized ? 'maximized' : ''} ${isRestoring ? 'restoring' : ''} ${isTransitioningToNormal ? 'transitioning-to-normal' : ''}`}>
-        <div
-          className="terminal-header"
-          style={{ touchAction: 'none' }}
-        >
+        <div className="terminal-header">
           <div className="terminal-controls">
             <span
               className="control close"
@@ -317,12 +355,21 @@ export function Terminal() {
                  '# '}
               </span>
               <div className="message-wrapper">
-                <span className="content">{msg.content}</span>
+                <span
+                  className="content"
+                  dangerouslySetInnerHTML={{
+                    __html:
+                      msg.type === 'ai'
+                        ? formatAIResponse(msg.content)
+                        : msg.content,
+                  }}
+                />
                 {msg.imageData && msg.imageMimeType && (
                   <img
                     src={`data:${msg.imageMimeType};base64,${msg.imageData}`}
                     alt="AI generated content"
                     className="terminal-image"
+                    onClick={() => handleImageClick(msg)}
                   />
                 )}
               </div>
@@ -365,6 +412,28 @@ export function Terminal() {
         </div>
         </div>
         </Rnd>
+      )}
+
+      {modalImage && (
+        <div className="image-modal-overlay" onClick={closeModal}>
+          <div className="image-modal-content" onClick={(e) => e.stopPropagation()}>
+            <img src={modalImage.src} alt={modalImage.alt} className="modal-image" />
+            <div className="modal-toolbar">
+              <button title="Download">
+                <Download size={18} />
+              </button>
+              <button title="Copy">
+                <Copy size={18} />
+              </button>
+              <button title="Zoom">
+                <ZoomIn size={18} />
+              </button>
+              <button title="Close" onClick={closeModal}>
+                <X size={18} />
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );
