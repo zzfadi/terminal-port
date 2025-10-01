@@ -177,7 +177,9 @@ export function Terminal() {
       };
 
       // Check if response contains HTML code blocks or is too large - skip typing animation
-      const hasHTMLBlock = /```html\s*\n[\s\S]*?```/i.test(response.text);
+      const hasHTMLBlock = /```html\s*\n[\s\S]*?```/i.test(response.text) ||
+                           /```html\s*[\s\S]*?```/i.test(response.text) ||
+                           /`html\s*[\s\S]*?`/i.test(response.text); // Also detect single-backtick (non-standard)
       const isTooLarge = response.text.length > 2000; // Skip typing for responses > 2000 chars
 
       if (hasHTMLBlock || isTooLarge) {
@@ -469,34 +471,113 @@ export function Terminal() {
 
   const extractHTML = (content: string): string | null => {
     // Detect HTML code blocks: ```html...``` or raw <html>...</html>
-    // Try with newline first (standard format)
+    // Try with newline first (standard format - TRIPLE backticks)
     let codeBlockMatch = content.match(/```html\s*\n([\s\S]*?)```/i);
 
-    // Fallback: try without newline requirement
+    // Fallback: try without newline requirement (TRIPLE backticks)
     if (!codeBlockMatch) {
       codeBlockMatch = content.match(/```html\s*([\s\S]*?)```/i);
     }
 
+    // Fallback: try SINGLE backtick (Gemini sometimes uses this incorrectly)
+    if (!codeBlockMatch) {
+      const singleBacktickMatch = content.match(/`html\s*\n([\s\S]*?)`/i);
+      if (singleBacktickMatch) {
+        console.warn('⚠️ HTML code used single backtick instead of triple backticks. This will be supported but is non-standard.');
+        codeBlockMatch = singleBacktickMatch;
+      }
+    }
+
+    // Final fallback: try single backtick without newline
+    if (!codeBlockMatch) {
+      const singleBacktickNoNewline = content.match(/`html\s*([\s\S]*?)`/i);
+      if (singleBacktickNoNewline) {
+        console.warn('⚠️ HTML code used single backtick instead of triple backticks. This will be supported but is non-standard.');
+        codeBlockMatch = singleBacktickNoNewline;
+      }
+    }
+
+    let html = null;
+
     if (codeBlockMatch) {
-      const html = codeBlockMatch[1].trim();
-      // Inject CSP meta tag to allow inline scripts if not already present
-      if (html.includes('<head>') && !html.includes('Content-Security-Policy')) {
-        return html.replace('<head>', '<head>\n<meta http-equiv="Content-Security-Policy" content="script-src \'unsafe-inline\'; style-src \'unsafe-inline\';">');
+      html = codeBlockMatch[1].trim();
+    } else {
+      // Last resort: look for raw <html>...</html> tags
+      const htmlTagMatch = content.match(/<html[\s\S]*<\/html>/i);
+      if (htmlTagMatch) {
+        html = htmlTagMatch[0];
       }
-      return html;
     }
 
-    const htmlTagMatch = content.match(/<html[\s\S]*<\/html>/i);
-    if (htmlTagMatch) {
-      const html = htmlTagMatch[0];
-      // Inject CSP meta tag if not already present
-      if (html.includes('<head>') && !html.includes('Content-Security-Policy')) {
-        return html.replace('<head>', '<head>\n<meta http-equiv="Content-Security-Policy" content="script-src \'unsafe-inline\'; style-src \'unsafe-inline\';">');
-      }
-      return html;
+    if (!html) {
+      return null;
     }
 
-    return null;
+    // Enhanced DOMPurify sanitization for full HTML documents
+    // This config allows HTML/CSS/JS needed for interactive apps while blocking XSS
+    const sanitized = DOMPurify.sanitize(html, {
+      WHOLE_DOCUMENT: true, // Allow full HTML document structure
+      ALLOWED_TAGS: [
+        // Document structure
+        'html', 'head', 'body', 'meta', 'title', 'style', 'script',
+        // Content sections
+        'header', 'main', 'footer', 'section', 'article', 'aside', 'nav',
+        // Text content
+        'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'span', 'div',
+        'strong', 'em', 'b', 'i', 'u', 'br', 'hr', 'pre', 'code',
+        // Lists
+        'ul', 'ol', 'li', 'dl', 'dt', 'dd',
+        // Forms & inputs
+        'form', 'input', 'button', 'label', 'select', 'option', 'textarea',
+        'fieldset', 'legend', 'datalist', 'output', 'progress', 'meter',
+        // Media
+        'img', 'figure', 'figcaption', 'picture', 'canvas', 'svg',
+        'path', 'circle', 'rect', 'line', 'polygon', 'polyline', 'ellipse',
+        'g', 'defs', 'text', 'tspan',
+        // Tables
+        'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'caption',
+        // Interactive
+        'details', 'summary', 'dialog',
+        // Semantic
+        'time', 'mark', 'abbr', 'cite', 'q', 'blockquote', 'address'
+      ],
+      ALLOWED_ATTR: [
+        // Global attributes
+        'id', 'class', 'style', 'title', 'lang', 'dir', 'tabindex',
+        'role', 'aria-label', 'aria-labelledby', 'aria-describedby', 'aria-hidden',
+        'data-*', // Allow all data attributes
+        // Form attributes
+        'type', 'name', 'value', 'placeholder', 'required', 'disabled', 'readonly',
+        'min', 'max', 'step', 'pattern', 'autocomplete', 'autofocus', 'checked',
+        'selected', 'multiple', 'size', 'maxlength', 'minlength', 'for',
+        // Media attributes
+        'src', 'alt', 'width', 'height', 'loading',
+        // SVG attributes
+        'viewBox', 'd', 'fill', 'stroke', 'stroke-width', 'cx', 'cy', 'r', 'rx', 'ry',
+        'x', 'y', 'x1', 'y1', 'x2', 'y2', 'points', 'transform',
+        // Link attributes
+        'href', 'target', 'rel', 'download',
+        // Meta attributes
+        'charset', 'content', 'http-equiv', 'name', 'viewport'
+      ],
+      KEEP_CONTENT: true, // Keep content of removed tags
+      RETURN_DOM: false, // Return string, not DOM
+      RETURN_DOM_FRAGMENT: false,
+      RETURN_TRUSTED_TYPE: false,
+      FORCE_BODY: false, // Don't force content into body (allow full document)
+      // Security: Allow data URIs for images (for self-contained HTML)
+      ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|data|blob):)/i
+    });
+
+    // Inject CSP meta tag to allow inline scripts/styles if not already present
+    if (sanitized && sanitized.includes('<head>') && !sanitized.includes('Content-Security-Policy')) {
+      return sanitized.replace(
+        '<head>',
+        '<head>\n<meta http-equiv="Content-Security-Policy" content="default-src \'self\'; script-src \'unsafe-inline\'; style-src \'unsafe-inline\'; img-src \'self\' data: blob:;">'
+      );
+    }
+
+    return sanitized;
   };
 
   return (

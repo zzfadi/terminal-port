@@ -1,6 +1,6 @@
 import { GoogleGenAI } from '@google/genai';
 import { portfolioData } from './data/portfolio-data';
-import { loadSystemPrompt } from './utils/PromptLoader';
+import { loadSystemPrompt, loadHTMLGenerationPrompt } from './utils/PromptLoader';
 
 /**
  * Simplified Gemini Client - Direct approach without over-engineering
@@ -16,6 +16,116 @@ export class GeminiClient {
   }
 
   /**
+   * Detect if user request needs HTML generation
+   * Uses keyword-based detection (no AI call) for efficiency
+   */
+  private shouldGenerateHTML(message: string): boolean {
+    const htmlKeywords = [
+      'create', 'build', 'make', 'show me',
+      'generate', 'design', 'interactive',
+      'calculator', 'game', 'chart', 'graph',
+      'timeline', 'visualize', 'demo', 'form',
+      'widget', 'component', 'animation', 'draw',
+      'converter', 'tool', 'app', 'player',
+      'timer', 'clock', 'counter', 'progress'
+    ];
+
+    const lowerMessage = message.toLowerCase();
+
+    // Check for HTML-related keywords
+    const hasHTMLKeyword = htmlKeywords.some(keyword => lowerMessage.includes(keyword));
+
+    // Additional context checks
+    const hasInteractiveIntent =
+      lowerMessage.includes('how') && (lowerMessage.includes('work') || lowerMessage.includes('look')) ||
+      lowerMessage.includes('example of') ||
+      lowerMessage.includes('demonstrate');
+
+    return hasHTMLKeyword || hasInteractiveIntent;
+  }
+
+  /**
+   * Extract HTML requirements from user message
+   * Classifies request type and extracts styling preferences
+   */
+  private extractHTMLRequirements(message: string): {
+    requestType: string;
+    portfolioColors: string;
+  } {
+    const lowerMessage = message.toLowerCase();
+
+    // Classify request type based on keywords
+    let requestType = 'component';
+
+    if (lowerMessage.match(/calculator|converter|tool|form|input|field/)) {
+      requestType = 'interactive';
+    } else if (lowerMessage.match(/chart|graph|timeline|visualize|plot|diagram/)) {
+      requestType = 'visualization';
+    } else if (lowerMessage.match(/demo|example|show|illustrate|how.*work/)) {
+      requestType = 'demo';
+    } else if (lowerMessage.match(/game|play|snake|tic-tac-toe|puzzle/)) {
+      requestType = 'interactive';
+    }
+
+    // Portfolio brand colors (from terminal design)
+    const portfolioColors = '#00FF41 (primary green), #0a0a0a (background dark), #e0e0e0 (text light)';
+
+    return { requestType, portfolioColors };
+  }
+
+  /**
+   * Generate HTML using specialized prompt
+   * Single AI call with comprehensive HTML generation instructions
+   */
+  async generateHTMLContent(userMessage: string): Promise<{
+    text: string;
+    imageData?: string;
+    imageMimeType?: string;
+  }> {
+    try {
+      // Extract requirements from user message
+      const requirements = this.extractHTMLRequirements(userMessage);
+
+      // Load specialized HTML generation prompt with variables
+      const htmlPrompt = loadHTMLGenerationPrompt({
+        userRequest: userMessage,
+        requestType: requirements.requestType,
+        portfolioColors: requirements.portfolioColors
+      });
+
+      // Call Gemini API with HTML generation prompt
+      const response = await this.ai.models.generateContent({
+        model: this.model,
+        contents: htmlPrompt,
+        config: {
+          maxOutputTokens: 8192, // Increased for complex HTML generation
+          temperature: 0.3 // Slightly higher for creativity, but still controlled
+        }
+      });
+
+      const aiResponse = response.text || 'I apologize, but I encountered an issue generating the HTML. Please try again with a more specific request.';
+
+      // Update conversation history (for context in follow-up questions)
+      this.conversationHistory.push({ role: 'User', content: userMessage });
+      this.conversationHistory.push({ role: 'Assistant', content: aiResponse });
+
+      // Keep only last 20 messages
+      if (this.conversationHistory.length > 20) {
+        this.conversationHistory = this.conversationHistory.slice(-20);
+      }
+
+      return {
+        text: aiResponse
+      };
+    } catch (error) {
+      console.error('Error generating HTML:', error);
+      return {
+        text: 'I apologize, but I encountered an error while generating the HTML. Please try again with a different request.'
+      };
+    }
+  }
+
+  /**
    * Send a message to Gemini with full portfolio context
    * Returns both text and optional image data
    */
@@ -25,6 +135,11 @@ export class GeminiClient {
     imageMimeType?: string;
   }> {
     try {
+      // Check if this request should generate HTML
+      if (this.shouldGenerateHTML(userMessage)) {
+        return await this.generateHTMLContent(userMessage);
+      }
+
       // Build the complete system prompt with all portfolio context
       const systemPrompt = this.buildSystemPrompt();
 

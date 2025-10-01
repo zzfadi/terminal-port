@@ -9,6 +9,7 @@
  */
 
 import systemPromptRaw from '../prompts/system.md?raw';
+import htmlGenerationPromptRaw from '../prompts/html-generation.md?raw';
 
 interface TemplateVariables {
   [key: string]: string;
@@ -41,6 +42,24 @@ export function loadSystemPrompt(variables: TemplateVariables): string {
  */
 export function getRawSystemPrompt(): string {
   return systemPromptRaw;
+}
+
+/**
+ * Load and compile the HTML generation prompt with given variables
+ */
+export function loadHTMLGenerationPrompt(variables: {
+  userRequest: string;
+  requestType: string;
+  portfolioColors: string;
+}): string {
+  return processTemplate(htmlGenerationPromptRaw, variables);
+}
+
+/**
+ * Get raw HTML generation prompt template (without variable processing)
+ */
+export function getRawHTMLGenerationPrompt(): string {
+  return htmlGenerationPromptRaw;
 }
 
 /**

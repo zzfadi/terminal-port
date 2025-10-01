@@ -142,6 +142,101 @@ Required `.env` in `v2/`:
 VITE_GEMINI_API_KEY=your_api_key_here
 ```
 
+## HTML Generation Governance System
+
+### Overview
+
+The portfolio includes a sophisticated HTML generation system that creates complete, interactive HTML applications on demand. This system uses a specialized prompt to ensure high-quality, secure, and consistent HTML output.
+
+### Architecture
+
+**Flow:**
+```
+User Request → GeminiClient.sendMessage()
+    ↓
+shouldGenerateHTML() - Keyword detection (NO AI call)
+    ├─→ NO: Regular conversation
+    └─→ YES: generateHTMLContent()
+            ↓
+loadHTMLGenerationPrompt() - Specialized prompt
+            ↓
+Gemini API (single call)
+            ↓
+DOMPurify sanitization in Terminal.tsx
+            ↓
+Render in sandboxed iframe
+```
+
+**Key Features:**
+- Single AI call (efficient keyword-based routing)
+- Comprehensive prompt engineering (`html-generation.md`)
+- Multi-layer security (DOMPurify + CSP headers)
+- Supports interactive apps, visualizations, games, forms
+
+### Components
+
+**1. HTML Generation Prompt** (`src/prompts/html-generation.md`)
+- ~400 lines of detailed instructions
+- Template variables: `{{userRequest}}`, `{{requestType}}`, `{{portfolioColors}}`
+- Complete HTML structure requirements
+- Security constraints and best practices
+- Request type-specific guidelines
+- Full working examples
+
+**2. GeminiClient Methods** (`src/GeminiClient.ts`)
+- `shouldGenerateHTML()` - Keyword-based intent detection
+- `extractHTMLRequirements()` - Classifies request type and extracts styling
+- `generateHTMLContent()` - Generates HTML with specialized prompt
+- Automatic routing in `sendMessage()`
+
+**3. Enhanced Validation** (`src/Terminal.tsx`)
+- Comprehensive DOMPurify configuration
+- Allows full HTML documents (`WHOLE_DOCUMENT: true`)
+- Permits necessary tags (html, head, body, script, style, forms, SVG, canvas)
+- Blocks XSS attacks while enabling interactivity
+- Injects CSP headers for additional security
+
+**4. PromptLoader Integration** (`src/utils/PromptLoader.ts`)
+- `loadHTMLGenerationPrompt()` function
+- Template variable substitution
+- Build-time prompt loading
+
+### Keywords That Trigger HTML Generation
+
+**Interactive**: create, build, make, calculator, tool, converter, form, timer, clock, counter
+**Visualization**: chart, graph, timeline, visualize, plot, diagram
+**Games**: game, play, snake, tic-tac-toe, puzzle
+**General**: show me, demo, interactive, widget, component, animation
+
+### Request Types
+
+1. **Interactive** - Calculators, converters, tools, forms
+2. **Visualization** - Charts, graphs, timelines, diagrams
+3. **Demo** - Educational examples, concept illustrations
+4. **Component** - UI patterns, reusable components
+
+### Security Features
+
+- **DOMPurify Sanitization**: Comprehensive tag/attribute whitelist
+- **CSP Headers**: Content Security Policy meta tags
+- **Sandboxed Iframe**: Isolated execution environment
+- **No External Resources**: Self-contained HTML only
+- **Safe JavaScript Patterns**: No eval(), no inline handlers
+
+### Adding New HTML Capabilities
+
+1. **Update Keywords**: Add to `shouldGenerateHTML()` in GeminiClient.ts
+2. **Refine Prompt**: Edit `src/prompts/html-generation.md`
+3. **Test Classification**: Verify `extractHTMLRequirements()` categorizes correctly
+4. **Validate Security**: Ensure DOMPurify config permits new features
+
+### Performance Considerations
+
+- Single AI call per HTML request (no classification overhead)
+- Larger token budget (4096 tokens) for complete HTML
+- Slightly higher temperature (0.3) for creativity
+- Conversation history maintained for follow-up questions
+
 ## Common Development Tasks
 
 ### Update Portfolio Content
