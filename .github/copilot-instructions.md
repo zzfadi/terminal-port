@@ -1,33 +1,109 @@
-# Copilot Instructions for OnePromptPortfolio
+# fadi-landing — AI Coding Instructions
 
-## Quick context
-- Single-page app: all production logic lives in `terminal-portfolio.html` (HTML + CSS + large inline JS `terminal` object). No build tooling.
-- Aux HTML harnesses: `test-terminal.html` (logic-unit tests with mocks) and `e2e-tests.html` (iframe-driven journeys) document expected behaviour for critical user paths.
-- Existing AI guidance in `CLAUDE.md` is authoritative for tone, command roster, and content accuracy—mirror its conventions when evolving features.
+A meta-portfolio showcasing **AI model capabilities** through different landing page implementations. Same content, different designs, multiple AI interpretations per design.
 
-## Architecture snapshot
-- `terminal` object bootstraps on `DOMContentLoaded`; it wires DOM nodes (`output`, `terminal-input`), history navigation, and a virtual filesystem used by `ls/cd/cat/tree`.
-- Commands are registered in `setupCommands()` as lambdas delegating to methods (e.g. `projects` → `showProjects`). Keep new commands in this map + update `showHelp()`.
-- Printing flows through `printLine()` or `typeWriter()`; always send formatted HTML fragments (e.g. `<span class="success">`) to preserve neon terminal styling.
-- Startup animation executes `startupSequence()` → auto-runs `neofetch`; respect this pacing when adding onboarding content.
-- Matrix canvas effect is managed by `initMatrixRain()` with debounced resize logic—avoid heavy DOM operations inside the draw loop.
+## Three-Layer Architecture
 
-## Workflow tips
-- Development: open `terminal-portfolio.html` directly in the browser or via `python3 -m http.server`; no bundling step.
-- Smoke tests: manually exercise commands (`help`, `contact`, `ls`, etc.) after changes—especially anything touching the virtual filesystem or link handlers.
-- Automated references: `test-terminal.html` covers command handlers without DOM; update mocks if you add required CLI output. `e2e-tests.html` simulates real journeys—extend journeys if you introduce new “must work” flows.
+```
+├── content/
+│   └── profile.md              # Layer 1: Source of truth (versioned, rarely changes)
+├── designs/
+│   ├── terminal/prompt.md      # Layer 2: Design concepts + generation prompts
+│   ├── minimal/prompt.md
+│   └── {new-design}/prompt.md
+├── pages/
+│   ├── terminal/               # Layer 3: Nested by design → model
+│   │   ├── opus/
+│   │   ├── gemini/
+│   │   └── gpt/
+│   ├── minimal/
+│   │   └── gemini/
+│   └── {design}/{model}/
+├── index.html                  # Gallery shell with iframe
+├── gallery.{js,css}            # Navigation system
+└── config.json                 # Page registry
+```
 
-## Content & UX rules
-- Portfolio voice is professional/engaging; keep messaging aligned with sections in `showAbout()`, `showExperience()`, etc. Update all related helpers when facts change.
-- Link-style interactions (`contact` links, `openGitHub`, `sendEmail`) rely on `handleContactAction` dispatch—wire new link types there so keyboard/touch handlers keep working.
-- Virtual files under `fileSystem` power navigation; when you add folders/files, adjust `showTree()` output and any scripted tests that assert directory listings.
-- Resume download uses `generateResume()` returning plain text; if you alter fields, sync with content shown in `neofetch()` and `showContact()` to avoid drift.
+### Layer 1: Content Source (`content/profile.md`)
+Single source of truth for all personal/professional data. Versioned, rarely updated.
+- Name, role, location, company
+- Social links, contact info
+- Projects with descriptions and tech stacks
+- Skills by category with experience levels
 
-## Guardrails
-- Preserve single-file delivery (no external JS/CSS); if you must embed assets, inline them.
-- Test on mobile breakpoints (CSS switches at 768px and toggles matrix visibility logic). Any new layout should respect the responsive flex structure.
-- Don’t rename core commands without updating `CLAUDE.md`, test suites, and boot help messaging.
+### Layer 2: Design Prompts (`designs/{name}/prompt.md`)
+Each design concept has a prompt template that references `profile.md` data.
+- Design philosophy and aesthetic goals
+- Required sections and interactions
+- Output format requirements for zero-integration deployment
 
-## When unsure
-- Check `CLAUDE.md` for original rationale, tone, and backlog ideas.
-- Reach out (email in `showContact()`) if a change touches professional biography or resume data that may require owner approval.
+### Layer 3: Implementations (`pages/{design}/{model}/`)
+AI-generated pages. Each is standalone—copy model output directly into folder.
+
+## Adding a New Implementation
+
+1. Pick a design from `designs/` and run its prompt with your chosen model
+2. Create folder: `pages/{design}/{model}/` (e.g., `pages/terminal/gpt/`)
+3. Paste AI output directly—must be self-contained with `index.html`, `styles.css`, optional `script.js`
+4. Register in `config.json` under the appropriate design:
+   ```json
+   {
+     "id": "terminal",
+     "label": "Terminal",
+     "description": "Dark terminal aesthetic with interactive CLI",
+     "prompt": "designs/terminal/prompt.md",
+     "models": [
+       {
+         "id": "terminal-opus",
+         "model": "Claude Opus 4.5",
+         "path": "pages/terminal/opus/",
+         "date": "2025-11"
+       },
+       {
+         "id": "terminal-gpt",
+         "model": "GPT-4o",
+         "path": "pages/terminal/gpt/",
+         "date": "2025-11"
+       }
+     ]
+   }
+   ```
+
+## Implementation Output Requirements
+
+For zero-integration deployment, AI-generated pages must:
+
+1. **Be self-contained**: All HTML/CSS/JS in the page folder, no external dependencies except Google Fonts
+2. **Include footer attribution**: `"Built with {Model} — Part of the Zuabi.dev Gallery experiment"`
+3. **Support dark mode**: Use `prefers-color-scheme: dark` media query
+4. **Be responsive**: Breakpoints at `640px` and `900px`
+5. **Use CSS variables**: Define colors in `:root` block (`--bg`, `--accent`, `--text-*`)
+6. **Use semantic HTML**: `<article>`, `<section>`, `<nav>` for accessibility
+
+## Gallery System
+
+Two-level navigation: **Design tabs** (terminal, minimal, etc.) + **Model radios** (opus, gemini, gpt)
+
+- **URL routing**: `fadi.dev/#page-id` maps to `pages/{design}/{model}/`
+- **Keyboard**: `G` toggles selector, `←/→` switch designs, `↑/↓` switch models, `Escape` closes
+- **Prompt viewer**: Click "View design prompt" to see the prompt used for current design
+- **Config-driven**: `gallery.js` reads `config.json` with `designs[].models[]` hierarchy
+
+## Development
+
+```bash
+npx serve    # Serve from project root
+# Open http://localhost:3000
+```
+
+No build step—vanilla HTML/CSS/JS only. Deploy to GitHub Pages or Firebase Hosting.
+
+## Creating a New Design
+
+1. Create `designs/{design-name}/prompt.md`
+2. Include in prompt:
+   - Reference to `content/profile.md` for data
+   - Clear aesthetic/interaction requirements
+   - Output format matching implementation requirements above
+3. Add design entry to `config.json` with empty `models: []` and `prompt` path
+4. Test with one model, then generate variants with others

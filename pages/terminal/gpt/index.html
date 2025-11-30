@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fadi Al Zuabi — Terminal GPT</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="hero" aria-label="Intro">
+      <div>
+        <p class="hero__eyebrow">zuabi.dev / terminal-gpt</p>
+        <h1>Fadi Al Zuabi</h1>
+        <p class="hero__tagline">Senior Firmware Engineer & AI Champion</p>
+      </div>
+      <div class="hero__meta">
+        <span>Roseville, CA</span>
+        <span>Solidigm (SK Hynix)</span>
+      </div>
+    </header>
+
+    <main>
+      <article class="terminal" aria-label="Interactive terminal">
+        <header class="terminal__header">
+          <span>guest@zuabi.dev</span>
+          <span>terminal-gpt ░ v1.0</span>
+        </header>
+        <div class="terminal__screen" aria-live="polite">
+          <div id="terminal-output" class="terminal__output"></div>
+          <form id="terminal-form" class="terminal__form" autocomplete="off">
+            <label for="terminal-input" class="sr-only">Command line</label>
+            <div class="terminal__prompt">
+              <span>&gt;</span>
+              <input
+                id="terminal-input"
+                name="command"
+                type="text"
+                spellcheck="false"
+                autocomplete="off"
+                aria-label="Type a command and press Enter"
+              />
+            </div>
+            <p class="terminal__hint">Try "help" to see the available commands.</p>
+          </form>
+        </div>
+      </article>
+
+      <aside class="panels" aria-label="Quick reference">
+        <section>
+          <h2>Mission</h2>
+          <p>
+            Building bridges between hardware and AI. Helping engineers ship faster
+            with intelligent tools.
+          </p>
+        </section>
+        <section>
+          <h2>Stats</h2>
+          <ul>
+            <li><strong>5+</strong> years firmware</li>
+            <li><strong>60+</strong> engineers trained</li>
+            <li><strong>70%</strong> AI adoption lift</li>
+            <li><strong>80-90%</strong> CI/CD speedup</li>
+          </ul>
+        </section>
+        <section>
+          <h2>Shortcuts</h2>
+          <div class="shortcuts">
+            <button data-command="help" type="button">help</button>
+            <button data-command="projects" type="button">projects</button>
+            <button data-command="skills" type="button">skills</button>
+            <button data-command="connect" type="button">connect</button>
+            <button data-command="focus" type="button">focus</button>
+            <button data-command="clear" type="button">clear</button>
+          </div>
+        </section>
+      </aside>
+    </main>
+
+    <footer>
+      <p>Built with GPT-5.1-Codex — Part of the Zuabi.dev Gallery experiment</p>
+      <a href="mailto:fadi.b.zuabi@gmail.com">fadi.b.zuabi@gmail.com</a>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>

@@ -1,0 +1,197 @@
+:root {
+    --bg: #0d1117;
+    --text-primary: #58a6ff;
+    --text-secondary: #8b949e;
+    --text-success: #3fb950;
+    --text-error: #f85149;
+    --text-warning: #d29922;
+    --border: #30363d;
+    --font-mono: 'JetBrains Mono', monospace;
+}
+
+@media (prefers-color-scheme: light) {
+    /* Force dark mode for terminal aesthetic regardless of system preference, 
+       but defining variables here just in case we want to support it later 
+       or if the prompt strictly required system preference support. 
+       However, terminal usually implies dark. I will stick to dark theme 
+       as per "Dark terminal/CLI aesthetic" requirement. */
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--bg);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.crt-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    background-size: 100% 2px, 3px 100%;
+    pointer-events: none;
+    z-index: 10;
+    opacity: 0.15;
+}
+
+main.terminal {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    max-width: 900px;
+    width: 100%;
+    margin: 0 auto;
+    overflow-y: auto;
+    scrollbar-width: none; /* Firefox */
+}
+
+main.terminal::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+}
+
+.terminal-header {
+    display: flex;
+    align-items: center;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 20px;
+    position: sticky;
+    top: 0;
+    background-color: var(--bg);
+    z-index: 5;
+}
+
+.dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+
+.red { background-color: #ff5f56; }
+.yellow { background-color: #ffbd2e; }
+.green { background-color: #27c93f; }
+
+.title {
+    margin-left: 10px;
+    color: var(--text-secondary);
+    font-size: 0.9em;
+}
+
+#output {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.command-block {
+    margin-bottom: 10px;
+}
+
+.command-line {
+    color: var(--text-success);
+    font-weight: bold;
+}
+
+.response {
+    color: var(--text-secondary);
+    white-space: pre-wrap;
+    margin-top: 5px;
+}
+
+.response h1 {
+    color: var(--text-primary);
+    font-size: 1.5em;
+    margin-bottom: 10px;
+    border-bottom: 1px dashed var(--border);
+    padding-bottom: 5px;
+}
+
+.response h2 {
+    color: var(--text-warning);
+    font-size: 1.1em;
+    margin-top: 15px;
+    margin-bottom: 5px;
+}
+
+.response ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.response li {
+    margin-bottom: 5px;
+}
+
+.response a {
+    color: var(--text-primary);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+}
+
+.response a:hover {
+    border-bottom-color: var(--text-primary);
+}
+
+.input-line {
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+    padding-bottom: 20px; /* Space for scrolling */
+}
+
+.prompt {
+    color: var(--text-success);
+    margin-right: 10px;
+    white-space: nowrap;
+}
+
+#command-input {
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: inherit;
+    flex: 1;
+    outline: none;
+    caret-color: var(--text-primary);
+}
+
+footer {
+    text-align: center;
+    padding: 10px;
+    font-size: 0.8em;
+    color: var(--text-secondary);
+    border-top: 1px solid var(--border);
+    background-color: var(--bg);
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    main.terminal {
+        padding: 10px;
+    }
+    
+    .terminal-header {
+        margin-bottom: 10px;
+    }
+    
+    .response h1 {
+        font-size: 1.2em;
+    }
+}

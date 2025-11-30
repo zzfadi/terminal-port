@@ -1,0 +1,117 @@
+:root {
+    --bg: #000000;
+    --text-primary: #00ff00;
+    --text-secondary: #ffffff;
+    --accent: #ffff00;
+    --error: #ff0000;
+    --command: #ffff00;
+    --success: #00ff00;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: #000000;
+        --text-primary: #00ff00;
+        --text-secondary: #ffffff;
+        --accent: #ffff00;
+        --error: #ff0000;
+        --command: #ffff00;
+        --success: #00ff00;
+    }
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: 'JetBrains Mono', monospace;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.terminal-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.terminal {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    overflow: hidden;
+}
+
+.output {
+    flex: 1;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    line-height: 1.4;
+    margin-bottom: 10px;
+}
+
+.input-line {
+    display: flex;
+    align-items: center;
+    border-top: 1px solid var(--text-primary);
+    padding-top: 5px;
+}
+
+.prompt {
+    color: var(--accent);
+    white-space: pre;
+}
+
+#command-input {
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: inherit;
+    flex: 1;
+    outline: none;
+    caret-color: var(--text-primary);
+}
+
+.command {
+    color: var(--command);
+}
+
+.result {
+    color: var(--success);
+}
+
+.error {
+    color: var(--error);
+}
+
+footer {
+    text-align: center;
+    padding: 10px;
+    font-size: 0.8em;
+    color: var(--text-secondary);
+    background: var(--bg);
+    border-top: 1px solid var(--text-primary);
+}
+
+@media (max-width: 640px) {
+    .terminal {
+        padding: 10px;
+    }
+    .output {
+        font-size: 0.9em;
+    }
+    #command-input {
+        font-size: 0.9em;
+    }
+    .prompt {
+        font-size: 0.9em;
+    }
+    footer {
+        font-size: 0.7em;
+    }
+}

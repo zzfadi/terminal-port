@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fadi Al Zuabi - Firmware Engineer & AI Champion</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Colors */
+            --color-bg: #f8f9fa;
+            --color-surface: #ffffff;
+            --color-text-primary: #111827;
+            --color-text-secondary: #4b5563;
+            --color-text-tertiary: #9ca3af;
+            --color-accent: #2563eb; /* Royal Blue */
+            --color-accent-hover: #1d4ed8;
+            --color-border: #e5e7eb;
+            --color-code-bg: #f3f4f6;
+
+            /* Spacing */
+            --space-xs: 0.5rem;
+            --space-sm: 1rem;
+            --space-md: 2rem;
+            --space-lg: 4rem;
+            --space-xl: 6rem;
+
+            /* Typography */
+            --font-family: 'Inter', sans-serif;
+            --font-size-base: 16px;
+            --line-height-base: 1.6;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --color-bg: #0f172a;
+                --color-surface: #1e293b;
+                --color-text-primary: #f3f4f6;
+                --color-text-secondary: #94a3b8;
+                --color-text-tertiary: #64748b;
+                --color-accent: #3b82f6;
+                --color-accent-hover: #60a5fa;
+                --color-border: #334155;
+                --color-code-bg: #1e293b;
+            }
+        }
+
+        /* Reset & Base */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--color-bg);
+            color: var(--color-text-primary);
+            line-height: var(--line-height-base);
+            font-size: var(--font-size-base);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        a {
+            color: var(--color-accent);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        a:hover {
+            color: var(--color-accent-hover);
+            text-decoration: underline;
+        }
+
+        ul {
+            list-style: none;
+        }
+
+        /* Layout */
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 var(--space-md);
+        }
+
+        section {
+            margin-bottom: var(--space-xl);
+        }
+
+        /* Header / Hero */
+        header {
+            padding: var(--space-xl) 0 var(--space-lg) 0;
+        }
+
+        .hero-role {
+            color: var(--color-text-secondary);
+            font-weight: 500;
+            margin-bottom: var(--space-xs);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-size: 0.875rem;
+        }
+
+        .hero-name {
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: var(--space-sm);
+            line-height: 1.2;
+        }
+
+        .hero-tagline {
+            font-size: 1.25rem;
+            color: var(--color-text-secondary);
+            max-width: 600px;
+            margin-bottom: var(--space-md);
+        }
+
+        .social-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-sm);
+        }
+
+        .social-link {
+            font-size: 0.9rem;
+            color: var(--color-text-secondary);
+            border: 1px solid var(--color-border);
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-md);
+            transition: all 0.2s ease;
+        }
+
+        .social-link:hover {
+            border-color: var(--color-accent);
+            color: var(--color-accent);
+            text-decoration: none;
+            background-color: rgba(59, 130, 246, 0.05);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-sm);
+            margin-bottom: var(--space-lg);
+        }
+
+        .stat-card {
+            background: var(--color-surface);
+            padding: var(--space-md);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--color-border);
+            text-align: center;
+        }
+
+        .stat-number {
+            display: block;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--color-accent);
+            margin-bottom: var(--space-xs);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--color-text-secondary);
+        }
+
+        /* Section Headers */
+        h2 {
+            font-size: 1.5rem;
+            margin-bottom: var(--space-md);
+            border-bottom: 2px solid var(--color-border);
+            padding-bottom: var(--space-xs);
+            display: inline-block;
+        }
+
+        h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        /* About Section */
+        .bio-text {
+            color: var(--color-text-secondary);
+            font-size: 1.05rem;
+        }
+
+        /* Experience & Projects List */
+        .entry {
+            margin-bottom: var(--space-md);
+        }
+
+        .entry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            margin-bottom: var(--space-xs);
+        }
+
+        .entry-company {
+            font-weight: 700;
+            color: var(--color-text-primary);
+        }
+
+        .entry-role {
+            font-weight: 500;
+            color: var(--color-text-secondary);
+        }
+
+        .entry-date {
+            font-size: 0.875rem;
+            color: var(--color-text-tertiary);
+            font-feature-settings: "tnum";
+        }
+
+        .entry-description {
+            color: var(--color-text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .tech-tag {
+            display: inline-block;
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            background-color: var(--color-code-bg);
+            color: var(--color-text-secondary);
+            border-radius: 4px;
+            margin-right: 4px;
+            margin-top: 4px;
+            font-family: monospace;
+        }
+
+        /* Skills Grid */
+        .skills-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: var(--space-md);
+        }
+
+        .skill-category h3 {
+            color: var(--color-accent);
+            font-size: 1rem;
+            margin-bottom: var(--space-sm);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .skill-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid var(--color-border);
+            padding: var(--space-lg) 0;
+            text-align: center;
+            color: var(--color-text-tertiary);
+            font-size: 0.875rem;
+        }
+
+        /* Responsiveness */
+        @media (min-width: 640px) {
+            .hero-name { font-size: 3.5rem; }
+            .stats-grid { grid-template-columns: repeat(4, 1fr); }
+            .skills-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        @media (min-width: 900px) {
+            .container { max-width: 900px; }
+            .bio-text { font-size: 1.125rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <!-- Header / Hero -->
+        <header>
+            <div class="hero-role">Senior Firmware Engineer & AI Champion</div>
+            <h1 class="hero-name">Fadi Al Zuabi</h1>
+            <p class="hero-tagline">Building bridges between hardware and AI. Helping engineers ship faster with intelligent tools.</p>
+            
+            <div class="social-links">
+                <a href="mailto:fadi.b.zuabi@gmail.com" class="social-link">Email</a>
+                <a href="https://linkedin.com/in/fadi-zuabi" class="social-link">LinkedIn</a>
+                <a href="https://github.com/zzfadi" class="social-link">GitHub</a>
+                <a href="https://x.com/fadi_zuabi" class="social-link">X / Twitter</a>
+                <a href="https://www.zuabi.dev" class="social-link">Website</a>
+            </div>
+        </header>
+
+        <!-- Stats -->
+        <section>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-number">5+</span>
+                    <span class="stat-label">Years Experience</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">60+</span>
+                    <span class="stat-label">Engineers Trained</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">70%</span>
+                    <span class="stat-label">Adoption Lift</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">90%</span>
+                    <span class="stat-label">Runtime Reduction</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- About -->
+        <section>
+            <h2>About</h2>
+            <p class="bio-text">
+                AI is the biggest leverage multiplier I've seen in my engineering career. I watched junior engineers become 2-3x more productive with the right tools. That's why I champion AI adoption at Solidigm—turning skeptics into believers, one workflow at a time. My superpower is bridging deep firmware expertise with cutting-edge AI capabilities.
+            </p>
+        </section>
+
+        <!-- Experience -->
+        <section>
+            <h2>Career</h2>
+            
+            <div class="entry">
+                <div class="entry-header">
+                    <span class="entry-company">Solidigm (SK Hynix)</span>
+                    <span class="entry-date">2022–Present</span>
+                </div>
+                <div class="entry-role">Senior Firmware Engineer & AI Champion</div>
+                <p class="entry-description">Leading AI adoption programs (70% Copilot usage increase) and building intelligent firmware debugging systems using DataIku and GNNs. Technical Product Lead for GEN5 PCIe SSD delivery.</p>
+            </div>
+
+            <div class="entry">
+                <div class="entry-header">
+                    <span class="entry-company">Intel</span>
+                    <span class="entry-date">2021–2022</span>
+                </div>
+                <div class="entry-role">Firmware Engineer</div>
+                <p class="entry-description">Developed firmware for NAND Storage solutions.</p>
+            </div>
+
+            <div class="entry">
+                <div class="entry-header">
+                    <span class="entry-company">GE Aerospace</span>
+                    <span class="entry-date">2019–2021</span>
+                </div>
+                <div class="entry-role">Embedded Software Engineer</div>
+                <p class="entry-description">Worked on Aircraft Systems and led CI/CD optimization resulting in 80-90% runtime reduction. Delivered first 4G-LTE Module in Aviation.</p>
+            </div>
+        </section>
+
+        <!-- Notable Work -->
+        <section>
+            <h2>Notable Work</h2>
+            
+            <div class="entry">
+                <h3>Intelligent Firmware Debug Agent</h3>
+                <p class="entry-description">AI-powered debugging system with multi-LLM orchestration and predictive capabilities.</p>
+                <div>
+                    <span class="tech-tag">DataIku</span>
+                    <span class="tech-tag">Snowflake</span>
+                    <span class="tech-tag">GNN</span>
+                    <span class="tech-tag">Multi-LLM</span>
+                </div>
+            </div>
+
+            <div class="entry">
+                <h3>GitHub Copilot Enterprise Deployment</h3>
+                <p class="entry-description">Company-wide AI tool customization and adoption framework. Trained 60+ senior engineers.</p>
+                <div>
+                    <span class="tech-tag">Adoption</span>
+                    <span class="tech-tag">Training</span>
+                    <span class="tech-tag">Enterprise AI</span>
+                </div>
+            </div>
+
+            <div class="entry">
+                <h3>CI/CD Optimization</h3>
+                <p class="entry-description">Cloud-based static analysis automation reducing runtime by 80-90%.</p>
+                <div>
+                    <span class="tech-tag">DevOps</span>
+                    <span class="tech-tag">Automation</span>
+                    <span class="tech-tag">Cloud</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Skills -->
+        <section>
+            <h2>Skills</h2>
+            <div class="skills-grid">
+                <div class="skill-category">
+                    <h3>Firmware</h3>
+                    <div class="skill-list">
+                        <span class="tech-tag">C/C++</span>
+                        <span class="tech-tag">NVMe</span>
+                        <span class="tech-tag">PCIe Gen4/5</span>
+                        <span class="tech-tag">RTOS</span>
+                        <span class="tech-tag">Linux Kernel</span>
+                        <span class="tech-tag">DO-178C</span>
+                    </div>
+                </div>
+
+                <div class="skill-category">
+                    <h3>AI & ML</h3>
+                    <div class="skill-list">
+                        <span class="tech-tag">LLM Integration</span>
+                        <span class="tech-tag">Prompt Engineering</span>
+                        <span class="tech-tag">RAG Systems</span>
+                        <span class="tech-tag">DataIku</span>
+                        <span class="tech-tag">Vertex AI</span>
+                    </div>
+                </div>
+
+                <div class="skill-category">
+                    <h3>Cloud & Web</h3>
+                    <div class="skill-list">
+                        <span class="tech-tag">GCP</span>
+                        <span class="tech-tag">Firebase</span>
+                        <span class="tech-tag">Python</span>
+                        <span class="tech-tag">TypeScript</span>
+                        <span class="tech-tag">React</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer>
+            <p>Built with Gemini — Part of the Zuabi.dev Gallery experiment</p>
+        </footer>
+
+    </div>
+
+</body>
+</html>

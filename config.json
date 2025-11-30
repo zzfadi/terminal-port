@@ -1,0 +1,108 @@
+{
+  "default": "terminal-opus",
+  "designs": [
+    {
+      "id": "terminal",
+      "label": "Terminal",
+      "description": "Dark terminal aesthetic with interactive CLI",
+      "prompt": "designs/terminal/prompt.md",
+      "models": [
+        {
+          "id": "terminal-opus-legacy",
+          "model": "Claude Opus 4.1 (Legacy)",
+          "path": "pages/terminal/opus-legacy/",
+          "date": "2025-09"
+        },
+        {
+          "id": "terminal-opus",
+          "model": "Claude Opus 4.5",
+          "path": "pages/terminal/opus/",
+          "date": "2025-11"
+        },
+        {
+          "id": "terminal-gemini",
+          "model": "Gemini 3 Pro",
+          "path": "pages/terminal/gemini/",
+          "date": "2025-11"
+        },
+        {
+          "id": "terminal-gpt",
+          "model": "GPT-5.1-Codex",
+          "path": "pages/terminal/gpt/",
+          "date": "2025-11"
+        },
+        {
+          "id": "terminal-grok",
+          "model": "Grok Code Fast 1",
+          "path": "pages/terminal/grok/",
+          "date": "2025-11"
+        },
+        {
+          "id": "terminal-sonnet",
+          "model": "Claude Sonnet 4.5",
+          "path": "pages/terminal/sonnet/",
+          "date": "2025-11"
+        }
+      ]
+    },
+    {
+      "id": "minimal",
+      "label": "Minimal",
+      "description": "Clean, modern card-based layout",
+      "prompt": "designs/minimal/prompt.md",
+      "models": [
+        {
+          "id": "minimal-gemini",
+          "model": "Gemini 2.5 Pro",
+          "path": "pages/minimal/gemini/",
+          "date": "2025-11"
+        }
+      ]
+    },
+    {
+      "id": "signal",
+      "label": "Signal",
+      "description": "Technical-atmospheric, oscilloscope-meets-human-story",
+      "prompt": "designs/signal/prompt.md",
+      "models": [
+        {
+          "id": "signal-gemini",
+          "model": "Gemini 3 Pro",
+          "path": "pages/signal/gemini/",
+          "date": "2025-11"
+        },
+        {
+          "id": "signal-grok",
+          "model": "Grok Code Fast 1",
+          "path": "pages/signal/grok/",
+          "date": "2025-11"
+        },
+        {
+          "id": "signal-gpt",
+          "model": "GPT-5.1-Codex",
+          "path": "pages/signal/gpt/",
+          "date": "2025-11"
+        },
+        {
+          "id": "signal-opus",
+          "model": "Claude Opus 4.5",
+          "path": "pages/signal/opus/",
+          "date": "2025-11"
+        },
+        {
+          "id": "signal-raptor-mini",
+          "model": "Raptor mini (Preview)",
+          "path": "pages/signal/raptor-mini/",
+          "date": "2025-11"
+        }
+      ]
+    }
+  ],
+  "_readme": {
+    "concept": "Three-layer architecture: content → design prompts → model implementations",
+    "structure": "designs[] → models[] hierarchy for tab + radio navigation",
+    "addPage": "1. Find or create design entry. 2. Add model to its models array. 3. Paste output to pages/{design}/{model}/",
+    "urlFormat": "fadi.dev/#page-id",
+    "naming": "{design}-{model} e.g., terminal-opus, minimal-gemini"
+  }
+}

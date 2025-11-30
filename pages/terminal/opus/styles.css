@@ -1,0 +1,441 @@
+/* ============================================
+   THE TERMINAL — fadi@bridge
+   ============================================ */
+
+:root {
+  --bg: #0c0c0c;
+  --terminal-bg: #1a1a1a;
+  --text: #e0e0e0;
+  --text-dim: #666666;
+  --text-muted: #444444;
+  --accent: #4ade80;
+  --accent-dim: rgba(74, 222, 128, 0.15);
+  --error: #f87171;
+  --warning: #fbbf24;
+  --info: #60a5fa;
+
+  --font: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  --font-size: 14px;
+  --line-height: 1.6;
+}
+
+/* ============================================
+   Reset & Base
+   ============================================ */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font);
+  font-size: var(--font-size);
+  line-height: var(--line-height);
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+/* ============================================
+   Terminal Container
+   ============================================ */
+
+.terminal {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  position: relative;
+}
+
+/* ============================================
+   Micro Links (floating)
+   ============================================ */
+
+.micro-links {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  gap: 16px;
+  z-index: 100;
+}
+
+.micro-links a {
+  width: 20px;
+  height: 20px;
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+  opacity: 0.6;
+}
+
+.micro-links a:hover {
+  color: var(--accent);
+  opacity: 1;
+  transform: translateY(-2px);
+}
+
+.micro-links svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* ============================================
+   Terminal Window
+   ============================================ */
+
+.terminal-window {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--terminal-bg);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+/* Terminal Header */
+.terminal-header {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.terminal-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.terminal-buttons .btn {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
+
+.terminal-buttons .close { background: #ff5f56; }
+.terminal-buttons .minimize { background: #ffbd2e; }
+.terminal-buttons .maximize { background: #27ca40; }
+
+.terminal-title {
+  flex: 1;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-right: 60px;
+}
+
+/* Terminal Body */
+.terminal-body {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.terminal-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.terminal-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.terminal-body::-webkit-scrollbar-thumb {
+  background: var(--text-muted);
+  border-radius: 4px;
+}
+
+/* Output area */
+.output {
+  flex: 1;
+}
+
+.output-line {
+  margin-bottom: 4px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.output-line.command {
+  color: var(--text);
+}
+
+.output-line.command .prompt {
+  color: var(--accent);
+}
+
+.output-line.response {
+  color: var(--text-dim);
+  padding-left: 0;
+}
+
+.output-line.error {
+  color: var(--error);
+}
+
+.output-line.success {
+  color: var(--accent);
+}
+
+.output-line.info {
+  color: var(--info);
+}
+
+.output-line.warning {
+  color: var(--warning);
+}
+
+.output-line.ascii {
+  color: var(--accent);
+  line-height: 1.2;
+}
+
+.output-line .highlight {
+  color: var(--accent);
+}
+
+.output-line .dim {
+  color: var(--text-muted);
+}
+
+.output-line a {
+  color: var(--info);
+  text-decoration: none;
+}
+
+.output-line a:hover {
+  text-decoration: underline;
+}
+
+/* Typing animation for responses */
+.typing {
+  overflow: hidden;
+  animation: typing 0.5s steps(40, end);
+}
+
+@keyframes typing {
+  from { max-height: 0; }
+  to { max-height: 500px; }
+}
+
+/* Input line */
+.input-line {
+  display: flex;
+  align-items: center;
+  margin-top: 8px;
+  position: relative;
+}
+
+.prompt {
+  color: var(--accent);
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+#terminal-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  caret-color: var(--accent);
+}
+
+#terminal-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* Blinking cursor (when input is empty) */
+.cursor {
+  display: none;
+  width: 8px;
+  height: 18px;
+  background: var(--accent);
+  animation: blink 1s step-end infinite;
+  margin-left: -8px;
+}
+
+#terminal-input:placeholder-shown + .cursor {
+  display: inline-block;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* ============================================
+   Status Bar
+   ============================================ */
+
+.status-bar {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  padding: 12px;
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.status-item::before {
+  content: '●';
+  font-size: 6px;
+  color: var(--accent);
+}
+
+/* ============================================
+   Projects Grid (shown via command)
+   ============================================ */
+
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+  margin: 12px 0;
+}
+
+.project-card {
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.project-card:hover {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.project-name {
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+
+.project-desc {
+  color: var(--text-dim);
+  font-size: 12px;
+}
+
+.project-link {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--info);
+  text-decoration: none;
+}
+
+.project-link:hover {
+  text-decoration: underline;
+}
+
+/* ============================================
+   AI Thinking Animation
+   ============================================ */
+
+.thinking {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px 0;
+}
+
+.thinking span {
+  width: 6px;
+  height: 6px;
+  background: var(--accent);
+  border-radius: 50%;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+.thinking span:nth-child(2) { animation-delay: 0.2s; }
+.thinking span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.3; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+/* ============================================
+   Responsive
+   ============================================ */
+
+@media (max-width: 640px) {
+  :root {
+    --font-size: 13px;
+  }
+
+  .terminal {
+    padding: 10px;
+  }
+
+  .micro-links {
+    top: 10px;
+    right: 10px;
+    gap: 12px;
+  }
+
+  .micro-links a {
+    width: 18px;
+    height: 18px;
+  }
+
+  .terminal-header {
+    padding: 10px 12px;
+  }
+
+  .terminal-body {
+    padding: 16px;
+  }
+
+  .status-bar {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+}
+
+/* ============================================
+   Print (hide everything except content)
+   ============================================ */
+
+@media print {
+  .micro-links,
+  .terminal-header,
+  .status-bar,
+  .input-line {
+    display: none !important;
+  }
+
+  .terminal-window {
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
+}

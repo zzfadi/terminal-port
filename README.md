@@ -1,34 +1,62 @@
-# Terminal Portfolio
+# Zuabi.dev Gallery
 
-A single-page, terminal-inspired portfolio for Fadi Al Zuabi. The entire experience lives in [`terminal-portfolio.html`](./terminal-portfolio.html) with inline CSS/JS—no build step or external assets required.
+A meta-portfolio showcasing **AI model capabilities** through different landing page implementations. Same content, different designs, multiple AI interpretations per design.
 
-## Local development
+🌐 **Live at [zuabi.dev](https://zuabi.dev)**
 
-```bash
-python3 -m http.server 8001
+## Concept
+
+This gallery explores how different AI models interpret the same design brief. Each design concept (terminal, minimal, signal) is implemented by multiple AI models, creating a unique comparison of AI-generated web pages.
+
+## Three-Layer Architecture
+
+```
+├── content/
+│   └── profile.md              # Layer 1: Source of truth
+├── designs/
+│   ├── terminal/prompt.md      # Layer 2: Design prompts
+│   ├── minimal/prompt.md
+│   └── signal/prompt.md
+├── pages/
+│   ├── terminal/               # Layer 3: AI implementations
+│   │   ├── opus-legacy/        # Claude Opus 4.1 (original)
+│   │   ├── opus/               # Claude Opus 4.5
+│   │   ├── gemini/             # Gemini 3 Pro
+│   │   └── ...
+│   ├── minimal/
+│   └── signal/
+└── gallery.{js,css}            # Navigation system
 ```
 
-Then open <http://127.0.0.1:8001/terminal-portfolio.html> in your browser. The matrix rain animation, command handlers, and startup sequence will load automatically.
+## Features
 
-## Test harnesses
+- **Two-level navigation**: Design tabs + Model radios
+- **Keyboard shortcuts**: `G` toggle gallery, arrows to navigate, `Escape` to close
+- **Prompt viewer**: See the exact prompt used to generate each design
+- **URL routing**: `zuabi.dev/#page-id` for direct linking
+- **Self-contained pages**: Each AI output is standalone
 
-Two browser-based harnesses document the expected behaviours:
+## Current Designs
 
-- [`Tests/test-terminal.html`](./Tests/test-terminal.html) — unit-style checks for command outputs, filesystem navigation, and external link wiring.
-- [`Tests/e2e-tests.html`](./Tests/e2e-tests.html) — iframe-driven journeys covering "learn about Fadi", "contact Fadi", and "terminal reliability" flows.
+| Design | Description | Models |
+|--------|-------------|--------|
+| Terminal | Dark CLI aesthetic with interactive commands | 6 |
+| Minimal | Clean, modern card-based layout | 1 |
+| Signal | Technical-atmospheric oscilloscope theme | 5 |
 
-Serve the site locally (as above) and open each harness to run the suites. All tests currently pass (17/17 unit, 3/3 journeys).
+## Development
 
-## Deployment
+```bash
+npx serve    # Serve locally
+# Open http://localhost:3000
+```
 
-For GitHub Pages:
+No build step required—vanilla HTML/CSS/JS only.
 
-1. Commit the project to the `main` branch.
-2. Enable GitHub Pages in repository settings (Pages → Build and deployment → Branch: `main`, Folder: `/root`).
-3. Optionally add a `CNAME` file containing `zuabi.dev` (or your custom domain) and point DNS records to GitHub’s Pages IPs.
+## Adding New Pages
 
-## Release notes
+See [.github/copilot-instructions.md](.github/copilot-instructions.md) for detailed instructions.
 
-- **v1.0.0** – Initial public release with matrix rain intro, comprehensive command set, and passing test harnesses.
+---
 
-Future v2 planning can iterate on this baseline without additional tooling changes.
+*Built as an experiment in AI-assisted development*
