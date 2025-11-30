@@ -52,9 +52,33 @@
       "prompt": "designs/minimal/prompt.md",
       "models": [
         {
+          "id": "minimal-opus",
+          "model": "Claude Opus 4.5",
+          "path": "pages/minimal/opus/",
+          "date": "2025-11"
+        },
+        {
           "id": "minimal-gemini",
-          "model": "Gemini 2.5 Pro",
+          "model": "Gemini 3 Pro",
           "path": "pages/minimal/gemini/",
+          "date": "2025-11"
+        },
+        {
+          "id": "minimal-gpt",
+          "model": "GPT-5.1-Codex",
+          "path": "pages/minimal/gpt/",
+          "date": "2025-11"
+        },
+        {
+          "id": "minimal-grok",
+          "model": "Grok Code Fast 1",
+          "path": "pages/minimal/grok/",
+          "date": "2025-11"
+        },
+        {
+          "id": "minimal-raptor-mini",
+          "model": "Raptor mini (Preview)",
+          "path": "pages/minimal/raptor-mini/",
           "date": "2025-11"
         }
       ]

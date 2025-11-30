@@ -7,51 +7,69 @@
   <meta name="description" content="A gallery of landing pages, each built by a different AI model.">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
 
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-
+  <!-- Fonts loaded via CSS @import for Sora + JetBrains Mono -->
   <link rel="stylesheet" href="gallery.css">
 </head>
 <body>
   <!-- Full-viewport iframe for page content -->
   <iframe id="page-frame" title="Landing page content"></iframe>
 
-  <!-- Floating gallery selector -->
-  <div class="gallery-selector" id="gallery-selector">
-    <button class="selector-toggle" id="selector-toggle" aria-expanded="false" aria-controls="selector-panel">
-      <span class="current-info">
-        <span class="current-design" id="current-design">loading</span>
-        <span class="current-sep">·</span>
-        <span class="current-model" id="current-model">...</span>
+  <!-- Floating trigger button -->
+  <button class="gallery-trigger" id="gallery-trigger" aria-haspopup="dialog" aria-expanded="false">
+    <span class="trigger-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="7" height="7"></rect>
+        <rect x="14" y="3" width="7" height="7"></rect>
+        <rect x="14" y="14" width="7" height="7"></rect>
+        <rect x="3" y="14" width="7" height="7"></rect>
+      </svg>
+    </span>
+    <span class="trigger-current">
+      <span class="trigger-design" id="trigger-design">Loading</span>
+      <span class="trigger-sep">·</span>
+      <span class="trigger-model" id="trigger-model">
+        <span class="trigger-model-icon" id="trigger-model-icon"></span>
+        <span class="trigger-model-name" id="trigger-model-name">...</span>
       </span>
-      <span class="toggle-arrow">▾</span>
-    </button>
+    </span>
+    <span class="trigger-kbd">G</span>
+  </button>
 
-    <div class="selector-panel" id="selector-panel" role="menu">
-      <!-- Header -->
-      <div class="panel-header">
-        <span class="panel-title">Zuabi.dev Gallery</span>
-        <span class="panel-subtitle">Same content, different AI designs</span>
+  <!-- Modal backdrop -->
+  <div class="gallery-backdrop" id="gallery-backdrop"></div>
+
+  <!-- Command Palette / Bottom Sheet -->
+  <div class="gallery-palette" id="gallery-palette" role="dialog" aria-modal="true" aria-labelledby="palette-title">
+    <!-- Header -->
+    <div class="palette-header">
+      <div class="palette-title">
+        <h2 id="palette-title">Zuabi.dev Gallery</h2>
+        <button class="palette-close" id="palette-close" aria-label="Close gallery">&times;</button>
       </div>
+      <p class="palette-subtitle">Same content, different AI designs</p>
+    </div>
 
-      <!-- Design Tabs -->
-      <div class="design-tabs" id="design-tabs" role="tablist"></div>
+    <!-- Design Selector (Chips/Tabs) -->
+    <div class="palette-designs" id="palette-designs" role="tablist" aria-label="Design styles"></div>
 
-      <!-- Model Radio List (populated per design) -->
-      <div class="model-list" id="model-list" role="radiogroup"></div>
+    <!-- Model List -->
+    <div class="palette-models" id="palette-models" role="listbox" aria-label="AI model implementations"></div>
 
-      <!-- View Prompt Button -->
-      <button class="view-prompt-btn" id="view-prompt-btn">
+    <!-- Footer -->
+    <div class="palette-footer">
+      <div class="palette-shortcuts">
+        <span class="shortcut"><kbd>↑</kbd><kbd>↓</kbd> models</span>
+        <span class="shortcut"><kbd>←</kbd><kbd>→</kbd> designs</span>
+        <span class="shortcut"><kbd>esc</kbd> close</span>
+      </div>
+      <button class="palette-prompt-btn" id="palette-prompt-btn">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
           <polyline points="14 2 14 8 20 8"></polyline>
           <line x1="16" y1="13" x2="8" y2="13"></line>
           <line x1="16" y1="17" x2="8" y2="17"></line>
-          <polyline points="10 9 9 9 8 9"></polyline>
         </svg>
-        View design prompt
+        View prompt
       </button>
     </div>
   </div>
@@ -74,7 +92,7 @@
     <div class="loading-spinner"></div>
   </div>
 
-  <!-- Keyboard hint -->
+  <!-- Keyboard hint toast -->
   <div class="keyboard-hint" id="keyboard-hint">
     Press <kbd>G</kbd> to browse gallery
   </div>

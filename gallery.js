@@ -1,10 +1,31 @@
 /**
- * Gallery Navigation System
- * Two-level navigation: Design Tabs + Model Radio buttons
+ * Gallery Navigation System v2
+ * Adaptive Command Palette with Model Brand Icons
+ * Desktop: Center modal | Mobile: Bottom sheet with swipe
  */
 
 (function() {
   'use strict';
+
+  // ============================================
+  // Configuration
+  // ============================================
+
+  const MODEL_BRANDS = {
+    claude: { class: 'claude', icon: 'assets/icons/claude.svg', keywords: ['claude', 'opus', 'haiku'] },
+    gpt: { class: 'gpt', icon: 'assets/icons/gpt.svg', keywords: ['gpt', 'openai', 'codex'] },
+    gemini: { class: 'gemini', icon: 'assets/icons/gemini.svg', keywords: ['gemini', 'google', 'bard'] },
+    grok: { class: 'grok', icon: 'assets/icons/grok.svg', keywords: ['grok', 'xai'] },
+    sonnet: { class: 'sonnet', icon: 'assets/icons/sonnet.svg', keywords: ['sonnet'] },
+    raptor: { class: 'raptor', icon: 'assets/icons/raptor.svg', keywords: ['raptor'] }
+  };
+
+  const DESIGN_ICONS = {
+    terminal: '⌘',
+    minimal: '◯',
+    signal: '〰',
+    default: '◆'
+  };
 
   // ============================================
   // State
@@ -13,27 +34,30 @@
   let config = null;
   let currentPageId = null;
   let currentDesignId = null;
-  let isExpanded = false;
+  let isOpen = false;
+  let touchStartY = 0;
 
   // ============================================
   // DOM Elements
   // ============================================
 
   const frame = document.getElementById('page-frame');
-  const selector = document.getElementById('gallery-selector');
-  const toggle = document.getElementById('selector-toggle');
-  const panel = document.getElementById('selector-panel');
-  const currentDesignEl = document.getElementById('current-design');
-  const currentModelEl = document.getElementById('current-model');
-  const designTabs = document.getElementById('design-tabs');
-  const modelList = document.getElementById('model-list');
-  const loadingOverlay = document.getElementById('loading-overlay');
-  const keyboardHint = document.getElementById('keyboard-hint');
-  const viewPromptBtn = document.getElementById('view-prompt-btn');
+  const trigger = document.getElementById('gallery-trigger');
+  const triggerDesign = document.getElementById('trigger-design');
+  const triggerModelIcon = document.getElementById('trigger-model-icon');
+  const triggerModelName = document.getElementById('trigger-model-name');
+  const backdrop = document.getElementById('gallery-backdrop');
+  const palette = document.getElementById('gallery-palette');
+  const paletteClose = document.getElementById('palette-close');
+  const paletteDesigns = document.getElementById('palette-designs');
+  const paletteModels = document.getElementById('palette-models');
+  const promptBtn = document.getElementById('palette-prompt-btn');
   const promptModalOverlay = document.getElementById('prompt-modal-overlay');
   const promptModalTitle = document.getElementById('prompt-modal-title');
   const promptModalContent = document.getElementById('prompt-modal-content');
   const promptModalClose = document.getElementById('prompt-modal-close');
+  const loadingOverlay = document.getElementById('loading-overlay');
+  const keyboardHint = document.getElementById('keyboard-hint');
 
   // ============================================
   // Config Loading
@@ -48,6 +72,98 @@
       console.error('Failed to load config:', error);
       return null;
     }
+  }
+
+  // ============================================
+  // Brand Detection
+  // ============================================
+
+  function detectBrand(modelName) {
+    const lower = modelName.toLowerCase();
+
+    // Special case: Sonnet is Claude family but has its own color
+    if (lower.includes('sonnet')) {
+      return MODEL_BRANDS.sonnet;
+    }
+
+    // Special case: Opus is Claude family
+    if (lower.includes('opus') || lower.includes('claude')) {
+      return MODEL_BRANDS.claude;
+    }
+
+    for (const [key, brand] of Object.entries(MODEL_BRANDS)) {
+      if (brand.keywords.some(kw => lower.includes(kw))) {
+        return brand;
+      }
+    }
+
+    return { class: 'claude', icon: 'assets/icons/claude.svg' }; // Fallback
+  }
+
+  function getDesignIcon(designId) {
+    return DESIGN_ICONS[designId] || DESIGN_ICONS.default;
+  }
+
+  // ============================================
+  // SVG Icon Creators (Safe DOM methods)
+  // ============================================
+
+  function createCalendarIcon() {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('fill', 'none');
+    svg.setAttribute('stroke', 'currentColor');
+    svg.setAttribute('stroke-width', '2');
+    svg.setAttribute('stroke-linecap', 'round');
+    svg.setAttribute('stroke-linejoin', 'round');
+
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('x', '3');
+    rect.setAttribute('y', '4');
+    rect.setAttribute('width', '18');
+    rect.setAttribute('height', '18');
+    rect.setAttribute('rx', '2');
+    rect.setAttribute('ry', '2');
+    svg.appendChild(rect);
+
+    const line1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line1.setAttribute('x1', '16');
+    line1.setAttribute('y1', '2');
+    line1.setAttribute('x2', '16');
+    line1.setAttribute('y2', '6');
+    svg.appendChild(line1);
+
+    const line2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line2.setAttribute('x1', '8');
+    line2.setAttribute('y1', '2');
+    line2.setAttribute('x2', '8');
+    line2.setAttribute('y2', '6');
+    svg.appendChild(line2);
+
+    const line3 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line3.setAttribute('x1', '3');
+    line3.setAttribute('y1', '10');
+    line3.setAttribute('x2', '21');
+    line3.setAttribute('y2', '10');
+    svg.appendChild(line3);
+
+    return svg;
+  }
+
+  function createCheckIcon() {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('fill', 'none');
+    svg.setAttribute('stroke', 'currentColor');
+    svg.setAttribute('stroke-width', '3');
+    svg.setAttribute('stroke-linecap', 'round');
+    svg.setAttribute('stroke-linejoin', 'round');
+
+    const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+    polyline.setAttribute('points', '20 6 9 17 4 12');
+    svg.appendChild(polyline);
+
+    return svg;
   }
 
   // ============================================
@@ -67,12 +183,18 @@
   }
 
   function getShortModelName(modelName) {
-    let short = modelName.toLowerCase();
-    short = short.replace('claude ', '');
-    short = short.replace('openai ', '');
-    short = short.replace('google ', '');
-    short = short.replace('gemini ', '');
+    let short = modelName;
+    // Remove common prefixes
+    short = short.replace(/^Claude\s+/i, '');
+    short = short.replace(/^OpenAI\s+/i, '');
+    short = short.replace(/^Google\s+/i, '');
     return short;
+  }
+
+  function clearElement(element) {
+    while (element.firstChild) {
+      element.removeChild(element.firstChild);
+    }
   }
 
   // ============================================
@@ -85,7 +207,27 @@
   }
 
   function setHashForPage(pageId) {
-    history.pushState(null, '', `#${pageId}`);
+    history.pushState(null, '', '#' + pageId);
+  }
+
+  // ============================================
+  // Trigger Button Updates
+  // ============================================
+
+  function updateTrigger(design, model) {
+    triggerDesign.textContent = design.label;
+
+    const brand = detectBrand(model.model);
+    triggerModelIcon.className = 'trigger-model-icon model-icon ' + brand.class;
+
+    // Clear and add icon
+    clearElement(triggerModelIcon);
+    const iconImg = document.createElement('img');
+    iconImg.src = brand.icon;
+    iconImg.alt = model.model + ' icon';
+    triggerModelIcon.appendChild(iconImg);
+
+    triggerModelName.textContent = getShortModelName(model.model);
   }
 
   // ============================================
@@ -112,45 +254,60 @@
     currentPageId = pageId;
     currentDesignId = design.id;
 
-    // Update toggle display
-    currentDesignEl.textContent = design.label;
-    currentModelEl.textContent = getShortModelName(model.model);
+    // Update trigger display
+    updateTrigger(design, model);
 
     // Load page in iframe
     frame.src = model.path;
 
     // Update UI states
-    updateDesignTabs();
+    updateDesignChips();
     renderModelList(design);
   }
 
   // ============================================
-  // Design Tabs
+  // Design Chips
   // ============================================
 
-  function renderDesignTabs() {
-    designTabs.innerHTML = '';
+  function renderDesignChips() {
+    clearElement(paletteDesigns);
 
-    config.designs.forEach(design => {
-      const tab = document.createElement('button');
-      tab.className = 'design-tab';
-      tab.textContent = design.label;
-      tab.dataset.designId = design.id;
-      tab.setAttribute('role', 'tab');
-      tab.setAttribute('aria-selected', design.id === currentDesignId);
+    config.designs.forEach(function(design, index) {
+      const chip = document.createElement('button');
+      chip.className = 'design-chip';
+      chip.dataset.designId = design.id;
+      chip.setAttribute('role', 'tab');
+      chip.setAttribute('aria-selected', design.id === currentDesignId);
+      chip.style.animationDelay = (50 + index * 50) + 'ms';
 
-      tab.addEventListener('click', () => selectDesign(design.id));
+      const icon = document.createElement('span');
+      icon.className = 'design-chip-icon';
+      icon.textContent = getDesignIcon(design.id);
+      chip.appendChild(icon);
 
-      designTabs.appendChild(tab);
+      const label = document.createElement('span');
+      label.textContent = design.label;
+      chip.appendChild(label);
+
+      const count = document.createElement('span');
+      count.className = 'design-chip-count';
+      count.textContent = design.models.length;
+      chip.appendChild(count);
+
+      chip.addEventListener('click', function() {
+        selectDesign(design.id);
+      });
+
+      paletteDesigns.appendChild(chip);
     });
   }
 
-  function updateDesignTabs() {
-    const tabs = designTabs.querySelectorAll('.design-tab');
-    tabs.forEach(tab => {
-      const isActive = tab.dataset.designId === currentDesignId;
-      tab.classList.toggle('active', isActive);
-      tab.setAttribute('aria-selected', isActive);
+  function updateDesignChips() {
+    const chips = paletteDesigns.querySelectorAll('.design-chip');
+    chips.forEach(function(chip) {
+      const isActive = chip.dataset.designId === currentDesignId;
+      chip.classList.toggle('active', isActive);
+      chip.setAttribute('aria-selected', isActive);
     });
   }
 
@@ -159,11 +316,13 @@
     if (!design) return;
 
     currentDesignId = designId;
-    updateDesignTabs();
+    updateDesignChips();
     renderModelList(design);
 
     // If current page isn't in this design, load first model
-    const currentInDesign = design.models.find(m => m.id === currentPageId);
+    const currentInDesign = design.models.find(function(m) {
+      return m.id === currentPageId;
+    });
     if (!currentInDesign && design.models.length > 0) {
       loadPage(design.models[0].id);
     }
@@ -174,99 +333,123 @@
   // ============================================
 
   function renderModelList(design) {
-    modelList.innerHTML = '';
+    clearElement(paletteModels);
 
     if (design.models.length === 0) {
       const empty = document.createElement('div');
-      empty.className = 'model-empty';
+      empty.className = 'models-empty';
       empty.textContent = 'No implementations yet';
-      modelList.appendChild(empty);
+      paletteModels.appendChild(empty);
       return;
     }
 
-    design.models.forEach(model => {
-      const item = document.createElement('div');
-      item.className = 'model-item';
-      item.dataset.pageId = model.id;
-      item.setAttribute('role', 'radio');
-      item.setAttribute('tabindex', '0');
+    design.models.forEach(function(model, index) {
+      const card = document.createElement('div');
+      card.className = 'model-card';
+      card.dataset.pageId = model.id;
+      card.setAttribute('role', 'option');
+      card.setAttribute('tabindex', '0');
+      card.style.animationDelay = (index * 30) + 'ms';
 
       const isActive = model.id === currentPageId;
-      if (isActive) item.classList.add('active');
-      item.setAttribute('aria-checked', isActive);
+      if (isActive) card.classList.add('active');
+      card.setAttribute('aria-selected', isActive);
 
-      // Radio circle
-      const radio = document.createElement('div');
-      radio.className = 'model-item-radio';
-      item.appendChild(radio);
+      // Model Icon
+      const brand = detectBrand(model.model);
+      const icon = document.createElement('div');
+      icon.className = 'model-icon ' + brand.class;
 
-      // Info
+      const iconImg = document.createElement('img');
+      iconImg.src = brand.icon;
+      iconImg.alt = model.model + ' icon';
+      icon.appendChild(iconImg);
+
+      card.appendChild(icon);
+
+      // Model Info
       const info = document.createElement('div');
-      info.className = 'model-item-info';
+      info.className = 'model-info';
 
       const name = document.createElement('div');
-      name.className = 'model-item-name';
+      name.className = 'model-name';
       name.textContent = model.model;
       info.appendChild(name);
 
+      const meta = document.createElement('div');
+      meta.className = 'model-meta';
+
       if (model.date) {
-        const date = document.createElement('div');
-        date.className = 'model-item-date';
-        date.textContent = model.date;
-        info.appendChild(date);
+        const date = document.createElement('span');
+        date.className = 'model-date';
+        date.appendChild(createCalendarIcon());
+        const dateText = document.createTextNode(model.date);
+        date.appendChild(dateText);
+        meta.appendChild(date);
       }
 
-      item.appendChild(info);
+      info.appendChild(meta);
+      card.appendChild(info);
 
-      // Arrow
-      const arrow = document.createElement('span');
-      arrow.className = 'model-item-arrow';
-      arrow.textContent = '←';
-      item.appendChild(arrow);
+      // Checkmark
+      const check = document.createElement('div');
+      check.className = 'model-check';
+      check.appendChild(createCheckIcon());
+      card.appendChild(check);
 
       // Click handler
-      item.addEventListener('click', () => {
+      card.addEventListener('click', function() {
         loadPage(model.id);
-        closePanel();
+        closePalette();
       });
 
-      modelList.appendChild(item);
-    });
-  }
+      // Keyboard support
+      card.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          loadPage(model.id);
+          closePalette();
+        }
+      });
 
-  function updateModelList() {
-    const items = modelList.querySelectorAll('.model-item');
-    items.forEach(item => {
-      const isActive = item.dataset.pageId === currentPageId;
-      item.classList.toggle('active', isActive);
-      item.setAttribute('aria-checked', isActive);
+      paletteModels.appendChild(card);
     });
   }
 
   // ============================================
-  // Panel Toggle
+  // Palette Open/Close
   // ============================================
 
-  function openPanel() {
-    isExpanded = true;
-    toggle.setAttribute('aria-expanded', 'true');
-    panel.classList.add('open');
+  function openPalette() {
+    isOpen = true;
+    trigger.setAttribute('aria-expanded', 'true');
+    backdrop.classList.add('open');
+    palette.classList.add('open');
 
+    // Focus first model card
+    setTimeout(function() {
+      const firstCard = paletteModels.querySelector('.model-card');
+      if (firstCard) firstCard.focus();
+    }, 100);
+
+    // Hide keyboard hint
     if (keyboardHint) {
       keyboardHint.classList.remove('visible');
       sessionStorage.setItem('gallery-hint-shown', 'true');
     }
   }
 
-  function closePanel() {
-    isExpanded = false;
-    toggle.setAttribute('aria-expanded', 'false');
-    panel.classList.remove('open');
+  function closePalette() {
+    isOpen = false;
+    trigger.setAttribute('aria-expanded', 'false');
+    backdrop.classList.remove('open');
+    palette.classList.remove('open');
+    trigger.focus();
   }
 
-  function togglePanel() {
-    if (isExpanded) closePanel();
-    else openPanel();
+  function togglePalette() {
+    if (isOpen) closePalette();
+    else openPalette();
   }
 
   // ============================================
@@ -275,11 +458,12 @@
 
   function showKeyboardHint() {
     if (sessionStorage.getItem('gallery-hint-shown')) return;
+    if (window.innerWidth < 768) return; // Don't show on mobile
 
-    setTimeout(() => {
+    setTimeout(function() {
       if (keyboardHint) {
         keyboardHint.classList.add('visible');
-        setTimeout(() => {
+        setTimeout(function() {
           keyboardHint.classList.remove('visible');
           sessionStorage.setItem('gallery-hint-shown', 'true');
         }, 4000);
@@ -292,56 +476,113 @@
   // ============================================
 
   function handleKeydown(e) {
+    // G to toggle palette
     if (e.key === 'g' && !e.ctrlKey && !e.metaKey && !e.altKey) {
-      if (document.activeElement === document.body || document.activeElement === toggle) {
+      if (document.activeElement === document.body ||
+          document.activeElement === trigger ||
+          palette.contains(document.activeElement)) {
         e.preventDefault();
-        togglePanel();
+        togglePalette();
         return;
       }
     }
 
+    // Escape to close
     if (e.key === 'Escape') {
       if (promptModalOverlay.classList.contains('open')) {
         e.preventDefault();
         closePromptModal();
         return;
       }
-      if (isExpanded) {
+      if (isOpen) {
         e.preventDefault();
-        closePanel();
+        closePalette();
         return;
       }
     }
 
-    // Left/Right to switch designs when panel is open
-    if (isExpanded && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
-      e.preventDefault();
-      const designIds = config.designs.map(d => d.id);
-      const currentIdx = designIds.indexOf(currentDesignId);
-      let newIdx;
-      if (e.key === 'ArrowLeft') {
-        newIdx = currentIdx > 0 ? currentIdx - 1 : designIds.length - 1;
-      } else {
-        newIdx = currentIdx < designIds.length - 1 ? currentIdx + 1 : 0;
+    // Arrow navigation when palette is open
+    if (isOpen) {
+      // Left/Right to switch designs
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        e.preventDefault();
+        const designIds = config.designs.map(function(d) { return d.id; });
+        const currentIdx = designIds.indexOf(currentDesignId);
+        var newIdx;
+        if (e.key === 'ArrowLeft') {
+          newIdx = currentIdx > 0 ? currentIdx - 1 : designIds.length - 1;
+        } else {
+          newIdx = currentIdx < designIds.length - 1 ? currentIdx + 1 : 0;
+        }
+        selectDesign(designIds[newIdx]);
       }
-      selectDesign(designIds[newIdx]);
+
+      // Up/Down to switch models
+      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        const design = getDesignById(currentDesignId);
+        if (!design || design.models.length === 0) return;
+
+        const modelIds = design.models.map(function(m) { return m.id; });
+        const currentIdx = modelIds.indexOf(currentPageId);
+        var newModelIdx;
+        if (e.key === 'ArrowUp') {
+          newModelIdx = currentIdx > 0 ? currentIdx - 1 : modelIds.length - 1;
+        } else {
+          newModelIdx = currentIdx < modelIds.length - 1 ? currentIdx + 1 : 0;
+        }
+        loadPage(modelIds[newModelIdx]);
+      }
+
+      // Enter to select focused model
+      if (e.key === 'Enter') {
+        const focused = document.activeElement;
+        if (focused && focused.classList.contains('model-card')) {
+          e.preventDefault();
+          const pageId = focused.dataset.pageId;
+          if (pageId) {
+            loadPage(pageId);
+            closePalette();
+          }
+        }
+      }
     }
+  }
 
-    // Up/Down to switch models when panel is open
-    if (isExpanded && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
-      e.preventDefault();
-      const design = getDesignById(currentDesignId);
-      if (!design || design.models.length === 0) return;
+  // ============================================
+  // Touch/Swipe Support for Mobile Bottom Sheet
+  // ============================================
 
-      const modelIds = design.models.map(m => m.id);
-      const currentIdx = modelIds.indexOf(currentPageId);
-      let newIdx;
-      if (e.key === 'ArrowUp') {
-        newIdx = currentIdx > 0 ? currentIdx - 1 : modelIds.length - 1;
-      } else {
-        newIdx = currentIdx < modelIds.length - 1 ? currentIdx + 1 : 0;
-      }
-      loadPage(modelIds[newIdx]);
+  function handleTouchStart(e) {
+    if (!isOpen) return;
+    touchStartY = e.touches[0].clientY;
+  }
+
+  function handleTouchMove(e) {
+    if (!isOpen) return;
+
+    const touchY = e.touches[0].clientY;
+    const diff = touchY - touchStartY;
+
+    // Only allow downward swipe
+    if (diff > 0) {
+      const translateY = Math.min(diff, 200);
+      palette.style.transform = 'translateY(' + translateY + 'px)';
+    }
+  }
+
+  function handleTouchEnd(e) {
+    if (!isOpen) return;
+
+    const touchY = e.changedTouches[0].clientY;
+    const diff = touchY - touchStartY;
+
+    // Reset transform
+    palette.style.transform = '';
+
+    // If swiped down more than 100px, close
+    if (diff > 100) {
+      closePalette();
     }
   }
 
@@ -352,20 +593,35 @@
   async function openPromptModal() {
     const design = getDesignById(currentDesignId);
     if (!design || !design.prompt) {
-      promptModalContent.innerHTML = '<div class="prompt-loading">No prompt available for this design.</div>';
+      clearElement(promptModalContent);
+      const noPrompt = document.createElement('div');
+      noPrompt.className = 'prompt-loading';
+      noPrompt.textContent = 'No prompt available for this design.';
+      promptModalContent.appendChild(noPrompt);
       return;
     }
 
-    promptModalTitle.textContent = `${design.label} Design Prompt`;
-    promptModalContent.innerHTML = '<div class="prompt-loading">Loading prompt...</div>';
+    promptModalTitle.textContent = design.label + ' Design Prompt';
+    clearElement(promptModalContent);
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'prompt-loading';
+    loadingDiv.textContent = 'Loading prompt...';
+    promptModalContent.appendChild(loadingDiv);
     promptModalOverlay.classList.add('open');
 
     try {
       const response = await fetch(design.prompt);
       const text = await response.text();
-      promptModalContent.innerHTML = `<pre>${escapeHtml(text)}</pre>`;
+      clearElement(promptModalContent);
+      const pre = document.createElement('pre');
+      pre.textContent = text;
+      promptModalContent.appendChild(pre);
     } catch (error) {
-      promptModalContent.innerHTML = '<div class="prompt-loading">Failed to load prompt.</div>';
+      clearElement(promptModalContent);
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'prompt-loading';
+      errorDiv.textContent = 'Failed to load prompt.';
+      promptModalContent.appendChild(errorDiv);
     }
   }
 
@@ -373,44 +629,55 @@
     promptModalOverlay.classList.remove('open');
   }
 
-  function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
-
   // ============================================
   // Event Listeners
   // ============================================
 
   function setupEventListeners() {
-    toggle.addEventListener('click', togglePanel);
+    // Trigger button
+    trigger.addEventListener('click', togglePalette);
 
-    viewPromptBtn.addEventListener('click', openPromptModal);
+    // Close button
+    paletteClose.addEventListener('click', closePalette);
+
+    // Backdrop click
+    backdrop.addEventListener('click', closePalette);
+
+    // Prompt modal
+    promptBtn.addEventListener('click', openPromptModal);
     promptModalClose.addEventListener('click', closePromptModal);
-    promptModalOverlay.addEventListener('click', (e) => {
+    promptModalOverlay.addEventListener('click', function(e) {
       if (e.target === promptModalOverlay) closePromptModal();
     });
 
-    document.addEventListener('click', (e) => {
-      if (isExpanded && !selector.contains(e.target)) {
-        closePanel();
-      }
-    });
-
+    // Keyboard
     document.addEventListener('keydown', handleKeydown);
 
-    window.addEventListener('hashchange', () => {
+    // Touch events for mobile bottom sheet
+    palette.addEventListener('touchstart', handleTouchStart, { passive: true });
+    palette.addEventListener('touchmove', handleTouchMove, { passive: true });
+    palette.addEventListener('touchend', handleTouchEnd, { passive: true });
+
+    // Hash change
+    window.addEventListener('hashchange', function() {
       const pageId = getPageIdFromHash() || config.default;
       if (pageId !== currentPageId) {
         loadPage(pageId);
       }
     });
 
-    frame.addEventListener('load', () => {
+    // Frame load complete
+    frame.addEventListener('load', function() {
       loadingOverlay.classList.remove('visible');
       frame.classList.remove('loading');
       showKeyboardHint();
+    });
+
+    // Click outside palette to close
+    document.addEventListener('click', function(e) {
+      if (isOpen && !palette.contains(e.target) && !trigger.contains(e.target) && !backdrop.contains(e.target)) {
+        closePalette();
+      }
     });
   }
 
@@ -425,8 +692,8 @@
       return;
     }
 
-    // Render design tabs
-    renderDesignTabs();
+    // Render design chips
+    renderDesignChips();
 
     // Setup events
     setupEventListeners();
