@@ -685,6 +685,13 @@
   // Initialize
   // ============================================
 
+  function getRandomFirstModel() {
+    // Pick a random design and return its first model's ID
+    const designs = config.designs;
+    const randomDesign = designs[Math.floor(Math.random() * designs.length)];
+    return randomDesign.models[0].id;
+  }
+
   async function init() {
     await loadConfig();
     if (!config) {
@@ -698,9 +705,21 @@
     // Setup events
     setupEventListeners();
 
-    // Load initial page
-    const initialPageId = getPageIdFromHash() || config.default;
+    // Check if landing on root (no hash)
+    const hashPageId = getPageIdFromHash();
+    const isRootLanding = !hashPageId;
+
+    // If root landing, pick random design's first model; otherwise use hash or default
+    const initialPageId = isRootLanding ? getRandomFirstModel() : (hashPageId || config.default);
     loadPage(initialPageId);
+
+    // Auto-open gallery on root landing
+    if (isRootLanding) {
+      // Small delay to let page render first
+      setTimeout(function() {
+        openPalette();
+      }, 300);
+    }
   }
 
   init();
