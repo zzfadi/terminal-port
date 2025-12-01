@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fadi Al Zuabi | Insert Coin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="scanline"></div>
+    
+    <header class="game-header">
+        <div class="score-board">
+            <div class="score-box">
+                <span class="label">1UP</span>
+                <span class="value">00</span>
+            </div>
+            <div class="score-box">
+                <span class="label">HIGH SCORE</span>
+                <span class="value">999999</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="arcade-cabinet">
+        <section id="hero" class="level-start">
+            <div class="hero-content">
+                <h1 class="glitch" data-text="READY!">READY!</h1>
+                <div class="character-display">
+                    <div class="pacman"></div>
+                    <div class="dots">
+                        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+                    </div>
+                </div>
+                <div class="intro-text">
+                    <h2>Fadi Al Zuabi</h2>
+                    <p class="role">Senior Firmware Engineer & AI Champion</p>
+                    <p class="tagline">Building bridges between hardware and AI.</p>
+                </div>
+                <div class="insert-coin">
+                    <p>INSERT COIN TO START</p>
+                    <p class="blink">PRESS START</p>
+                </div>
+            </div>
+        </section>
+
+        <nav class="game-nav">
+            <button class="nav-btn" data-target="about">ABOUT</button>
+            <button class="nav-btn" data-target="career">CAREER</button>
+            <button class="nav-btn" data-target="projects">PROJECTS</button>
+            <button class="nav-btn" data-target="skills">SKILLS</button>
+        </nav>
+
+        <div id="game-content" class="content-area">
+            <!-- Content injected via JS or hidden sections below -->
+            
+            <article id="about" class="game-section active">
+                <h3 class="section-title"><span class="icon">🍒</span> PLAYER INFO</h3>
+                <div class="profile-card">
+                    <p><strong>LOCATION:</strong> Roseville, CA</p>
+                    <p><strong>COMPANY:</strong> Solidigm (SK Hynix)</p>
+                    <p><strong>LANGUAGES:</strong> English, Arabic</p>
+                    <p class="bio">
+                        I'm a firmware engineer who builds AI systems. UIUC grad, worked at GE Aerospace and Intel, now at Solidigm where I train engineers on AI tools and build systems that make firmware development smarter.
+                    </p>
+                    <div class="social-links">
+                        <a href="https://github.com/zzfadi" target="_blank" class="pixel-link">GITHUB</a>
+                        <a href="https://linkedin.com/in/fadi-zuabi" target="_blank" class="pixel-link">LINKEDIN</a>
+                        <a href="https://x.com/fadi_zuabi" target="_blank" class="pixel-link">TWITTER</a>
+                    </div>
+                </div>
+            </article>
+
+            <article id="career" class="game-section">
+                <h3 class="section-title"><span class="icon">🍓</span> STAGES CLEARED</h3>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-header">
+                            <span class="date">2022-PRES</span>
+                            <span class="company">SOLIDIGM</span>
+                        </div>
+                        <div class="timeline-role">Senior Firmware Engineer, AI Champion</div>
+                        <ul class="achievements">
+                            <li>Leading AI adoption programs (70% usage increase)</li>
+                            <li>Trained 60+ engineers to ship faster</li>
+                            <li>Building intelligent firmware debugging systems</li>
+                        </ul>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-header">
+                            <span class="date">2021-2022</span>
+                            <span class="company">INTEL</span>
+                        </div>
+                        <div class="timeline-role">Firmware Engineer, NAND Storage</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-header">
+                            <span class="date">2019-2021</span>
+                            <span class="company">GE AEROSPACE</span>
+                        </div>
+                        <div class="timeline-role">Embedded Software Engineer</div>
+                        <ul class="achievements">
+                            <li>First 4G-LTE Module in Aviation</li>
+                            <li>CI/CD Optimization (80-90% reduction)</li>
+                        </ul>
+                    </div>
+                </div>
+            </article>
+
+            <article id="projects" class="game-section">
+                <h3 class="section-title"><span class="icon">🍊</span> BONUS LEVELS</h3>
+                <div class="project-grid">
+                    <div class="project-card">
+                        <h4>Intelligent FW Debug Agent</h4>
+                        <p>AI-powered debugging system with multi-LLM orchestration and predictive capabilities.</p>
+                        <div class="tech-stack">
+                            <span>DataIku</span><span>Snowflake</span><span>GNN</span>
+                        </div>
+                    </div>
+                    <div class="project-card">
+                        <h4>Copilot Enterprise</h4>
+                        <p>Company-wide AI tool customization. 70% adoption increase.</p>
+                        <div class="tech-stack">
+                            <span>AI Adoption</span><span>Training</span>
+                        </div>
+                    </div>
+                    <div class="project-card">
+                        <h4>GEN5 PCIe SSD</h4>
+                        <p>Technical Product Lead for next-gen storage delivery.</p>
+                        <div class="tech-stack">
+                            <span>PCIe Gen5</span><span>NVMe</span>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <article id="skills" class="game-section">
+                <h3 class="section-title"><span class="icon">🍎</span> POWER-UPS</h3>
+                <div class="skills-container">
+                    <div class="skill-category">
+                        <h4>FIRMWARE</h4>
+                        <div class="skill-bar">
+                            <div class="skill-name">C/C++</div>
+                            <div class="skill-level" style="width: 95%"></div>
+                        </div>
+                        <div class="skill-bar">
+                            <div class="skill-name">NVMe/PCIe</div>
+                            <div class="skill-level" style="width: 90%"></div>
+                        </div>
+                        <div class="skill-bar">
+                            <div class="skill-name">RTOS/Linux</div>
+                            <div class="skill-level" style="width: 85%"></div>
+                        </div>
+                    </div>
+                    <div class="skill-category">
+                        <h4>AI & ML</h4>
+                        <div class="skill-bar">
+                            <div class="skill-name">LLM Integration</div>
+                            <div class="skill-level" style="width: 90%"></div>
+                        </div>
+                        <div class="skill-bar">
+                            <div class="skill-name">RAG Systems</div>
+                            <div class="skill-level" style="width: 85%"></div>
+                        </div>
+                        <div class="skill-bar">
+                            <div class="skill-name">Prompt Eng</div>
+                            <div class="skill-level" style="width: 95%"></div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </main>
+
+    <footer>
+        <p>Built with Gemini 3 Pro — Part of the Zuabi.dev Gallery experiment</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

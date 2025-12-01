@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fadi Al Zuabi - Snake Edition</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="scanline"></div>
+    <div class="container">
+        <header>
+            <div class="score-board">
+                <span class="label">PLAYER:</span> <span class="value">FADI_AL_ZUABI</span>
+                <span class="label">ROLE:</span> <span class="value">FW_ENG_AI_CHAMP</span>
+                <span class="label">LEVEL:</span> <span class="value">5</span>
+            </div>
+            <h1>Fadi Al Zuabi</h1>
+            <p class="tagline">> Building bridges between hardware and AI. Helping engineers ship faster with intelligent tools.</p>
+        </header>
+
+        <nav>
+            <ul>
+                <li><a href="#about">[ ABOUT ]</a></li>
+                <li><a href="#experience">[ EXP ]</a></li>
+                <li><a href="#projects">[ PROJECTS ]</a></li>
+                <li><a href="#skills">[ SKILLS ]</a></li>
+                <li><a href="#contact">[ CONTACT ]</a></li>
+            </ul>
+            <div class="hint">PRESS 'S' TO START GAME</div>
+        </nav>
+
+        <main>
+            <section id="about">
+                <h2>// BIO</h2>
+                <div class="content-block">
+                    <p>I'm a firmware engineer who builds AI systems. UIUC grad, worked at GE Aerospace and Intel, now at Solidigm where I train engineers on AI tools and build systems that make firmware development smarter.</p>
+                    <p>My superpower is bridging deep firmware expertise with cutting-edge AI capabilities.</p>
+                </div>
+            </section>
+
+            <section id="experience">
+                <h2>// CAREER_LOG</h2>
+                <article class="job">
+                    <h3>Solidigm (SK Hynix)</h3>
+                    <div class="meta">2022–Present | Senior Firmware Engineer, AI Champion</div>
+                    <ul>
+                        <li>Leading AI adoption programs (70% Copilot usage increase)</li>
+                        <li>Training engineers to ship faster with AI tools (60+ trained)</li>
+                        <li>Building intelligent firmware debugging systems</li>
+                    </ul>
+                </article>
+                <article class="job">
+                    <h3>Intel</h3>
+                    <div class="meta">2021–2022 | Firmware Engineer, NAND Storage</div>
+                </article>
+                <article class="job">
+                    <h3>GE Aerospace</h3>
+                    <div class="meta">2019–2021 | Embedded Software Engineer</div>
+                    <ul>
+                        <li>CI/CD Optimization: 80-90% runtime reduction</li>
+                        <li>First 4G-LTE Module in Aviation</li>
+                    </ul>
+                </article>
+            </section>
+
+            <section id="projects">
+                <h2>// QUESTS</h2>
+                <div class="grid">
+                    <div class="card">
+                        <h3>Intelligent FW Debug Agent</h3>
+                        <p>AI-powered debugging system with multi-LLM orchestration and predictive capabilities.</p>
+                        <div class="tags">DataIku, Snowflake, GNN</div>
+                    </div>
+                    <div class="card">
+                        <h3>Copilot Deployment</h3>
+                        <p>Company-wide AI tool customization. 70% adoption increase.</p>
+                        <div class="tags">Enterprise AI</div>
+                    </div>
+                    <div class="card">
+                        <h3>GEN5 PCIe SSD</h3>
+                        <p>Technical Product Lead for delivery.</p>
+                        <div class="tags">Firmware, PCIe</div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="skills">
+                <h2>// INVENTORY</h2>
+                <div class="skill-list">
+                    <div class="skill-category">
+                        <h3>Firmware</h3>
+                        <div class="bar-container"><div class="bar" style="width: 95%"></div></div>
+                        <p>C/C++, NVMe, PCIe, RTOS, Linux</p>
+                    </div>
+                    <div class="skill-category">
+                        <h3>AI & ML</h3>
+                        <div class="bar-container"><div class="bar" style="width: 85%"></div></div>
+                        <p>LLMs, RAG, Prompt Eng, DataIku</p>
+                    </div>
+                    <div class="skill-category">
+                        <h3>Cloud/Dev</h3>
+                        <div class="bar-container"><div class="bar" style="width: 70%"></div></div>
+                        <p>GCP, Python, TS, React</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="contact">
+                <h2>// CONNECT</h2>
+                <ul class="links">
+                    <li><a href="mailto:fadi.b.zuabi@gmail.com">EMAIL</a></li>
+                    <li><a href="https://github.com/zzfadi">GITHUB</a></li>
+                    <li><a href="https://linkedin.com/in/fadi-zuabi">LINKEDIN</a></li>
+                    <li><a href="https://x.com/fadi_zuabi">TWITTER</a></li>
+                    <li><a href="https://www.zuabi.dev">WEBSITE</a></li>
+                </ul>
+            </section>
+        </main>
+
+        <footer>
+            Built with Gemini 3 Pro — Part of the Zuabi.dev Gallery experiment
+        </footer>
+    </div>
+
+    <div id="game-overlay" class="hidden">
+        <div class="game-container">
+            <div class="game-header">
+                <span>SCORE: <span id="score">0</span></span>
+                <button id="close-game">[X] EXIT</button>
+            </div>
+            <canvas id="snake-canvas" width="400" height="400"></canvas>
+            <div class="controls-hint">USE ARROW KEYS TO MOVE</div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

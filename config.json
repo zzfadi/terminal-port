@@ -120,6 +120,72 @@
           "date": "2025-11"
         }
       ]
+    },
+    {
+      "id": "pac-man",
+      "label": "PAC-MAN",
+      "description": "Retro arcade game inspired layout with maze navigation",
+      "prompt": "designs/PAC-MAN/prompt.md",
+      "models": [
+        {
+          "id": "pac-man-opus",
+          "model": "Claude Opus 4.5",
+          "path": "pages/PAC-MAN/opus/",
+          "date": "2025-11"
+        },
+        {
+          "id": "pac-man-grok",
+          "model": "Grok Code Fast 1",
+          "path": "pages/pac-man/grok/",
+          "date": "2025-11"
+        },
+        {
+          "id": "pac-man-gemini",
+          "model": "Gemini 3 Pro",
+          "path": "pages/PAC-MAN/gemini/",
+          "date": "2025-11"
+        },
+        {
+          "id": "pac-man-gpt",
+          "model": "GPT-5.1-Codex",
+          "path": "pages/PAC-MAN/gpt/",
+          "date": "2025-11"
+        }
+      ]
+    },
+    {
+      "id": "snake",
+      "label": "Snake",
+      "description": "Snake game inspired layout with playable Easter egg",
+      "prompt": "designs/Snake/prompt.md",
+      "models": [
+        {
+          "id": "snake-opus",
+          "model": "Claude Opus 4.5",
+          "path": "pages/Snake/opus/",
+          "date": "2025-11"
+        },
+        {
+          "id": "snake-gemini",
+          "model": "Gemini 3 Pro",
+          "path": "pages/Snake/gemini/",
+          "date": "2025-11"
+        }
+      ]
+    },
+    {
+      "id": "game-of-life",
+      "label": "Game of Life",
+      "description": "Conway's Game of Life cellular automaton with interactive simulation",
+      "prompt": "designs/GameOfLife/prompt.md",
+      "models": [
+        {
+          "id": "game-of-life-opus",
+          "model": "Claude Opus 4.5",
+          "path": "pages/GameOfLife/opus/",
+          "date": "2025-11"
+        }
+      ]
     }
   ],
   "_readme": {

@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fadi Al Zuabi — Game of Life</title>
+  <meta name="description" content="Firmware engineer. AI builder. Bridging hardware and intelligence.">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <canvas id="game-of-life"></canvas>
+  
+  <div class="overlay">
+    <header class="header">
+      <div class="logo">
+        <span class="cell alive"></span>
+        <span class="cell alive"></span>
+        <span class="cell"></span>
+      </div>
+      <nav class="nav">
+        <a href="#about">About</a>
+        <a href="#work">Work</a>
+        <a href="#skills">Skills</a>
+        <a href="#connect">Connect</a>
+      </nav>
+      <button class="game-controls" id="toggle-game" aria-label="Toggle simulation">
+        <span class="control-icon">⏸</span>
+      </button>
+    </header>
+
+    <main>
+      <section class="hero" id="about">
+        <div class="hero-content">
+          <div class="hero-badge">Generation <span id="generation-count">0</span></div>
+          <h1>Fadi Al Zuabi</h1>
+          <p class="role">Senior Firmware Engineer & AI Champion</p>
+          <p class="tagline">Building bridges between hardware and AI. Helping engineers ship faster with intelligent tools.</p>
+          <div class="hero-meta">
+            <span class="meta-item">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+              Roseville, CA
+            </span>
+            <span class="meta-item">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+              </svg>
+              Solidigm (SK Hynix)
+            </span>
+          </div>
+        </div>
+        <div class="hero-stats">
+          <div class="stat-cell">
+            <div class="stat-value">5+</div>
+            <div class="stat-label">Years Firmware</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-value">60+</div>
+            <div class="stat-label">Engineers Trained</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-value">70%</div>
+            <div class="stat-label">AI Adoption ↑</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-value">90%</div>
+            <div class="stat-label">CI/CD Speedup</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="bio-section">
+        <div class="bio-card">
+          <div class="bio-pattern">
+            <span class="cell alive"></span>
+            <span class="cell"></span>
+            <span class="cell alive"></span>
+            <span class="cell alive"></span>
+            <span class="cell"></span>
+          </div>
+          <p>AI is the biggest leverage multiplier I've seen in my engineering career. I watched junior engineers become 2-3x more productive with the right tools. That's why I champion AI adoption at Solidigm—turning skeptics into believers, one workflow at a time.</p>
+          <p class="bio-highlight">My superpower is bridging deep firmware expertise with cutting-edge AI capabilities.</p>
+        </div>
+      </section>
+
+      <section class="work-section" id="work">
+        <h2>Notable Work</h2>
+        <div class="work-grid">
+          <article class="work-card">
+            <div class="work-header">
+              <div class="work-cells">
+                <span class="cell alive"></span>
+                <span class="cell alive"></span>
+                <span class="cell alive"></span>
+              </div>
+              <span class="work-company">Solidigm</span>
+            </div>
+            <h3>Intelligent Firmware Debug Agent</h3>
+            <p>AI-powered debugging system with multi-LLM orchestration and predictive capabilities for faster root cause analysis.</p>
+            <div class="work-tech">
+              <span>DataIku</span>
+              <span>Snowflake</span>
+              <span>GNN</span>
+              <span>Multi-LLM</span>
+            </div>
+          </article>
+
+          <article class="work-card">
+            <div class="work-header">
+              <div class="work-cells">
+                <span class="cell alive"></span>
+                <span class="cell"></span>
+                <span class="cell alive"></span>
+              </div>
+              <span class="work-company">Solidigm</span>
+            </div>
+            <h3>GitHub Copilot Enterprise Deployment</h3>
+            <p>Company-wide AI tool customization and adoption framework. Trained 60+ senior engineers, achieved 70% adoption increase.</p>
+            <div class="work-tech">
+              <span>Copilot</span>
+              <span>Enterprise</span>
+              <span>Training</span>
+            </div>
+          </article>
+
+          <article class="work-card">
+            <div class="work-header">
+              <div class="work-cells">
+                <span class="cell"></span>
+                <span class="cell alive"></span>
+                <span class="cell alive"></span>
+              </div>
+              <span class="work-company">Solidigm</span>
+            </div>
+            <h3>GEN5 PCIe SSD</h3>
+            <p>Technical Product Lead, primary liaison across firmware, validation, and cross-company teams for next-gen storage.</p>
+            <div class="work-tech">
+              <span>PCIe Gen5</span>
+              <span>NVMe</span>
+              <span>Firmware</span>
+            </div>
+          </article>
+
+          <article class="work-card">
+            <div class="work-header">
+              <div class="work-cells">
+                <span class="cell alive"></span>
+                <span class="cell alive"></span>
+                <span class="cell"></span>
+              </div>
+              <span class="work-company">GE Aerospace</span>
+            </div>
+            <h3>CI/CD Optimization</h3>
+            <p>Cloud-based static analysis automation achieving 80-90% runtime reduction and $30k+ annual savings.</p>
+            <div class="work-tech">
+              <span>Cloud</span>
+              <span>CI/CD</span>
+              <span>Static Analysis</span>
+            </div>
+          </article>
+
+          <article class="work-card">
+            <div class="work-header">
+              <div class="work-cells">
+                <span class="cell"></span>
+                <span class="cell alive"></span>
+                <span class="cell"></span>
+              </div>
+              <span class="work-company">GE Aerospace</span>
+            </div>
+            <h3>First 4G-LTE Module in Aviation</h3>
+            <p>Pioneered the first cellular module integration in the aviation health monitoring industry.</p>
+            <div class="work-tech">
+              <span>4G-LTE</span>
+              <span>Aviation</span>
+              <span>Embedded</span>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="skills-section" id="skills">
+        <h2>Skills</h2>
+        <div class="skills-grid">
+          <div class="skill-category">
+            <div class="skill-header">
+              <h3>Firmware & Embedded</h3>
+              <span class="skill-years">5+ years</span>
+            </div>
+            <div class="skill-cells">
+              <span class="cell alive" title="C/C++"></span>
+              <span class="cell alive" title="NVMe"></span>
+              <span class="cell alive" title="PCIe"></span>
+              <span class="cell alive" title="ARM"></span>
+              <span class="cell alive" title="RTOS"></span>
+            </div>
+            <ul class="skill-list">
+              <li>C/C++, NVMe, PCIe Gen4/Gen5</li>
+              <li>Multi-core (ARM, Xtensa), RTOS</li>
+              <li>SSD firmware, NAND flash</li>
+              <li>DO-178C, MISRA C/C++</li>
+            </ul>
+          </div>
+
+          <div class="skill-category">
+            <div class="skill-header">
+              <h3>AI & Machine Learning</h3>
+              <span class="skill-years">1.5+ years</span>
+            </div>
+            <div class="skill-cells">
+              <span class="cell alive" title="LLMs"></span>
+              <span class="cell alive" title="RAG"></span>
+              <span class="cell alive" title="Prompting"></span>
+              <span class="cell" title=""></span>
+              <span class="cell alive" title="DataIku"></span>
+            </div>
+            <ul class="skill-list">
+              <li>LLM integration (GPT-4, Claude, Gemini)</li>
+              <li>Prompt engineering, RAG systems</li>
+              <li>DataIku, Snowflake, Vertex AI</li>
+              <li>Enterprise AI adoption</li>
+            </ul>
+          </div>
+
+          <div class="skill-category">
+            <div class="skill-header">
+              <h3>Cloud & Development</h3>
+              <span class="skill-years">2+ years</span>
+            </div>
+            <div class="skill-cells">
+              <span class="cell alive" title="GCP"></span>
+              <span class="cell" title=""></span>
+              <span class="cell alive" title="Python"></span>
+              <span class="cell alive" title="TypeScript"></span>
+              <span class="cell" title=""></span>
+            </div>
+            <ul class="skill-list">
+              <li>GCP, Firebase</li>
+              <li>Python, TypeScript</li>
+              <li>React, Next.js</li>
+            </ul>
+          </div>
+
+          <div class="skill-category">
+            <div class="skill-header">
+              <h3>Leadership</h3>
+              <span class="skill-years">3+ years</span>
+            </div>
+            <div class="skill-cells">
+              <span class="cell alive" title="Training"></span>
+              <span class="cell alive" title="Cross-functional"></span>
+              <span class="cell alive" title="Product"></span>
+              <span class="cell alive" title="Mentoring"></span>
+              <span class="cell" title=""></span>
+            </div>
+            <ul class="skill-list">
+              <li>Trained 60+ engineers</li>
+              <li>Cross-functional team leadership</li>
+              <li>Technical product ownership</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="timeline-section">
+        <h2>Career Evolution</h2>
+        <div class="timeline">
+          <div class="timeline-item">
+            <div class="timeline-marker">
+              <span class="cell alive"></span>
+            </div>
+            <div class="timeline-content">
+              <span class="timeline-date">2019</span>
+              <h3>B.S. Electrical Engineering — UIUC</h3>
+              <p>Focus: Embedded Systems, Digital Design</p>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-marker">
+              <span class="cell alive"></span>
+            </div>
+            <div class="timeline-content">
+              <span class="timeline-date">2019–2021</span>
+              <h3>GE Aerospace</h3>
+              <p>Embedded Software Engineer, Aircraft Systems</p>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-marker">
+              <span class="cell alive"></span>
+            </div>
+            <div class="timeline-content">
+              <span class="timeline-date">2021–2022</span>
+              <h3>Intel</h3>
+              <p>Firmware Engineer, NAND Storage</p>
+            </div>
+          </div>
+          <div class="timeline-item current">
+            <div class="timeline-marker">
+              <span class="cell alive pulse"></span>
+            </div>
+            <div class="timeline-content">
+              <span class="timeline-date">2022–Present</span>
+              <h3>Solidigm (SK Hynix)</h3>
+              <p>Senior Firmware Engineer, AI Champion</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="connect-section" id="connect">
+        <h2>Connect</h2>
+        <p class="connect-intro">Let's evolve ideas together. Reach out through any channel.</p>
+        <div class="connect-grid">
+          <a href="mailto:fadi.b.zuabi@gmail.com" class="connect-card">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+              <polyline points="22,6 12,13 2,6"></polyline>
+            </svg>
+            <span>Email</span>
+          </a>
+          <a href="https://github.com/zzfadi" target="_blank" rel="noopener noreferrer" class="connect-card">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+            </svg>
+            <span>GitHub</span>
+          </a>
+          <a href="https://linkedin.com/in/fadi-zuabi" target="_blank" rel="noopener noreferrer" class="connect-card">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+            </svg>
+            <span>LinkedIn</span>
+          </a>
+          <a href="https://x.com/fadi_zuabi" target="_blank" rel="noopener noreferrer" class="connect-card">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+            </svg>
+            <span>X/Twitter</span>
+          </a>
+        </div>
+      </section>
+
+      <section class="game-info">
+        <h2>About This Page</h2>
+        <p>This portfolio is powered by <strong>Conway's Game of Life</strong>—a cellular automaton where cells live, die, or are born based on simple rules.</p>
+        <div class="game-controls-info">
+          <h3>🎮 Interactive Controls</h3>
+          <ul>
+            <li><strong>Click</strong> anywhere to spawn patterns (gliders, spaceships, pulsars)</li>
+            <li><strong>Click & drag</strong> to draw cells freely</li>
+            <li><strong>Space</strong> to pause/resume</li>
+            <li><strong>R</strong> to reset with new patterns</li>
+            <li><strong>C</strong> to clear the board</li>
+          </ul>
+        </div>
+        <div class="game-rules">
+          <div class="rule">
+            <div class="rule-cells">
+              <span class="cell alive"></span>
+              <span class="cell"></span>
+              <span class="cell"></span>
+            </div>
+            <p><strong>Underpopulation:</strong> Live cell with &lt;2 neighbors dies</p>
+          </div>
+          <div class="rule">
+            <div class="rule-cells">
+              <span class="cell alive"></span>
+              <span class="cell alive"></span>
+              <span class="cell alive"></span>
+            </div>
+            <p><strong>Survival:</strong> Live cell with 2-3 neighbors lives</p>
+          </div>
+          <div class="rule">
+            <div class="rule-cells">
+              <span class="cell alive"></span>
+              <span class="cell alive"></span>
+              <span class="cell alive"></span>
+              <span class="cell alive"></span>
+            </div>
+            <p><strong>Overpopulation:</strong> Live cell with &gt;3 neighbors dies</p>
+          </div>
+          <div class="rule">
+            <div class="rule-cells">
+              <span class="cell"></span>
+              <span class="cell alive"></span>
+              <span class="cell alive"></span>
+              <span class="cell alive"></span>
+            </div>
+            <p><strong>Reproduction:</strong> Dead cell with exactly 3 neighbors becomes alive</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>Built with Claude Opus 4.5 — Part of the <a href="https://zuabi.dev">Zuabi.dev</a> Gallery experiment</p>
+      <p class="footer-sub">Like the cells in Game of Life, great things emerge from simple rules and connections.</p>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

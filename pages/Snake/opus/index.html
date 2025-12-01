@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fadi Al Zuabi — Senior Firmware Engineer & AI Champion</title>
+  <meta name="description" content="Firmware engineer building AI systems. Bridging hardware and intelligence.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Snake Game Overlay (Hidden by default) -->
+  <div id="game-overlay" class="game-overlay hidden">
+    <div class="game-container">
+      <div class="game-header">
+        <span class="game-title">🐍 SNAKE</span>
+        <span class="game-score">Score: <span id="score">0</span></span>
+      </div>
+      <canvas id="game-canvas" width="400" height="400"></canvas>
+      <div class="game-controls">
+        <p>Arrow keys to move • <kbd>ESC</kbd> to exit</p>
+        <button id="start-btn" class="game-btn">Start Game</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game Hint -->
+  <div class="game-hint" id="game-hint">
+    Press <kbd>S</kbd> to play Snake 🐍
+  </div>
+
+  <header class="header">
+    <nav class="nav">
+      <div class="nav-brand">
+        <span class="snake-icon">🐍</span>
+        <span class="brand-text">FZ</span>
+      </div>
+      <ul class="nav-links">
+        <li><a href="#about">About</a></li>
+        <li><a href="#work">Work</a></li>
+        <li><a href="#skills">Skills</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" id="about">
+      <div class="hero-content">
+        <div class="hero-text">
+          <p class="hero-greeting">Hello, I'm</p>
+          <h1 class="hero-name">Fadi Al Zuabi</h1>
+          <p class="hero-role">Senior Firmware Engineer & AI Champion</p>
+          <p class="hero-tagline">Building bridges between hardware and AI. Helping engineers ship faster with intelligent tools.</p>
+          <div class="hero-stats">
+            <div class="stat">
+              <span class="stat-value">5+</span>
+              <span class="stat-label">Years Firmware</span>
+            </div>
+            <div class="stat">
+              <span class="stat-value">60+</span>
+              <span class="stat-label">Engineers Trained</span>
+            </div>
+            <div class="stat">
+              <span class="stat-value">70%</span>
+              <span class="stat-label">AI Adoption ↑</span>
+            </div>
+          </div>
+          <div class="hero-links">
+            <a href="https://github.com/zzfadi" target="_blank" rel="noopener" class="social-link">GitHub</a>
+            <a href="https://linkedin.com/in/fadi-zuabi" target="_blank" rel="noopener" class="social-link">LinkedIn</a>
+            <a href="https://x.com/fadi_zuabi" target="_blank" rel="noopener" class="social-link">X/Twitter</a>
+          </div>
+        </div>
+        <div class="hero-visual">
+          <div class="snake-animation">
+            <div class="snake-segment"></div>
+            <div class="snake-segment"></div>
+            <div class="snake-segment"></div>
+            <div class="snake-segment"></div>
+            <div class="snake-segment head"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="bio-section">
+      <div class="container">
+        <article class="bio-card">
+          <div class="bio-icon">💡</div>
+          <p class="bio-text">AI is the biggest leverage multiplier I've seen in my engineering career. I watched junior engineers become 2-3x more productive with the right tools. That's why I champion AI adoption at Solidigm—turning skeptics into believers, one workflow at a time. My superpower is bridging deep firmware expertise with cutting-edge AI capabilities.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="work-section" id="work">
+      <div class="container">
+        <h2 class="section-title">
+          <span class="title-icon">🎮</span>
+          Notable Work
+        </h2>
+        <div class="work-grid">
+          <article class="work-card">
+            <div class="work-header">
+              <span class="work-emoji">🤖</span>
+              <h3 class="work-title">Intelligent Firmware Debug Agent</h3>
+            </div>
+            <p class="work-company">Solidigm</p>
+            <p class="work-description">AI-powered debugging system with multi-LLM orchestration and predictive capabilities</p>
+            <div class="work-tech">
+              <span class="tech-tag">DataIku</span>
+              <span class="tech-tag">Snowflake</span>
+              <span class="tech-tag">GNN</span>
+              <span class="tech-tag">Multi-LLM</span>
+            </div>
+          </article>
+
+          <article class="work-card">
+            <div class="work-header">
+              <span class="work-emoji">🚀</span>
+              <h3 class="work-title">GitHub Copilot Enterprise</h3>
+            </div>
+            <p class="work-company">Solidigm</p>
+            <p class="work-description">Company-wide AI tool customization and adoption framework</p>
+            <div class="work-tech">
+              <span class="tech-tag highlight">70% adoption ↑</span>
+              <span class="tech-tag highlight">60+ trained</span>
+            </div>
+          </article>
+
+          <article class="work-card">
+            <div class="work-header">
+              <span class="work-emoji">💾</span>
+              <h3 class="work-title">GEN5 PCIe SSD</h3>
+            </div>
+            <p class="work-company">Solidigm</p>
+            <p class="work-description">Technical Product Lead, primary liaison across firmware/validation/cross-company teams</p>
+            <div class="work-tech">
+              <span class="tech-tag">PCIe Gen5</span>
+              <span class="tech-tag">NVMe</span>
+              <span class="tech-tag">Firmware</span>
+            </div>
+          </article>
+
+          <article class="work-card">
+            <div class="work-header">
+              <span class="work-emoji">⚡</span>
+              <h3 class="work-title">CI/CD Optimization</h3>
+            </div>
+            <p class="work-company">GE Aerospace</p>
+            <p class="work-description">Cloud-based static analysis automation</p>
+            <div class="work-tech">
+              <span class="tech-tag highlight">80-90% faster</span>
+              <span class="tech-tag highlight">$30k+ saved</span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="skills-section" id="skills">
+      <div class="container">
+        <h2 class="section-title">
+          <span class="title-icon">🏆</span>
+          Skills
+        </h2>
+        <div class="skills-grid">
+          <article class="skill-card">
+            <h3 class="skill-category">Firmware & Embedded</h3>
+            <p class="skill-experience">5+ years</p>
+            <div class="skill-tags">
+              <span>C/C++</span>
+              <span>NVMe</span>
+              <span>PCIe Gen4/Gen5</span>
+              <span>RTOS</span>
+              <span>ARM</span>
+              <span>Xtensa</span>
+              <span>DO-178C</span>
+            </div>
+          </article>
+
+          <article class="skill-card">
+            <h3 class="skill-category">AI & Machine Learning</h3>
+            <p class="skill-experience">1.5+ years</p>
+            <div class="skill-tags">
+              <span>LLM Integration</span>
+              <span>Prompt Engineering</span>
+              <span>RAG Systems</span>
+              <span>DataIku</span>
+              <span>Vertex AI</span>
+            </div>
+          </article>
+
+          <article class="skill-card">
+            <h3 class="skill-category">Cloud & Development</h3>
+            <p class="skill-experience">2+ years</p>
+            <div class="skill-tags">
+              <span>GCP</span>
+              <span>Firebase</span>
+              <span>Python</span>
+              <span>TypeScript</span>
+              <span>React</span>
+              <span>Next.js</span>
+            </div>
+          </article>
+
+          <article class="skill-card">
+            <h3 class="skill-category">Leadership</h3>
+            <p class="skill-experience">3+ years</p>
+            <div class="skill-tags">
+              <span>60+ Engineers Trained</span>
+              <span>Cross-functional Teams</span>
+              <span>Technical Product Ownership</span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="career-section">
+      <div class="container">
+        <h2 class="section-title">
+          <span class="title-icon">📍</span>
+          Career Path
+        </h2>
+        <div class="career-timeline">
+          <article class="career-item current">
+            <div class="career-marker"></div>
+            <div class="career-content">
+              <h3>Solidigm (SK Hynix)</h3>
+              <p class="career-role">Senior Firmware Engineer, AI Champion</p>
+              <p class="career-date">2022 – Present</p>
+            </div>
+          </article>
+          <article class="career-item">
+            <div class="career-marker"></div>
+            <div class="career-content">
+              <h3>Intel</h3>
+              <p class="career-role">Firmware Engineer, NAND Storage</p>
+              <p class="career-date">2021 – 2022</p>
+            </div>
+          </article>
+          <article class="career-item">
+            <div class="career-marker"></div>
+            <div class="career-content">
+              <h3>GE Aerospace</h3>
+              <p class="career-role">Embedded Software Engineer, Aircraft Systems</p>
+              <p class="career-date">2019 – 2021</p>
+            </div>
+          </article>
+          <article class="career-item education">
+            <div class="career-marker"></div>
+            <div class="career-content">
+              <h3>University of Illinois (UIUC)</h3>
+              <p class="career-role">B.S. Electrical Engineering</p>
+              <p class="career-date">2019</p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="contact-section" id="contact">
+      <div class="container">
+        <h2 class="section-title">
+          <span class="title-icon">📬</span>
+          Get In Touch
+        </h2>
+        <div class="contact-content">
+          <p class="contact-text">Interested in AI adoption, firmware engineering, or just want to chat?</p>
+          <div class="contact-links">
+            <a href="mailto:fadi.b.zuabi@gmail.com" class="contact-btn primary">
+              <span>📧</span> Email Me
+            </a>
+            <a href="https://linkedin.com/in/fadi-zuabi" target="_blank" rel="noopener" class="contact-btn">
+              <span>💼</span> LinkedIn
+            </a>
+            <a href="https://github.com/zzfadi" target="_blank" rel="noopener" class="contact-btn">
+              <span>🐙</span> GitHub
+            </a>
+          </div>
+          <p class="contact-location">📍 Roseville, CA</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p class="footer-text">Built with Claude Opus 4.5 — Part of the <a href="https://www.zuabi.dev" target="_blank" rel="noopener">Zuabi.dev</a> Gallery experiment</p>
+      <p class="footer-hint">🐍 Press <kbd>S</kbd> to play Snake</p>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

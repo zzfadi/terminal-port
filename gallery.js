@@ -1,7 +1,7 @@
 /**
- * Gallery Navigation System v2
- * Adaptive Command Palette with Model Brand Icons
- * Desktop: Center modal | Mobile: Bottom sheet with swipe
+ * Gallery Navigation System v3
+ * Attached Panel Switcher with Model Brand Icons
+ * Desktop: Anchored panel | Mobile: Bottom sheet with swipe
  */
 
 (function() {
@@ -36,6 +36,7 @@
   let currentDesignId = null;
   let isOpen = false;
   let touchStartY = 0;
+  let currentTheme = null; // null = system, 'light', 'dark'
 
   // ============================================
   // DOM Elements
@@ -58,6 +59,49 @@
   const promptModalClose = document.getElementById('prompt-modal-close');
   const loadingOverlay = document.getElementById('loading-overlay');
   const keyboardHint = document.getElementById('keyboard-hint');
+  const themeToggleBtn = document.getElementById('theme-toggle');
+
+  // ============================================
+  // Theme Management (controls iframe pages)
+  // ============================================
+
+  function initTheme() {
+    const savedTheme = localStorage.getItem('gallery-theme');
+    if (savedTheme) {
+      currentTheme = savedTheme;
+    } else {
+      // Default to system preference
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      currentTheme = prefersDark ? 'dark' : 'light';
+    }
+    applyThemeToFrame();
+    updateThemeButton();
+  }
+
+  function toggleTheme() {
+    currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    localStorage.setItem('gallery-theme', currentTheme);
+    applyThemeToFrame();
+    updateThemeButton();
+  }
+
+  function updateThemeButton() {
+    themeToggleBtn.classList.toggle('light-mode', currentTheme === 'light');
+  }
+
+  function applyThemeToFrame() {
+    // Apply color-scheme to iframe to override prefers-color-scheme
+    frame.style.colorScheme = currentTheme;
+    
+    // Try to inject into iframe document if same-origin
+    try {
+      if (frame.contentDocument) {
+        frame.contentDocument.documentElement.style.colorScheme = currentTheme;
+      }
+    } catch (e) {
+      // Cross-origin, rely on colorScheme style
+    }
+  }
 
   // ============================================
   // Config Loading
@@ -400,7 +444,11 @@
       // Click handler
       card.addEventListener('click', function() {
         loadPage(model.id);
-        closePalette();
+
+        // Auto-close on mobile only (desktop stays open)
+        if (window.innerWidth < 768) {
+          closePalette();
+        }
       });
 
       // Keyboard support
@@ -408,7 +456,11 @@
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           loadPage(model.id);
-          closePalette();
+
+          // Auto-close on mobile only
+          if (window.innerWidth < 768) {
+            closePalette();
+          }
         }
       });
 
@@ -423,6 +475,7 @@
   function openPalette() {
     isOpen = true;
     trigger.setAttribute('aria-expanded', 'true');
+    trigger.classList.add('active');
     backdrop.classList.add('open');
     palette.classList.add('open');
 
@@ -442,6 +495,7 @@
   function closePalette() {
     isOpen = false;
     trigger.setAttribute('aria-expanded', 'false');
+    trigger.classList.remove('active');
     backdrop.classList.remove('open');
     palette.classList.remove('open');
     trigger.focus();
@@ -640,6 +694,9 @@
     // Close button
     paletteClose.addEventListener('click', closePalette);
 
+    // Theme toggle
+    themeToggleBtn.addEventListener('click', toggleTheme);
+
     // Backdrop click
     backdrop.addEventListener('click', closePalette);
 
@@ -671,6 +728,8 @@
       loadingOverlay.classList.remove('visible');
       frame.classList.remove('loading');
       showKeyboardHint();
+      // Apply theme to newly loaded frame
+      applyThemeToFrame();
     });
 
     // Click outside palette to close
@@ -693,6 +752,9 @@
   }
 
   async function init() {
+    // Initialize theme first to prevent flash
+    initTheme();
+
     await loadConfig();
     if (!config) {
       console.error('Failed to initialize: no config');
