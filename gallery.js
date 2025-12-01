@@ -166,7 +166,7 @@
 
   async function loadConfig() {
     try {
-      const response = await fetch('config.json');
+      const response = await fetch('config.json?v=2');
       config = await response.json();
       return config;
     } catch (error) {
