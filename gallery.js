@@ -90,16 +90,73 @@
   }
 
   function applyThemeToFrame() {
-    // Apply color-scheme to iframe to override prefers-color-scheme
+    // Method 1: Apply color-scheme to iframe (works in Chrome)
     frame.style.colorScheme = currentTheme;
     
-    // Try to inject into iframe document if same-origin
+    // Method 2: Try to inject into iframe document if same-origin (works in Safari)
     try {
-      if (frame.contentDocument) {
-        frame.contentDocument.documentElement.style.colorScheme = currentTheme;
+      if (frame.contentDocument && frame.contentDocument.documentElement) {
+        const doc = frame.contentDocument;
+        const html = doc.documentElement;
+        
+        // Set color-scheme on html element
+        html.style.colorScheme = currentTheme;
+        
+        // Add/update a style tag that forces theme by overriding CSS variables
+        // This is the most reliable cross-browser method
+        let themeStyle = doc.getElementById('gallery-theme-override');
+        if (!themeStyle) {
+          themeStyle = doc.createElement('style');
+          themeStyle.id = 'gallery-theme-override';
+          doc.head.appendChild(themeStyle);
+        }
+        
+        // For Safari: Override CSS variables commonly used in pages
+        // This approach directly sets the CSS custom properties that pages use
+        if (currentTheme === 'dark') {
+          themeStyle.textContent = `
+            :root {
+              color-scheme: dark !important;
+              /* Common dark theme overrides for minimal pages */
+              --bg: #0a0a0a !important;
+              --bg-alt: #141414 !important;
+              --text-primary: #f5f5f5 !important;
+              --text-secondary: #a0a0a0 !important;
+              --text-muted: #666666 !important;
+              --accent-light: #1a2a3d !important;
+              --border: #2a2a2a !important;
+              --shadow: rgba(0, 0, 0, 0.3) !important;
+            }
+            html, body {
+              color-scheme: dark !important;
+            }
+          `;
+        } else {
+          themeStyle.textContent = `
+            :root {
+              color-scheme: light !important;
+              /* Common light theme overrides for minimal pages */
+              --bg: #fafafa !important;
+              --bg-alt: #ffffff !important;
+              --text-primary: #111111 !important;
+              --text-secondary: #555555 !important;
+              --text-muted: #888888 !important;
+              --accent-light: #e6f0ff !important;
+              --border: #e5e5e5 !important;
+              --shadow: rgba(0, 0, 0, 0.06) !important;
+            }
+            html, body {
+              color-scheme: light !important;
+            }
+          `;
+        }
+        
+        // Also set data attribute for pages that use it
+        html.setAttribute('data-theme', currentTheme);
       }
     } catch (e) {
-      // Cross-origin, rely on colorScheme style
+      // Cross-origin iframe, can only rely on color-scheme style on iframe element
+      console.log('Could not inject theme into iframe (cross-origin)');
     }
   }
 
