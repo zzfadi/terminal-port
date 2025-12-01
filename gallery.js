@@ -310,48 +310,110 @@
   }
 
   // ============================================
-  // Design Chips
+  // Design Tiles
   // ============================================
+
+  // Glider pattern for Game of Life preview
+  const GLIDER_CELLS = [2, 9, 16, 17, 18, 10, 3]; // indices for a glider in 8x6 grid
+
+  function createDesignPreview(designId) {
+    const preview = document.createElement('div');
+    preview.className = 'design-tile-preview';
+    preview.setAttribute('data-design', designId);
+
+    const inner = document.createElement('div');
+    inner.className = 'design-tile-preview-inner';
+
+    // Special case for game-of-life: add grid cells
+    if (designId === 'game-of-life') {
+      for (let i = 0; i < 48; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell' + (GLIDER_CELLS.includes(i) ? ' alive' : '');
+        inner.appendChild(cell);
+      }
+    }
+
+    preview.appendChild(inner);
+    return preview;
+  }
 
   function renderDesignChips() {
     clearElement(paletteDesigns);
 
     config.designs.forEach(function(design, index) {
-      const chip = document.createElement('button');
-      chip.className = 'design-chip';
-      chip.dataset.designId = design.id;
-      chip.setAttribute('role', 'tab');
-      chip.setAttribute('aria-selected', design.id === currentDesignId);
-      chip.style.animationDelay = (50 + index * 50) + 'ms';
+      const tile = document.createElement('button');
+      tile.className = 'design-tile';
+      tile.dataset.designId = design.id;
+      tile.setAttribute('role', 'tab');
+      tile.setAttribute('aria-selected', design.id === currentDesignId);
+      tile.style.animationDelay = (index * 40) + 'ms';
 
-      const icon = document.createElement('span');
-      icon.className = 'design-chip-icon';
-      icon.textContent = getDesignIcon(design.id);
-      chip.appendChild(icon);
+      // Create visual preview
+      const preview = createDesignPreview(design.id);
+      tile.appendChild(preview);
 
-      const label = document.createElement('span');
-      label.textContent = design.label;
-      chip.appendChild(label);
+      // Label container
+      const labelContainer = document.createElement('div');
+      labelContainer.className = 'design-tile-label';
+
+      const name = document.createElement('span');
+      name.className = 'design-tile-name';
+      name.textContent = design.label;
+      labelContainer.appendChild(name);
 
       const count = document.createElement('span');
-      count.className = 'design-chip-count';
-      count.textContent = design.models.length;
-      chip.appendChild(count);
+      count.className = 'design-tile-count';
+      count.textContent = design.models.length + (design.models.length === 1 ? ' model' : ' models');
+      labelContainer.appendChild(count);
 
-      chip.addEventListener('click', function() {
+      tile.appendChild(labelContainer);
+
+      tile.addEventListener('click', function() {
         selectDesign(design.id);
       });
 
-      paletteDesigns.appendChild(chip);
+      paletteDesigns.appendChild(tile);
     });
+
+    // Setup scroll indicators
+    setupScrollIndicators();
+  }
+
+  function setupScrollIndicators() {
+    const leftIndicator = document.getElementById('scroll-indicator-left');
+    const rightIndicator = document.getElementById('scroll-indicator-right');
+
+    if (!leftIndicator || !rightIndicator) return;
+
+    function updateScrollIndicators() {
+      const scrollLeft = paletteDesigns.scrollLeft;
+      const scrollWidth = paletteDesigns.scrollWidth;
+      const clientWidth = paletteDesigns.clientWidth;
+      const maxScroll = scrollWidth - clientWidth;
+
+      // Show left indicator if scrolled right
+      leftIndicator.classList.toggle('visible', scrollLeft > 10);
+
+      // Show right indicator if there's more to scroll
+      rightIndicator.classList.toggle('visible', scrollLeft < maxScroll - 10);
+    }
+
+    // Initial check
+    setTimeout(updateScrollIndicators, 100);
+
+    // Update on scroll
+    paletteDesigns.addEventListener('scroll', updateScrollIndicators, { passive: true });
+
+    // Update on resize
+    window.addEventListener('resize', updateScrollIndicators, { passive: true });
   }
 
   function updateDesignChips() {
-    const chips = paletteDesigns.querySelectorAll('.design-chip');
-    chips.forEach(function(chip) {
-      const isActive = chip.dataset.designId === currentDesignId;
-      chip.classList.toggle('active', isActive);
-      chip.setAttribute('aria-selected', isActive);
+    const tiles = paletteDesigns.querySelectorAll('.design-tile');
+    tiles.forEach(function(tile) {
+      const isActive = tile.dataset.designId === currentDesignId;
+      tile.classList.toggle('active', isActive);
+      tile.setAttribute('aria-selected', isActive);
     });
   }
 
