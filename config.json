@@ -240,6 +240,32 @@
           ]
         },
         {
+          "id": "retro-80s",
+          "label": "80s Retro",
+          "description": "Synthwave neon aesthetic with chrome typography and grid horizon",
+          "prompt": "designs/Retro/80s/prompt.md",
+          "models": [
+            {
+              "id": "retro-80s-opus",
+              "model": "Claude Opus 4.5",
+              "path": "pages/Retro/80s/opus/",
+              "date": "2025-12"
+            },
+            {
+              "id": "retro-80s-gemini",
+              "model": "Gemini 3 Pro",
+              "path": "pages/Retro/80s/gemini/",
+              "date": "2025-12"
+            },
+            {
+              "id": "retro-80s-gpt",
+              "model": "GPT-5.1-Codex-Max (Preview)",
+              "path": "pages/Retro/80s/gpt/",
+              "date": "2025-12"
+            }
+          ]
+        },
+        {
           "id": "retro-90s",
           "label": "90s Retro",
           "description": "Neon glitch 90s interface with VHS texture and arcade typography",

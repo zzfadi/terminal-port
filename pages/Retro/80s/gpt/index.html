@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fadi Al Zuabi — Retro 80s Portfolio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="background">
+    <div class="grid"></div>
+    <div class="sun"></div>
+    <div class="glow-band"></div>
+    <canvas id="stars" aria-hidden="true"></canvas>
+  </div>
+
+  <div class="chrome-frame">
+    <header class="top-bar">
+      <div class="logo">Fadi // 80s AI</div>
+      <nav aria-label="Primary">
+        <a href="#top">Home</a>
+        <a href="#projects">Projects</a>
+        <a href="#skills">Skills</a>
+        <a href="#experience">Experience</a>
+        <a href="#contact">Contact</a>
+      </nav>
+      <div class="tag">Roseville, CA</div>
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <div class="hero-text">
+          <p class="eyebrow">Senior Firmware Engineer · AI Champion</p>
+          <h1>Fadi Al Zuabi</h1>
+          <p class="lede">Building bridges between hardware and intelligence. Making AI useful for people who build real systems.</p>
+          <div class="cta-row">
+            <a class="btn primary" href="mailto:fadi.b.zuabi@gmail.com">Email Fadi</a>
+            <a class="btn ghost" href="https://github.com/zzfadi" target="_blank" rel="noreferrer">GitHub</a>
+            <a class="btn ghost" href="https://www.linkedin.com/in/fadi-zuabi" target="_blank" rel="noreferrer">LinkedIn</a>
+          </div>
+          <div class="stats">
+            <div class="stat">
+              <span class="label">Firmware</span>
+              <span class="value">5+ yrs</span>
+              <span class="hint">PCIe/NVMe, RTOS, kernels</span>
+            </div>
+            <div class="stat">
+              <span class="label">AI Adoption</span>
+              <span class="value">70%↑</span>
+              <span class="hint">Copilot programs at Solidigm</span>
+            </div>
+            <div class="stat">
+              <span class="label">Engineers trained</span>
+              <span class="value">60+</span>
+              <span class="hint">Hands-on enablement</span>
+            </div>
+            <div class="stat">
+              <span class="label">CI/CD savings</span>
+              <span class="value">80–90%</span>
+              <span class="hint">Runtime reduction</span>
+            </div>
+          </div>
+        </div>
+        <div class="hero-card" role="presentation">
+          <div class="scan">AI x Firmware</div>
+          <div class="diag">Solidigm · Intel · GE</div>
+          <div class="badge">GEN5 PCIe SSD Lead</div>
+          <div class="badge">Multi-LLM Orchestration</div>
+          <div class="badge">Graph Neural Networks</div>
+          <div class="badge">Snowflake + DataIku</div>
+        </div>
+      </section>
+
+      <section class="panel" id="projects" aria-labelledby="projects-title">
+        <div class="panel-header">
+          <p class="eyebrow">Ship it, but neon</p>
+          <h2 id="projects-title">Selected Projects</h2>
+          <p class="note">Impact-forward stories from Solidigm and before.</p>
+        </div>
+        <div class="cards">
+          <article class="card">
+            <header>
+              <p class="label">Solidigm · AI Systems</p>
+              <h3>Intelligent Firmware Debug Agent</h3>
+            </header>
+            <p>Multi-LLM orchestrated assistant predicting failure signatures and guiding debuggers across NVMe/PCIe firmware stacks.</p>
+            <ul>
+              <li>DataIku + Snowflake pipelines with graph neural networks for trace insights</li>
+              <li>Shortened debug loops and raised confidence on edge-case triage</li>
+            </ul>
+          </article>
+          <article class="card">
+            <header>
+              <p class="label">Solidigm · Enablement</p>
+              <h3>GitHub Copilot Enterprise Deployment</h3>
+            </header>
+            <p>Company-wide AI tool customization, policy, and hands-on training for senior firmware teams.</p>
+            <ul>
+              <li>70% adoption lift; 60+ engineers trained</li>
+              <li>Playbooks tuned for NVMe firmware codebases</li>
+            </ul>
+          </article>
+          <article class="card">
+            <header>
+              <p class="label">GE Aerospace</p>
+              <h3>CI/CD Optimization + 4G-LTE Module</h3>
+            </header>
+            <p>Automated static analysis and first aviation 4G module integration.</p>
+            <ul>
+              <li>80–90% runtime reduction saving $30k+/yr</li>
+              <li>Shipped first cellular module into aviation health monitoring</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section class="panel" id="skills" aria-labelledby="skills-title">
+        <div class="panel-header">
+          <p class="eyebrow">Tech stack</p>
+          <h2 id="skills-title">Skills that hit the metal</h2>
+          <p class="note">Firmware depth fused with AI systems thinking.</p>
+        </div>
+        <div class="skill-grid">
+          <article class="skill-block">
+            <h3>Firmware & Embedded</h3>
+            <p>NVMe | PCIe Gen4/Gen5 | NAND | RTOS | Linux kernel | ARM & Xtensa multicore | DO-178C | MISRA C/C++</p>
+            <p class="hint">5+ years shipping SSD firmware and aircraft systems.</p>
+          </article>
+          <article class="skill-block">
+            <h3>AI & Machine Learning</h3>
+            <p>LLM integration (GPT-4/5, Claude, Gemini) | prompt engineering | RAG | evaluation harnesses | GNNs for traces</p>
+            <p class="hint">Building assistants that understand firmware debugging.</p>
+          </article>
+          <article class="skill-block">
+            <h3>Cloud & Product</h3>
+            <p>DataIku, Snowflake, Vertex AI, GCP, Firebase | Python, TypeScript, React</p>
+            <p class="hint">Designing data flows that connect silicon logs to AI insights.</p>
+          </article>
+          <article class="skill-block">
+            <h3>Leadership</h3>
+            <p>Technical product ownership | cross-functional liaisons | training programs | AI adoption strategy</p>
+            <p class="hint">Turning skeptics into believers through working demos.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="panel" id="experience" aria-labelledby="experience-title">
+        <div class="panel-header">
+          <p class="eyebrow">Career lane</p>
+          <h2 id="experience-title">Experience timeline</h2>
+          <p class="note">From avionics to PCIe Gen5 SSDs.</p>
+        </div>
+        <div class="timeline">
+          <div class="timeline-item">
+            <div class="time">2022 — Present</div>
+            <div class="content">
+              <h3>Solidigm (SK Hynix)</h3>
+              <p>Senior Firmware Engineer & AI Champion. Leading AI adoption, building intelligent debugging systems, and driving GEN5 PCIe SSD delivery.</p>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="time">2021 — 2022</div>
+            <div class="content">
+              <h3>Intel</h3>
+              <p>Firmware Engineer for NAND storage, strengthening NVMe pipelines and validation collaboration.</p>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="time">2019 — 2021</div>
+            <div class="content">
+              <h3>GE Aerospace</h3>
+              <p>Embedded Software Engineer. DO-178C rigor, first 4G-LTE module in aviation health monitoring, and CI/CD acceleration.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel contact" id="contact" aria-labelledby="contact-title">
+        <div class="panel-header">
+          <p class="eyebrow">Let’s collaborate</p>
+          <h2 id="contact-title">Bring AI to your firmware stack</h2>
+          <p class="note">Speaking, consulting, or building—reach out.</p>
+        </div>
+        <div class="contact-grid">
+          <div>
+            <p class="label">Email</p>
+            <a class="link" href="mailto:fadi.b.zuabi@gmail.com">fadi.b.zuabi@gmail.com</a>
+          </div>
+          <div>
+            <p class="label">GitHub</p>
+            <a class="link" href="https://github.com/zzfadi" target="_blank" rel="noreferrer">github.com/zzfadi</a>
+          </div>
+          <div>
+            <p class="label">LinkedIn</p>
+            <a class="link" href="https://linkedin.com/in/fadi-zuabi" target="_blank" rel="noreferrer">linkedin.com/in/fadi-zuabi</a>
+          </div>
+          <div>
+            <p class="label">X / Twitter</p>
+            <a class="link" href="https://x.com/fadi_zuabi" target="_blank" rel="noreferrer">@fadi_zuabi</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>Built with GPT-5.1-Codex-Max (Preview) — Part of the Zuabi.dev Gallery experiment</p>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
