@@ -1,7 +1,7 @@
 /**
- * Gallery Navigation System v3
- * Attached Panel Switcher with Model Brand Icons
- * Desktop: Anchored panel | Mobile: Bottom sheet with swipe
+ * Gallery Navigation System v5
+ * Two-level hierarchy: Categories → Designs → Models
+ * Features: Compact design, stays open on desktop, professional-first start
  */
 
 (function() {
@@ -20,13 +20,6 @@
     raptor: { class: 'raptor', icon: 'assets/icons/raptor.svg', keywords: ['raptor'] }
   };
 
-  const DESIGN_ICONS = {
-    terminal: '⌘',
-    minimal: '◯',
-    signal: '〰',
-    default: '◆'
-  };
-
   // ============================================
   // State
   // ============================================
@@ -34,9 +27,10 @@
   let config = null;
   let currentPageId = null;
   let currentDesignId = null;
+  let currentCategoryId = null;
   let isOpen = false;
   let touchStartY = 0;
-  let currentTheme = null; // null = system, 'light', 'dark'
+  let currentTheme = null;
 
   // ============================================
   // DOM Elements
@@ -50,6 +44,7 @@
   const backdrop = document.getElementById('gallery-backdrop');
   const palette = document.getElementById('gallery-palette');
   const paletteClose = document.getElementById('palette-close');
+  const paletteCategories = document.getElementById('palette-categories');
   const paletteDesigns = document.getElementById('palette-designs');
   const paletteModels = document.getElementById('palette-models');
   const promptBtn = document.getElementById('palette-prompt-btn');
@@ -62,7 +57,15 @@
   const themeToggleBtn = document.getElementById('theme-toggle');
 
   // ============================================
-  // Theme Management (controls iframe pages)
+  // Utility: Check if mobile
+  // ============================================
+
+  function isMobile() {
+    return window.innerWidth < 600;
+  }
+
+  // ============================================
+  // Theme Management
   // ============================================
 
   function initTheme() {
@@ -70,7 +73,6 @@
     if (savedTheme) {
       currentTheme = savedTheme;
     } else {
-      // Default to system preference
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       currentTheme = prefersDark ? 'dark' : 'light';
     }
@@ -90,20 +92,15 @@
   }
 
   function applyThemeToFrame() {
-    // Method 1: Apply color-scheme to iframe (works in Chrome)
     frame.style.colorScheme = currentTheme;
     
-    // Method 2: Try to inject into iframe document if same-origin (works in Safari)
     try {
       if (frame.contentDocument && frame.contentDocument.documentElement) {
         const doc = frame.contentDocument;
         const html = doc.documentElement;
         
-        // Set color-scheme on html element
         html.style.colorScheme = currentTheme;
         
-        // Add/update a style tag that forces theme by overriding CSS variables
-        // This is the most reliable cross-browser method
         let themeStyle = doc.getElementById('gallery-theme-override');
         if (!themeStyle) {
           themeStyle = doc.createElement('style');
@@ -111,13 +108,10 @@
           doc.head.appendChild(themeStyle);
         }
         
-        // For Safari: Override CSS variables commonly used in pages
-        // This approach directly sets the CSS custom properties that pages use
         if (currentTheme === 'dark') {
           themeStyle.textContent = `
             :root {
               color-scheme: dark !important;
-              /* Common dark theme overrides for minimal pages */
               --bg: #0a0a0a !important;
               --bg-alt: #141414 !important;
               --text-primary: #f5f5f5 !important;
@@ -127,15 +121,12 @@
               --border: #2a2a2a !important;
               --shadow: rgba(0, 0, 0, 0.3) !important;
             }
-            html, body {
-              color-scheme: dark !important;
-            }
+            html, body { color-scheme: dark !important; }
           `;
         } else {
           themeStyle.textContent = `
             :root {
               color-scheme: light !important;
-              /* Common light theme overrides for minimal pages */
               --bg: #fafafa !important;
               --bg-alt: #ffffff !important;
               --text-primary: #111111 !important;
@@ -145,17 +136,13 @@
               --border: #e5e5e5 !important;
               --shadow: rgba(0, 0, 0, 0.06) !important;
             }
-            html, body {
-              color-scheme: light !important;
-            }
+            html, body { color-scheme: light !important; }
           `;
         }
         
-        // Also set data attribute for pages that use it
         html.setAttribute('data-theme', currentTheme);
       }
     } catch (e) {
-      // Cross-origin iframe, can only rely on color-scheme style on iframe element
       console.log('Could not inject theme into iframe (cross-origin)');
     }
   }
@@ -166,7 +153,7 @@
 
   async function loadConfig() {
     try {
-      const response = await fetch('config.json?v=2');
+      const response = await fetch('config.json?v=5');
       config = await response.json();
       return config;
     } catch (error) {
@@ -182,12 +169,10 @@
   function detectBrand(modelName) {
     const lower = modelName.toLowerCase();
 
-    // Special case: Sonnet is Claude family but has its own color
     if (lower.includes('sonnet')) {
       return MODEL_BRANDS.sonnet;
     }
 
-    // Special case: Opus is Claude family
     if (lower.includes('opus') || lower.includes('claude')) {
       return MODEL_BRANDS.claude;
     }
@@ -198,15 +183,11 @@
       }
     }
 
-    return { class: 'claude', icon: 'assets/icons/claude.svg' }; // Fallback
-  }
-
-  function getDesignIcon(designId) {
-    return DESIGN_ICONS[designId] || DESIGN_ICONS.default;
+    return { class: 'claude', icon: 'assets/icons/claude.svg' };
   }
 
   // ============================================
-  // SVG Icon Creators (Safe DOM methods)
+  // SVG Icon Creators
   // ============================================
 
   function createCalendarIcon() {
@@ -272,20 +253,29 @@
   // ============================================
 
   function findPageById(pageId) {
-    for (const design of config.designs) {
-      const model = design.models.find(m => m.id === pageId);
-      if (model) return { design, model };
+    for (const category of config.categories) {
+      for (const design of category.designs) {
+        const model = design.models.find(m => m.id === pageId);
+        if (model) return { category, design, model };
+      }
     }
     return null;
   }
 
   function getDesignById(designId) {
-    return config.designs.find(d => d.id === designId);
+    for (const category of config.categories) {
+      const design = category.designs.find(d => d.id === designId);
+      if (design) return { design, category };
+    }
+    return null;
+  }
+
+  function getCategoryById(categoryId) {
+    return config.categories.find(c => c.id === categoryId);
   }
 
   function getShortModelName(modelName) {
     let short = modelName;
-    // Remove common prefixes
     short = short.replace(/^Claude\s+/i, '');
     short = short.replace(/^OpenAI\s+/i, '');
     short = short.replace(/^Google\s+/i, '');
@@ -321,7 +311,6 @@
     const brand = detectBrand(model.model);
     triggerModelIcon.className = 'trigger-model-icon model-icon ' + brand.class;
 
-    // Clear and add icon
     clearElement(triggerModelIcon);
     const iconImg = document.createElement('img');
     iconImg.src = brand.icon;
@@ -342,36 +331,82 @@
       return;
     }
 
-    const { design, model } = result;
+    const { category, design, model } = result;
 
-    // Show loading
     loadingOverlay.classList.add('visible');
     frame.classList.add('loading');
 
-    // Update URL
     setHashForPage(pageId);
 
-    // Update state
     currentPageId = pageId;
     currentDesignId = design.id;
+    currentCategoryId = category.id;
 
-    // Update trigger display
     updateTrigger(design, model);
 
-    // Load page in iframe
     frame.src = model.path;
 
-    // Update UI states
-    updateDesignChips();
+    updateCategoryTabs();
+    renderDesignTiles();
     renderModelList(design);
+  }
+
+  // ============================================
+  // Category Tabs
+  // ============================================
+
+  function renderCategoryTabs() {
+    if (!paletteCategories) return;
+    
+    clearElement(paletteCategories);
+
+    config.categories.forEach(function(category) {
+      const tab = document.createElement('button');
+      tab.className = 'category-tab';
+      tab.dataset.categoryId = category.id;
+      tab.setAttribute('role', 'tab');
+      tab.setAttribute('aria-selected', category.id === currentCategoryId);
+      tab.textContent = category.label;
+
+      tab.addEventListener('click', function() {
+        selectCategory(category.id);
+      });
+
+      paletteCategories.appendChild(tab);
+    });
+  }
+
+  function updateCategoryTabs() {
+    const tabs = document.querySelectorAll('.category-tab');
+    tabs.forEach(function(tab) {
+      const isActive = tab.dataset.categoryId === currentCategoryId;
+      tab.classList.toggle('active', isActive);
+      tab.setAttribute('aria-selected', isActive);
+    });
+  }
+
+  function selectCategory(categoryId) {
+    currentCategoryId = categoryId;
+    updateCategoryTabs();
+    renderDesignTiles();
+    
+    const category = getCategoryById(categoryId);
+    if (category && category.designs.length > 0) {
+      const currentDesignInCategory = category.designs.find(d => d.id === currentDesignId);
+      if (!currentDesignInCategory) {
+        const firstDesign = category.designs[0];
+        if (firstDesign.models.length > 0) {
+          loadPage(firstDesign.models[0].id);
+        }
+      }
+    }
   }
 
   // ============================================
   // Design Tiles
   // ============================================
 
-  // Glider pattern for Game of Life preview
-  const GLIDER_CELLS = [2, 9, 16, 17, 18, 10, 3]; // indices for a glider in 8x6 grid
+  const GLIDER_CELLS = [2, 9, 16, 17, 18, 10, 3];
 
   function createDesignPreview(designId) {
     const preview = document.createElement('div');
@@ -381,7 +416,6 @@
     const inner = document.createElement('div');
     inner.className = 'design-tile-preview-inner';
 
-    // Special case for game-of-life: add grid cells
     if (designId === 'game-of-life') {
       for (let i = 0; i < 48; i++) {
         const cell = document.createElement('div');
@@ -394,22 +428,26 @@
     return preview;
   }
 
-  function renderDesignChips() {
+  function renderDesignTiles() {
     clearElement(paletteDesigns);
 
-    config.designs.forEach(function(design, index) {
+    const category = getCategoryById(currentCategoryId);
+    if (!category) return;
+
+    category.designs.forEach(function(design, index) {
       const tile = document.createElement('button');
       tile.className = 'design-tile';
       tile.dataset.designId = design.id;
       tile.setAttribute('role', 'tab');
       tile.setAttribute('aria-selected', design.id === currentDesignId);
-      tile.style.animationDelay = (index * 40) + 'ms';
+      if (design.id === currentDesignId) {
+        tile.classList.add('active');
+      }
+      tile.style.animationDelay = (index * 30) + 'ms';
 
-      // Create visual preview
       const preview = createDesignPreview(design.id);
       tile.appendChild(preview);
 
-      // Label container
       const labelContainer = document.createElement('div');
       labelContainer.className = 'design-tile-label';
 
@@ -431,41 +469,9 @@
 
       paletteDesigns.appendChild(tile);
     });
-
-    // Setup scroll indicators
-    setupScrollIndicators();
   }
 
-  function setupScrollIndicators() {
-    const leftIndicator = document.getElementById('scroll-indicator-left');
-    const rightIndicator = document.getElementById('scroll-indicator-right');
-
-    if (!leftIndicator || !rightIndicator) return;
-
-    function updateScrollIndicators() {
-      const scrollLeft = paletteDesigns.scrollLeft;
-      const scrollWidth = paletteDesigns.scrollWidth;
-      const clientWidth = paletteDesigns.clientWidth;
-      const maxScroll = scrollWidth - clientWidth;
-
-      // Show left indicator if scrolled right
-      leftIndicator.classList.toggle('visible', scrollLeft > 10);
-
-      // Show right indicator if there's more to scroll
-      rightIndicator.classList.toggle('visible', scrollLeft < maxScroll - 10);
-    }
-
-    // Initial check
-    setTimeout(updateScrollIndicators, 100);
-
-    // Update on scroll
-    paletteDesigns.addEventListener('scroll', updateScrollIndicators, { passive: true });
-
-    // Update on resize
-    window.addEventListener('resize', updateScrollIndicators, { passive: true });
-  }
-
-  function updateDesignChips() {
+  function updateDesignTiles() {
     const tiles = paletteDesigns.querySelectorAll('.design-tile');
     tiles.forEach(function(tile) {
       const isActive = tile.dataset.designId === currentDesignId;
@@ -475,14 +481,17 @@
   }
 
   function selectDesign(designId) {
-    const design = getDesignById(designId);
-    if (!design) return;
+    const result = getDesignById(designId);
+    if (!result) return;
 
+    const { design, category } = result;
     currentDesignId = designId;
-    updateDesignChips();
+    currentCategoryId = category.id;
+    
+    updateCategoryTabs();
+    updateDesignTiles();
     renderModelList(design);
 
-    // If current page isn't in this design, load first model
     const currentInDesign = design.models.find(function(m) {
       return m.id === currentPageId;
     });
@@ -512,13 +521,12 @@
       card.dataset.pageId = model.id;
       card.setAttribute('role', 'option');
       card.setAttribute('tabindex', '0');
-      card.style.animationDelay = (index * 30) + 'ms';
+      card.style.animationDelay = (index * 20) + 'ms';
 
       const isActive = model.id === currentPageId;
       if (isActive) card.classList.add('active');
       card.setAttribute('aria-selected', isActive);
 
-      // Model Icon
       const brand = detectBrand(model.model);
       const icon = document.createElement('div');
       icon.className = 'model-icon ' + brand.class;
@@ -530,7 +538,6 @@
 
       card.appendChild(icon);
 
-      // Model Info
       const info = document.createElement('div');
       info.className = 'model-info';
 
@@ -554,32 +561,21 @@
       info.appendChild(meta);
       card.appendChild(info);
 
-      // Checkmark
       const check = document.createElement('div');
       check.className = 'model-check';
       check.appendChild(createCheckIcon());
       card.appendChild(check);
 
-      // Click handler
       card.addEventListener('click', function() {
         loadPage(model.id);
-
-        // Auto-close on mobile only (desktop stays open)
-        if (window.innerWidth < 768) {
-          closePalette();
-        }
+        // Menu stays open - only closes on trigger click or click away
       });
 
-      // Keyboard support
       card.addEventListener('keydown', function(e) {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           loadPage(model.id);
-
-          // Auto-close on mobile only
-          if (window.innerWidth < 768) {
-            closePalette();
-          }
+          // Menu stays open - only closes on trigger click or click away
         }
       });
 
@@ -598,13 +594,11 @@
     backdrop.classList.add('open');
     palette.classList.add('open');
 
-    // Focus first model card
     setTimeout(function() {
       const firstCard = paletteModels.querySelector('.model-card');
       if (firstCard) firstCard.focus();
     }, 100);
 
-    // Hide keyboard hint
     if (keyboardHint) {
       keyboardHint.classList.remove('visible');
       sessionStorage.setItem('gallery-hint-shown', 'true');
@@ -618,6 +612,9 @@
     backdrop.classList.remove('open');
     palette.classList.remove('open');
     trigger.focus();
+    
+    // Dismiss welcome banner when closing palette
+    dismissWelcome();
   }
 
   function togglePalette() {
@@ -626,12 +623,39 @@
   }
 
   // ============================================
+  // First-time Welcome Banner
+  // ============================================
+
+  function showWelcomeBanner() {
+    if (localStorage.getItem('gallery-welcomed')) return;
+    
+    const banner = document.createElement('div');
+    banner.className = 'welcome-banner';
+    banner.id = 'welcome-banner';
+    banner.innerHTML = '<p>Hi, I\'m <strong>Fadi Al Zuabi</strong> and welcome to my site! Explore different designs made by different AI models and compare yourself!</p>';
+    
+    // Insert after header
+    const header = palette.querySelector('.palette-header');
+    if (header && header.nextSibling) {
+      header.parentNode.insertBefore(banner, header.nextSibling);
+    }
+  }
+
+  function dismissWelcome() {
+    const banner = document.getElementById('welcome-banner');
+    if (banner) {
+      banner.remove();
+      localStorage.setItem('gallery-welcomed', 'true');
+    }
+  }
+
+  // ============================================
   // Keyboard Hint
   // ============================================
 
   function showKeyboardHint() {
     if (sessionStorage.getItem('gallery-hint-shown')) return;
-    if (window.innerWidth < 768) return; // Don't show on mobile
+    if (isMobile()) return;
 
     setTimeout(function() {
       if (keyboardHint) {
@@ -649,7 +673,6 @@
   // ============================================
 
   function handleKeydown(e) {
-    // G to toggle palette
     if (e.key === 'g' && !e.ctrlKey && !e.metaKey && !e.altKey) {
       if (document.activeElement === document.body ||
           document.activeElement === trigger ||
@@ -660,7 +683,6 @@
       }
     }
 
-    // Escape to close
     if (e.key === 'Escape') {
       if (promptModalOverlay.classList.contains('open')) {
         e.preventDefault();
@@ -674,12 +696,13 @@
       }
     }
 
-    // Arrow navigation when palette is open
     if (isOpen) {
-      // Left/Right to switch designs
       if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
         e.preventDefault();
-        const designIds = config.designs.map(function(d) { return d.id; });
+        const category = getCategoryById(currentCategoryId);
+        if (!category) return;
+        
+        const designIds = category.designs.map(function(d) { return d.id; });
         const currentIdx = designIds.indexOf(currentDesignId);
         var newIdx;
         if (e.key === 'ArrowLeft') {
@@ -690,13 +713,12 @@
         selectDesign(designIds[newIdx]);
       }
 
-      // Up/Down to switch models
       if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
         e.preventDefault();
-        const design = getDesignById(currentDesignId);
-        if (!design || design.models.length === 0) return;
+        const result = getDesignById(currentDesignId);
+        if (!result || result.design.models.length === 0) return;
 
-        const modelIds = design.models.map(function(m) { return m.id; });
+        const modelIds = result.design.models.map(function(m) { return m.id; });
         const currentIdx = modelIds.indexOf(currentPageId);
         var newModelIdx;
         if (e.key === 'ArrowUp') {
@@ -707,7 +729,14 @@
         loadPage(modelIds[newModelIdx]);
       }
 
-      // Enter to select focused model
+      if (e.key === 'Tab' && !e.shiftKey && e.ctrlKey) {
+        e.preventDefault();
+        const categoryIds = config.categories.map(function(c) { return c.id; });
+        const currentIdx = categoryIds.indexOf(currentCategoryId);
+        const newIdx = currentIdx < categoryIds.length - 1 ? currentIdx + 1 : 0;
+        selectCategory(categoryIds[newIdx]);
+      }
+
       if (e.key === 'Enter') {
         const focused = document.activeElement;
         if (focused && focused.classList.contains('model-card')) {
@@ -715,7 +744,7 @@
           const pageId = focused.dataset.pageId;
           if (pageId) {
             loadPage(pageId);
-            closePalette();
+            // Menu stays open - only closes on trigger click or click away
           }
         }
       }
@@ -723,7 +752,7 @@
   }
 
   // ============================================
-  // Touch/Swipe Support for Mobile Bottom Sheet
+  // Touch/Swipe Support for Mobile
   // ============================================
 
   function handleTouchStart(e) {
@@ -737,7 +766,6 @@
     const touchY = e.touches[0].clientY;
     const diff = touchY - touchStartY;
 
-    // Only allow downward swipe
     if (diff > 0) {
       const translateY = Math.min(diff, 200);
       palette.style.transform = 'translateY(' + translateY + 'px)';
@@ -750,10 +778,8 @@
     const touchY = e.changedTouches[0].clientY;
     const diff = touchY - touchStartY;
 
-    // Reset transform
     palette.style.transform = '';
 
-    // If swiped down more than 100px, close
     if (diff > 100) {
       closePalette();
     }
@@ -764,8 +790,8 @@
   // ============================================
 
   async function openPromptModal() {
-    const design = getDesignById(currentDesignId);
-    if (!design || !design.prompt) {
+    const result = getDesignById(currentDesignId);
+    if (!result || !result.design.prompt) {
       clearElement(promptModalContent);
       const noPrompt = document.createElement('div');
       noPrompt.className = 'prompt-loading';
@@ -774,7 +800,7 @@
       return;
     }
 
-    promptModalTitle.textContent = design.label + ' Design Prompt';
+    promptModalTitle.textContent = result.design.label + ' Design Prompt';
     clearElement(promptModalContent);
     const loadingDiv = document.createElement('div');
     loadingDiv.className = 'prompt-loading';
@@ -783,7 +809,7 @@
     promptModalOverlay.classList.add('open');
 
     try {
-      const response = await fetch(design.prompt);
+      const response = await fetch(result.design.prompt);
       const text = await response.text();
       clearElement(promptModalContent);
       const pre = document.createElement('pre');
@@ -807,34 +833,25 @@
   // ============================================
 
   function setupEventListeners() {
-    // Trigger button
     trigger.addEventListener('click', togglePalette);
-
-    // Close button
     paletteClose.addEventListener('click', closePalette);
-
-    // Theme toggle
     themeToggleBtn.addEventListener('click', toggleTheme);
-
-    // Backdrop click
+    
+    // Backdrop click closes on both mobile and desktop
     backdrop.addEventListener('click', closePalette);
 
-    // Prompt modal
     promptBtn.addEventListener('click', openPromptModal);
     promptModalClose.addEventListener('click', closePromptModal);
     promptModalOverlay.addEventListener('click', function(e) {
       if (e.target === promptModalOverlay) closePromptModal();
     });
 
-    // Keyboard
     document.addEventListener('keydown', handleKeydown);
 
-    // Touch events for mobile bottom sheet
     palette.addEventListener('touchstart', handleTouchStart, { passive: true });
     palette.addEventListener('touchmove', handleTouchMove, { passive: true });
     palette.addEventListener('touchend', handleTouchEnd, { passive: true });
 
-    // Hash change
     window.addEventListener('hashchange', function() {
       const pageId = getPageIdFromHash() || config.default;
       if (pageId !== currentPageId) {
@@ -842,18 +859,31 @@
       }
     });
 
-    // Frame load complete
     frame.addEventListener('load', function() {
       loadingOverlay.classList.remove('visible');
       frame.classList.remove('loading');
       showKeyboardHint();
-      // Apply theme to newly loaded frame
       applyThemeToFrame();
     });
 
-    // Click outside palette to close
-    document.addEventListener('click', function(e) {
-      if (isOpen && !palette.contains(e.target) && !trigger.contains(e.target) && !backdrop.contains(e.target)) {
+    // Click outside palette to close (on iframe/page area)
+    // This handles clicking on the site (iframe) to close the palette
+    // Use mousedown instead of click to capture before DOM changes
+    document.addEventListener('mousedown', function(e) {
+      if (!isOpen) return;
+      
+      // Check if click is within palette bounds (in case DOM changed)
+      const paletteRect = palette.getBoundingClientRect();
+      const triggerRect = trigger.getBoundingClientRect();
+      const x = e.clientX;
+      const y = e.clientY;
+      
+      const inPalette = x >= paletteRect.left && x <= paletteRect.right &&
+                        y >= paletteRect.top && y <= paletteRect.bottom;
+      const inTrigger = x >= triggerRect.left && x <= triggerRect.right &&
+                        y >= triggerRect.top && y <= triggerRect.bottom;
+      
+      if (!inPalette && !inTrigger) {
         closePalette();
       }
     });
@@ -863,15 +893,18 @@
   // Initialize
   // ============================================
 
-  function getRandomFirstModel() {
-    // Pick a random design and return its first model's ID
-    const designs = config.designs;
-    const randomDesign = designs[Math.floor(Math.random() * designs.length)];
-    return randomDesign.models[0].id;
+  function getRandomProfessionalModel() {
+    const professionalCategory = config.categories.find(c => c.id === 'professional');
+    if (professionalCategory && professionalCategory.designs.length > 0) {
+      const randomDesign = professionalCategory.designs[Math.floor(Math.random() * professionalCategory.designs.length)];
+      if (randomDesign.models.length > 0) {
+        return randomDesign.models[0].id;
+      }
+    }
+    return config.default;
   }
 
   async function init() {
-    // Initialize theme first to prevent flash
     initTheme();
 
     await loadConfig();
@@ -880,24 +913,19 @@
       return;
     }
 
-    // Render design chips
-    renderDesignChips();
-
-    // Setup events
+    renderCategoryTabs();
     setupEventListeners();
 
-    // Check if landing on root (no hash)
     const hashPageId = getPageIdFromHash();
     const isRootLanding = !hashPageId;
 
-    // If root landing, pick random design's first model; otherwise use hash or default
-    const initialPageId = isRootLanding ? getRandomFirstModel() : (hashPageId || config.default);
+    const initialPageId = isRootLanding ? getRandomProfessionalModel() : (hashPageId || config.default);
     loadPage(initialPageId);
 
-    // Auto-open gallery on root landing
+    // Show welcome banner and open palette for first-time or root landing
     if (isRootLanding) {
-      // Small delay to let page render first
       setTimeout(function() {
+        showWelcomeBanner();
         openPalette();
       }, 300);
     }

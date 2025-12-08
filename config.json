@@ -1,197 +1,218 @@
 {
   "default": "terminal-opus",
-  "designs": [
+  "categories": [
     {
-      "id": "terminal",
-      "label": "Terminal",
-      "description": "Dark terminal aesthetic with interactive CLI",
-      "prompt": "designs/terminal/prompt.md",
-      "models": [
+      "id": "professional",
+      "label": "Professional",
+      "description": "Clean, professional portfolio designs",
+      "designs": [
         {
-          "id": "terminal-opus-legacy",
-          "model": "Claude Opus 4.1 (Legacy)",
-          "path": "pages/terminal/opus-legacy/",
-          "date": "2025-09"
+          "id": "minimal",
+          "label": "Minimal",
+          "description": "Clean, modern card-based layout",
+          "prompt": "designs/minimal/prompt.md",
+          "models": [
+            {
+              "id": "minimal-opus",
+              "model": "Claude Opus 4.5",
+              "path": "pages/minimal/opus/",
+              "date": "2025-11"
+            },
+            {
+              "id": "minimal-gemini",
+              "model": "Gemini 3 Pro",
+              "path": "pages/minimal/gemini/",
+              "date": "2025-11"
+            },
+            {
+              "id": "minimal-gpt",
+              "model": "GPT-5.1-Codex",
+              "path": "pages/minimal/gpt/",
+              "date": "2025-11"
+            },
+            {
+              "id": "minimal-grok",
+              "model": "Grok Code Fast 1",
+              "path": "pages/minimal/grok/",
+              "date": "2025-11"
+            },
+            {
+              "id": "minimal-raptor-mini",
+              "model": "Raptor mini (Preview)",
+              "path": "pages/minimal/raptor-mini/",
+              "date": "2025-11"
+            }
+          ]
         },
         {
-          "id": "terminal-opus",
-          "model": "Claude Opus 4.5",
-          "path": "pages/terminal/opus/",
-          "date": "2025-11"
-        },
-        {
-          "id": "terminal-gemini",
-          "model": "Gemini 3 Pro",
-          "path": "pages/terminal/gemini/",
-          "date": "2025-11"
-        },
-        {
-          "id": "terminal-gpt",
-          "model": "GPT-5.1-Codex",
-          "path": "pages/terminal/gpt/",
-          "date": "2025-11"
-        },
-        {
-          "id": "terminal-grok",
-          "model": "Grok Code Fast 1",
-          "path": "pages/terminal/grok/",
-          "date": "2025-11"
-        },
-        {
-          "id": "terminal-sonnet",
-          "model": "Claude Sonnet 4.5",
-          "path": "pages/terminal/sonnet/",
-          "date": "2025-11"
+          "id": "signal",
+          "label": "Signal",
+          "description": "Technical-atmospheric, oscilloscope-meets-human-story",
+          "prompt": "designs/signal/prompt.md",
+          "models": [
+            {
+              "id": "signal-gemini",
+              "model": "Gemini 3 Pro",
+              "path": "pages/signal/gemini/",
+              "date": "2025-11"
+            },
+            {
+              "id": "signal-grok",
+              "model": "Grok Code Fast 1",
+              "path": "pages/signal/grok/",
+              "date": "2025-11"
+            },
+            {
+              "id": "signal-gpt",
+              "model": "GPT-5.1-Codex",
+              "path": "pages/signal/gpt/",
+              "date": "2025-11"
+            },
+            {
+              "id": "signal-opus",
+              "model": "Claude Opus 4.5",
+              "path": "pages/signal/opus/",
+              "date": "2025-11"
+            },
+            {
+              "id": "signal-raptor-mini",
+              "model": "Raptor mini (Preview)",
+              "path": "pages/signal/raptor-mini/",
+              "date": "2025-11"
+            }
+          ]
         }
       ]
     },
     {
-      "id": "minimal",
-      "label": "Minimal",
-      "description": "Clean, modern card-based layout",
-      "prompt": "designs/minimal/prompt.md",
-      "models": [
+      "id": "tech-inspired",
+      "label": "Tech-Inspired",
+      "description": "Designs inspired by developer tools and technical aesthetics",
+      "designs": [
         {
-          "id": "minimal-opus",
-          "model": "Claude Opus 4.5",
-          "path": "pages/minimal/opus/",
-          "date": "2025-11"
-        },
-        {
-          "id": "minimal-gemini",
-          "model": "Gemini 3 Pro",
-          "path": "pages/minimal/gemini/",
-          "date": "2025-11"
-        },
-        {
-          "id": "minimal-gpt",
-          "model": "GPT-5.1-Codex",
-          "path": "pages/minimal/gpt/",
-          "date": "2025-11"
-        },
-        {
-          "id": "minimal-grok",
-          "model": "Grok Code Fast 1",
-          "path": "pages/minimal/grok/",
-          "date": "2025-11"
-        },
-        {
-          "id": "minimal-raptor-mini",
-          "model": "Raptor mini (Preview)",
-          "path": "pages/minimal/raptor-mini/",
-          "date": "2025-11"
+          "id": "terminal",
+          "label": "Terminal",
+          "description": "Dark terminal aesthetic with interactive CLI",
+          "prompt": "designs/terminal/prompt.md",
+          "models": [
+            {
+              "id": "terminal-opus-legacy",
+              "model": "Claude Opus 4.1 (Legacy)",
+              "path": "pages/terminal/opus-legacy/",
+              "date": "2025-09"
+            },
+            {
+              "id": "terminal-opus",
+              "model": "Claude Opus 4.5",
+              "path": "pages/terminal/opus/",
+              "date": "2025-11"
+            },
+            {
+              "id": "terminal-gemini",
+              "model": "Gemini 3 Pro",
+              "path": "pages/terminal/gemini/",
+              "date": "2025-11"
+            },
+            {
+              "id": "terminal-gpt",
+              "model": "GPT-5.1-Codex",
+              "path": "pages/terminal/gpt/",
+              "date": "2025-11"
+            },
+            {
+              "id": "terminal-grok",
+              "model": "Grok Code Fast 1",
+              "path": "pages/terminal/grok/",
+              "date": "2025-11"
+            },
+            {
+              "id": "terminal-sonnet",
+              "model": "Claude Sonnet 4.5",
+              "path": "pages/terminal/sonnet/",
+              "date": "2025-11"
+            }
+          ]
         }
       ]
     },
     {
-      "id": "signal",
-      "label": "Signal",
-      "description": "Technical-atmospheric, oscilloscope-meets-human-story",
-      "prompt": "designs/signal/prompt.md",
-      "models": [
+      "id": "games",
+      "label": "Games",
+      "description": "Retro arcade and game-inspired designs",
+      "designs": [
         {
-          "id": "signal-gemini",
-          "model": "Gemini 3 Pro",
-          "path": "pages/signal/gemini/",
-          "date": "2025-11"
+          "id": "pac-man",
+          "label": "PAC-MAN",
+          "description": "Retro arcade game inspired layout with maze navigation",
+          "prompt": "designs/PAC-MAN/prompt.md",
+          "models": [
+            {
+              "id": "pac-man-opus",
+              "model": "Claude Opus 4.5",
+              "path": "pages/PAC-MAN/opus/",
+              "date": "2025-11"
+            },
+            {
+              "id": "pac-man-grok",
+              "model": "Grok Code Fast 1",
+              "path": "pages/pac-man/grok/",
+              "date": "2025-11"
+            },
+            {
+              "id": "pac-man-gemini",
+              "model": "Gemini 3 Pro",
+              "path": "pages/PAC-MAN/gemini/",
+              "date": "2025-11"
+            },
+            {
+              "id": "pac-man-gpt",
+              "model": "GPT-5.1-Codex",
+              "path": "pages/PAC-MAN/gpt/",
+              "date": "2025-11"
+            }
+          ]
         },
         {
-          "id": "signal-grok",
-          "model": "Grok Code Fast 1",
-          "path": "pages/signal/grok/",
-          "date": "2025-11"
+          "id": "snake",
+          "label": "Snake",
+          "description": "Snake game inspired layout with playable Easter egg",
+          "prompt": "designs/Snake/prompt.md",
+          "models": [
+            {
+              "id": "snake-opus",
+              "model": "Claude Opus 4.5",
+              "path": "pages/Snake/opus/",
+              "date": "2025-11"
+            },
+            {
+              "id": "snake-gemini",
+              "model": "Gemini 3 Pro",
+              "path": "pages/Snake/gemini/",
+              "date": "2025-11"
+            }
+          ]
         },
         {
-          "id": "signal-gpt",
-          "model": "GPT-5.1-Codex",
-          "path": "pages/signal/gpt/",
-          "date": "2025-11"
-        },
-        {
-          "id": "signal-opus",
-          "model": "Claude Opus 4.5",
-          "path": "pages/signal/opus/",
-          "date": "2025-11"
-        },
-        {
-          "id": "signal-raptor-mini",
-          "model": "Raptor mini (Preview)",
-          "path": "pages/signal/raptor-mini/",
-          "date": "2025-11"
-        }
-      ]
-    },
-    {
-      "id": "pac-man",
-      "label": "PAC-MAN",
-      "description": "Retro arcade game inspired layout with maze navigation",
-      "prompt": "designs/PAC-MAN/prompt.md",
-      "models": [
-        {
-          "id": "pac-man-opus",
-          "model": "Claude Opus 4.5",
-          "path": "pages/PAC-MAN/opus/",
-          "date": "2025-11"
-        },
-        {
-          "id": "pac-man-grok",
-          "model": "Grok Code Fast 1",
-          "path": "pages/PAC-MAN/grok/",
-          "date": "2025-11"
-        },
-        {
-          "id": "pac-man-gemini",
-          "model": "Gemini 3 Pro",
-          "path": "pages/PAC-MAN/gemini/",
-          "date": "2025-11"
-        },
-        {
-          "id": "pac-man-gpt",
-          "model": "GPT-5.1-Codex",
-          "path": "pages/PAC-MAN/gpt/",
-          "date": "2025-11"
-        }
-      ]
-    },
-    {
-      "id": "snake",
-      "label": "Snake",
-      "description": "Snake game inspired layout with playable Easter egg",
-      "prompt": "designs/Snake/prompt.md",
-      "models": [
-        {
-          "id": "snake-opus",
-          "model": "Claude Opus 4.5",
-          "path": "pages/Snake/opus/",
-          "date": "2025-11"
-        },
-        {
-          "id": "snake-gemini",
-          "model": "Gemini 3 Pro",
-          "path": "pages/Snake/gemini/",
-          "date": "2025-11"
-        }
-      ]
-    },
-    {
-      "id": "game-of-life",
-      "label": "Game of Life",
-      "description": "Conway's Game of Life cellular automaton with interactive simulation",
-      "prompt": "designs/GameOfLife/prompt.md",
-      "models": [
-        {
-          "id": "game-of-life-opus",
-          "model": "Claude Opus 4.5",
-          "path": "pages/GameOfLife/opus/",
-          "date": "2025-11"
+          "id": "game-of-life",
+          "label": "Game of Life",
+          "description": "Conway's Game of Life cellular automaton with interactive simulation",
+          "prompt": "designs/GameOfLife/prompt.md",
+          "models": [
+            {
+              "id": "game-of-life-opus",
+              "model": "Claude Opus 4.5",
+              "path": "pages/GameOfLife/opus/",
+              "date": "2025-11"
+            }
+          ]
         }
       ]
     }
   ],
   "_readme": {
     "concept": "Three-layer architecture: content → design prompts → model implementations",
-    "structure": "designs[] → models[] hierarchy for tab + radio navigation",
-    "addPage": "1. Find or create design entry. 2. Add model to its models array. 3. Paste output to pages/{design}/{model}/",
+    "structure": "categories[] → designs[] → models[] hierarchy for nested navigation",
+    "addPage": "1. Find or create design entry in appropriate category. 2. Add model to its models array. 3. Paste output to pages/{design}/{model}/",
     "urlFormat": "fadi.dev/#page-id",
     "naming": "{design}-{model} e.g., terminal-opus, minimal-gemini"
   }
