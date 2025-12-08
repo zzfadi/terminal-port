@@ -274,6 +274,18 @@
     return config.categories.find(c => c.id === categoryId);
   }
 
+  function getOrderedCategories() {
+    const preferred = ['professional', 'retro', 'tech-inspired', 'games'];
+    return [...config.categories].sort(function(a, b) {
+      const aIdx = preferred.indexOf(a.id);
+      const bIdx = preferred.indexOf(b.id);
+      if (aIdx === -1 && bIdx === -1) return 0;
+      if (aIdx === -1) return 1;
+      if (bIdx === -1) return -1;
+      return aIdx - bIdx;
+    });
+  }
+
   function getShortModelName(modelName) {
     let short = modelName;
     short = short.replace(/^Claude\s+/i, '');
@@ -360,7 +372,7 @@
     
     clearElement(paletteCategories);
 
-    config.categories.forEach(function(category) {
+    getOrderedCategories().forEach(function(category) {
       const tab = document.createElement('button');
       tab.className = 'category-tab';
       tab.dataset.categoryId = category.id;
@@ -731,7 +743,7 @@
 
       if (e.key === 'Tab' && !e.shiftKey && e.ctrlKey) {
         e.preventDefault();
-        const categoryIds = config.categories.map(function(c) { return c.id; });
+        const categoryIds = getOrderedCategories().map(function(c) { return c.id; });
         const currentIdx = categoryIds.indexOf(currentCategoryId);
         const newIdx = currentIdx < categoryIds.length - 1 ? currentIdx + 1 : 0;
         selectCategory(categoryIds[newIdx]);

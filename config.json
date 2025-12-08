@@ -207,6 +207,65 @@
           ]
         }
       ]
+    },
+    {
+      "id": "retro",
+      "label": "Retro",
+      "description": "Nostalgic designs from past decades",
+      "designs": [
+        {
+          "id": "retro-70s",
+          "label": "70s Retro",
+          "description": "Groovy 70s aesthetic with earth tones and funky typography",
+          "prompt": "designs/Retro/70s/prompt.md",
+          "models": [
+            {
+              "id": "retro-70s-opus",
+              "model": "Claude Opus 4.5",
+              "path": "pages/Retro/70s/opus/",
+              "date": "2025-12"
+            },
+            {
+              "id": "retro-70s-gemini",
+              "model": "Gemini 3 Pro",
+              "path": "pages/Retro/70s/gemini/",
+              "date": "2025-12"
+            },
+            {
+              "id": "retro-70s-gpt",
+              "model": "GPT-5.1-Codex-Max (Preview)",
+              "path": "pages/Retro/70s/gpt/",
+              "date": "2025-12"
+            }
+          ]
+        },
+        {
+          "id": "retro-90s",
+          "label": "90s Retro",
+          "description": "Neon glitch 90s interface with VHS texture and arcade typography",
+          "prompt": "designs/Retro/90s/prompt.md",
+          "models": [
+            {
+              "id": "retro-90s-opus",
+              "model": "Claude Opus 4.5",
+              "path": "pages/Retro/90s/opus/",
+              "date": "2025-12"
+            },
+            {
+              "id": "retro-90s-gemini",
+              "model": "Gemini 3 Pro",
+              "path": "pages/Retro/90s/gemini/",
+              "date": "2025-12"
+            },
+            {
+              "id": "retro-90s-gpt",
+              "model": "GPT-5.1-Codex-Max (Preview)",
+              "path": "pages/Retro/90s/gpt/",
+              "date": "2025-12"
+            }
+          ]
+        }
+      ]
     }
   ],
   "_readme": {

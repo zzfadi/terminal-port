@@ -580,6 +580,49 @@ body {
   background: rgba(34, 211, 238, 0.7);
 }
 
+.design-tile-preview[data-design="retro-70s"] {
+  background: radial-gradient(circle at 20% 30%, #f97316 0%, #a855f7 45%, #0a0a0a 70%);
+  border-color: rgba(249, 115, 22, 0.6);
+}
+
+.design-tile-preview[data-design="retro-70s"] .design-tile-preview-inner {
+  align-items: center;
+  justify-content: center;
+}
+
+.design-tile-preview[data-design="retro-70s"] .design-tile-preview-inner::before {
+  content: '70s';
+  font-family: var(--g-font-mono);
+  font-weight: 700;
+  font-size: 9px;
+  color: #ffe7a3;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
+}
+
+.design-tile-preview[data-design="retro-90s"] {
+  background: linear-gradient(135deg, #12122b 0%, #0f162f 40%, #1b0f2b 100%);
+  border-color: rgba(0, 255, 225, 0.45);
+  box-shadow: inset 0 0 0 1px rgba(255, 79, 216, 0.2);
+}
+
+.design-tile-preview[data-design="retro-90s"] .design-tile-preview-inner {
+  align-items: center;
+  justify-content: center;
+}
+
+.design-tile-preview[data-design="retro-90s"] .design-tile-preview-inner::before {
+  content: '90s';
+  font-family: var(--g-font-mono);
+  font-weight: 700;
+  font-size: 9px;
+  color: #00ffe1;
+  letter-spacing: 0.6px;
+  text-shadow:
+    0 0 6px rgba(0, 255, 225, 0.6),
+    0 0 12px rgba(255, 79, 216, 0.6);
+}
+
 /* Tile Label (Compact) */
 .design-tile-label {
   display: flex;
