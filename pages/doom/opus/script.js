@@ -33,21 +33,21 @@ const MAPS = [
     '1......1.......4.............1',
     '1......1.......1.............1',
     '1..............1......H......1',
-    '11111.1111111111111111.1111111',
+    '11111.11111111111111111.111111',
     '1..............1.............1',
     '1.......E......1.............1',
     '1..............1.......E.....1',
     '1..............4.............1',
     '1...H..........1.............1',
     '1..............1.............1',
-    '1111111.111111111111.11111111',
+    '1111111.1111111111111.1111111',
     '1............1..............A1',
     '1............1...............1',
     '1....P.......1........E......1',
     '1............1...............1',
     '1............1...............1',
     '1............1...............1',
-    '11111111111111111111111111111',
+    '111111111111111111111111111111',
   ],
   // Level 2 — tighter, more enemies, mixed wall types
   [
@@ -558,14 +558,14 @@ function update(dt) {
 function shoot() {
   const hit = castRay(state.angle);
   for (const e of state.enemies) {
-    if (!e.alive || !e.visible) continue;
+    if (!e.alive) continue;
     const dx = e.x - state.px, dy = e.y - state.py;
     const dist = Math.sqrt(dx * dx + dy * dy);
     if (dist > hit.dist) continue;
     let a = Math.atan2(dy, dx) - state.angle;
     while (a < -Math.PI) a += 2 * Math.PI;
     while (a > Math.PI) a -= 2 * Math.PI;
-    if (Math.abs(a) < 0.15) {
+    if (Math.abs(a) < CFG.FOV / 2 && Math.abs(a) < 0.15) {
       e.health--; e.hitFlash = 0.15; sfxHit();
       if (e.health <= 0) {
         e.alive = false; state.score += 100; state.kills++;
@@ -1155,12 +1155,12 @@ function resetGame(level) {
 
 function advanceLevel() {
   if (state.level + 1 < MAPS.length) {
-    const prevScore = state.score, prevKills = state.kills;
+    const prevScore = state.score;
     state.level++;
     parseMap(state.level);
     state.health = Math.min(100, state.health + 25); // Bonus health
     state.ammo += 10;
-    state.score = prevScore; state.kills = prevKills;
+    state.score = prevScore; state.kills = 0; // Reset kills for new level
     state.dead = false; state.shooting = false;
     state.shootTimer = 0; state.shootCooldown = 0;
     state.bobPhase = 0; state.bobAmount = 0;
