@@ -7,171 +7,191 @@
 // ─── Configuration ──────────────────────────────────────────
 
 const CFG = {
-  // Grid resolution (characters)
   COLS: 100,
   ROWS: 35,
-
-  FOV: Math.PI / 3,       // 60° field of view
-  MAX_DEPTH: 20,           // Max ray distance
-  RAY_STEP: 0.02,          // DDA step size
-
+  FOV: Math.PI / 3,
+  MAX_DEPTH: 20,
   MOVE_SPEED: 3.0,
   STRAFE_SPEED: 2.5,
-  ROT_SPEED: 2.0,          // Keyboard rotation speed
+  ROT_SPEED: 2.0,
   MOUSE_SENS: 0.002,
-
-  // ASCII character palettes (near → far)
-  WALL_CHARS:    '█▓▒░▒░·. ',
-  FLOOR_CHARS:   '·∙:;,. ',
-  CEILING_CHARS: ' .·',
-
   FONT: 'JetBrains Mono',
   FONT_FALLBACK: 'Courier New',
 };
 
-// ─── Map ─────────────────────────────────────────────────────
-// 1=stone wall, 2=brick wall, 3=tech wall, 4=door, 0=empty
-// E=enemy spawn, H=health, A=ammo, P=player start
+// ─── Maps ────────────────────────────────────────────────────
+// 1=stone, 2=brick, 3=tech, 4=door
+// E=imp, D=demon, F=spectre, H=health, A=ammo, P=player
 
-const MAP_RAW = [
-  '1111111111111111111111111111111',
-  '1..............1.............1',
-  '1..............1.............1',
-  '1......1.......1......E......1',
-  '1......1.......4.............1',
-  '1......1.......1.............1',
-  '1..............1......H......1',
-  '11111.1111111111111111.1111111',
-  '1..............1.............1',
-  '1.......E......1.............1',
-  '1..............1.......E.....1',
-  '1..............4.............1',
-  '1...H..........1.............1',
-  '1..............1.............1',
-  '1111111.111111111111.11111111',
-  '1............1..............A1',
-  '1............1...............1',
-  '1....P.......1........E......1',
-  '1............1...............1',
-  '1............1...............1',
-  '1............1...............1',
-  '11111111111111111111111111111',
+const MAPS = [
+  // Level 1
+  [
+    '1111111111111111111111111111111',
+    '1..............1.............1',
+    '1..............1.............1',
+    '1......1.......1......E......1',
+    '1......1.......4.............1',
+    '1......1.......1.............1',
+    '1..............1......H......1',
+    '11111.1111111111111111.1111111',
+    '1..............1.............1',
+    '1.......E......1.............1',
+    '1..............1.......E.....1',
+    '1..............4.............1',
+    '1...H..........1.............1',
+    '1..............1.............1',
+    '1111111.111111111111.11111111',
+    '1............1..............A1',
+    '1............1...............1',
+    '1....P.......1........E......1',
+    '1............1...............1',
+    '1............1...............1',
+    '1............1...............1',
+    '11111111111111111111111111111',
+  ],
+  // Level 2 — tighter, more enemies, mixed wall types
+  [
+    '11111111111111111111111111',
+    '1...........1...........1',
+    '1.....E.....1.....D.....1',
+    '1...........4...........1',
+    '1...........1...........1',
+    '1..H..2222211112222..A..1',
+    '1.....2...........2.....1',
+    '1.....2....E.F....2.....1',
+    '1.....2...........2.....1',
+    '111.112...........211.111',
+    '1.....2...........2.....1',
+    '1..F..2....D......2..F..1',
+    '1.....2...........2.....1',
+    '1.....2222233322222.....1',
+    '1...........3...........1',
+    '1...........3...........1',
+    '1.....E.....3.....E.....1',
+    '1...........3...........1',
+    '1....P......4......H....1',
+    '1...........3...........1',
+    '1...........3.....D.....1',
+    '1...........3...........1',
+    '111111111111111111111111',
+  ],
 ];
 
 // ─── Game State ──────────────────────────────────────────────
 
 const state = {
-  // Player
-  px: 0, py: 0,       // Position
-  angle: 0,            // Facing direction (radians)
-  health: 100,
-  ammo: 25,
-  score: 0,
-  kills: 0,
-  shooting: false,
-  shootTimer: 0,
-  shootCooldown: 0,
-  bobPhase: 0,
-  bobAmount: 0,
-  damageFlash: 0,
+  px: 0, py: 0, angle: 0,
+  health: 100, ammo: 25, score: 0, kills: 0, level: 0,
+  totalEnemies: 0,
+  shooting: false, shootTimer: 0, shootCooldown: 0,
+  bobPhase: 0, bobAmount: 0,
+  damageFlash: 0, screenShake: 0, recoil: 0,
   dead: false,
-
-  // World
-  map: [],
-  mapW: 0,
-  mapH: 0,
-  enemies: [],
-  pickups: [],
-
-  // ASCII framebuffer
-  charBuf: [],    // character at each cell
-  colorBuf: [],   // color string at each cell
-  bgBuf: [],      // background color at each cell
-
-  // Input
-  keys: {},
-  mouseDX: 0,
-  pointerLocked: false,
-
-  // Timing
-  lastTime: 0,
-  dt: 0,
-  fps: 0,
-  frameCount: 0,
-  fpsTimer: 0,
-
-  // Screen
-  screen: 'title',  // 'title', 'game', 'dead'
-  titleBlink: 0,
-
-  // Canvas
-  canvas: null,
-  ctx: null,
-  dpr: 1,
-  W: 0, H: 0,
-  charW: 0, charH: 0,  // Measured character dimensions
-
+  map: [], mapW: 0, mapH: 0,
+  enemies: [], pickups: [], deathParticles: [],
+  charBuf: [], colorBuf: [],
+  keys: {}, mouseDX: 0, pointerLocked: false,
+  lastTime: 0, dt: 0, fps: 0, frameCount: 0, fpsTimer: 0,
+  screen: 'title', titleBlink: 0, victoryTimer: 0,
+  canvas: null, ctx: null, dpr: 1, W: 0, H: 0, charW: 0, charH: 0,
   // Pretext
-  pt: null,
+  pt: null, ptReady: false, ptPrep: {},
+  // Title particles
+  titleParticles: [],
 };
+
+// ═══════════════════════════════════════════════════════════════
+// Sound Effects (Web Audio API)
+// ═══════════════════════════════════════════════════════════════
+
+let audioCtx = null;
+
+function initAudio() {
+  if (audioCtx) return;
+  try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch {}
+}
+
+function playNoise(duration, freq, type, vol) {
+  if (!audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = type || 'sawtooth';
+  osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(freq * 0.1, audioCtx.currentTime + duration);
+  gain.gain.setValueAtTime(vol || 0.15, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+  osc.connect(gain).connect(audioCtx.destination);
+  osc.start(); osc.stop(audioCtx.currentTime + duration);
+}
+
+function sfxShoot() {
+  if (!audioCtx) return;
+  const bufSize = audioCtx.sampleRate * 0.08;
+  const buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / bufSize);
+  const src = audioCtx.createBufferSource();
+  const gain = audioCtx.createGain();
+  src.buffer = buf;
+  gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+  src.connect(gain).connect(audioCtx.destination);
+  src.start();
+}
+
+function sfxHit() { playNoise(0.15, 440, 'sawtooth', 0.1); }
+function sfxEnemyDeath() { playNoise(0.3, 220, 'square', 0.12); }
+function sfxPickup() { playNoise(0.1, 880, 'sine', 0.08); setTimeout(() => playNoise(0.1, 1320, 'sine', 0.08), 100); }
+function sfxDamage() { playNoise(0.1, 60, 'square', 0.2); }
 
 // ═══════════════════════════════════════════════════════════════
 // Map Parsing
 // ═══════════════════════════════════════════════════════════════
 
-function parseMap() {
-  // Trim the map and find dimensions
-  const rows = MAP_RAW.map(r => r);
+function parseMap(levelIdx) {
+  const rows = MAPS[levelIdx || 0];
   state.mapH = rows.length;
   state.mapW = Math.max(...rows.map(r => r.length));
-
   state.map = [];
   state.enemies = [];
   state.pickups = [];
+  state.deathParticles = [];
 
   for (let y = 0; y < state.mapH; y++) {
     state.map[y] = [];
     for (let x = 0; x < state.mapW; x++) {
       const ch = rows[y][x] || ' ';
+      state.map[y][x] = 0;
       switch (ch) {
-        case '1': state.map[y][x] = 1; break;
-        case '2': state.map[y][x] = 2; break;
-        case '3': state.map[y][x] = 3; break;
-        case '4': state.map[y][x] = 4; break;
+        case '1': case '2': case '3': case '4':
+          state.map[y][x] = parseInt(ch); break;
         case 'P':
-          state.map[y][x] = 0;
-          state.px = x + 0.5;
-          state.py = y + 0.5;
-          state.angle = -Math.PI / 2;  // Face north toward the action
-          break;
+          state.px = x + 0.5; state.py = y + 0.5;
+          state.angle = -Math.PI / 2; break;
         case 'E':
-          state.map[y][x] = 0;
-          state.enemies.push({
-            x: x + 0.5, y: y + 0.5,
-            health: 3,
-            alive: true,
-            type: 'imp',
-            attackTimer: 0,
-            moveTimer: 0,
-            speed: 1.2,
-            char: 'Ψ',
-            hitFlash: 0,
-            visible: false,
-            dist: 0,
-            screenX: 0,
-          });
-          break;
+          state.enemies.push(makeEnemy(x, y, 'imp')); break;
+        case 'D':
+          state.enemies.push(makeEnemy(x, y, 'demon')); break;
+        case 'F':
+          state.enemies.push(makeEnemy(x, y, 'spectre')); break;
         case 'H':
-          state.map[y][x] = 0;
-          state.pickups.push({ x: x + 0.5, y: y + 0.5, type: 'health', active: true, char: '+' });
-          break;
+          state.pickups.push({ x: x + 0.5, y: y + 0.5, type: 'health', active: true, char: '+' }); break;
         case 'A':
-          state.map[y][x] = 0;
-          state.pickups.push({ x: x + 0.5, y: y + 0.5, type: 'ammo', active: true, char: '¤' });
-          break;
-        default: state.map[y][x] = 0; break;
+          state.pickups.push({ x: x + 0.5, y: y + 0.5, type: 'ammo', active: true, char: '¤' }); break;
       }
     }
+  }
+  state.totalEnemies = state.enemies.length;
+}
+
+function makeEnemy(x, y, type) {
+  const base = { x: x + 0.5, y: y + 0.5, alive: true, attackTimer: 0, moveTimer: 0,
+                 hitFlash: 0, visible: false, dist: 0, screenX: 0 };
+  switch (type) {
+    case 'imp':     return { ...base, type, health: 3, speed: 1.2, char: 'Ψ', damage: [5, 10], color: 0 };
+    case 'demon':   return { ...base, type, health: 6, speed: 0.8, char: 'Ω', damage: [10, 20], color: 280 };
+    case 'spectre': return { ...base, type, health: 2, speed: 2.5, char: 'Φ', damage: [3, 8], color: 180 };
+    default:        return { ...base, type: 'imp', health: 3, speed: 1.2, char: 'Ψ', damage: [5, 10], color: 0 };
   }
 }
 
@@ -181,166 +201,130 @@ function isWall(x, y) {
   return state.map[my][mx] > 0;
 }
 
-function wallType(x, y) {
-  const mx = Math.floor(x), my = Math.floor(y);
-  if (mx < 0 || my < 0 || mx >= state.mapW || my >= state.mapH) return 1;
-  return state.map[my][mx];
-}
-
 // ═══════════════════════════════════════════════════════════════
-// Raycaster
+// Raycaster (DDA)
 // ═══════════════════════════════════════════════════════════════
 
 function castRay(angle) {
-  // DDA raycasting — steps exactly along grid lines for accuracy + speed
-  const dirX = Math.cos(angle);
-  const dirY = Math.sin(angle);
-
-  let mapX = Math.floor(state.px);
-  let mapY = Math.floor(state.py);
-
-  const deltaDistX = Math.abs(1 / dirX);
-  const deltaDistY = Math.abs(1 / dirY);
-
-  const stepX = dirX < 0 ? -1 : 1;
-  const stepY = dirY < 0 ? -1 : 1;
-
-  let sideDistX = dirX < 0
-    ? (state.px - mapX) * deltaDistX
-    : (mapX + 1 - state.px) * deltaDistX;
-  let sideDistY = dirY < 0
-    ? (state.py - mapY) * deltaDistY
-    : (mapY + 1 - state.py) * deltaDistY;
-
+  const dirX = Math.cos(angle), dirY = Math.sin(angle);
+  let mapX = Math.floor(state.px), mapY = Math.floor(state.py);
+  const ddx = Math.abs(1 / dirX), ddy = Math.abs(1 / dirY);
+  const stepX = dirX < 0 ? -1 : 1, stepY = dirY < 0 ? -1 : 1;
+  let sdx = dirX < 0 ? (state.px - mapX) * ddx : (mapX + 1 - state.px) * ddx;
+  let sdy = dirY < 0 ? (state.py - mapY) * ddy : (mapY + 1 - state.py) * ddy;
   let side = 0;
-  let steps = 0;
 
-  while (steps < 64) {
-    if (sideDistX < sideDistY) {
-      sideDistX += deltaDistX;
-      mapX += stepX;
-      side = 0;
-    } else {
-      sideDistY += deltaDistY;
-      mapY += stepY;
-      side = 1;
-    }
-    steps++;
-
+  for (let i = 0; i < 64; i++) {
+    if (sdx < sdy) { sdx += ddx; mapX += stepX; side = 0; }
+    else { sdy += ddy; mapY += stepY; side = 1; }
     if (mapX < 0 || mapY < 0 || mapX >= state.mapW || mapY >= state.mapH) break;
     if (state.map[mapY][mapX] > 0) {
       const wt = state.map[mapY][mapX];
       const dist = side === 0
         ? (mapX - state.px + (1 - stepX) / 2) / dirX
         : (mapY - state.py + (1 - stepY) / 2) / dirY;
-      return { dist: Math.abs(dist), wallType: wt, side };
+      // Calculate wallX (fractional hit position for texturing)
+      let wallX = side === 0
+        ? state.py + Math.abs(dist) * dirY
+        : state.px + Math.abs(dist) * dirX;
+      wallX -= Math.floor(wallX);
+      return { dist: Math.abs(dist), wallType: wt, side, wallX };
     }
   }
-  return { dist: CFG.MAX_DEPTH, wallType: 0, side: 0 };
+  return { dist: CFG.MAX_DEPTH, wallType: 0, side: 0, wallX: 0 };
 }
 
+// ═══════════════════════════════════════════════════════════════
+// Scene Rendering
+// ═══════════════════════════════════════════════════════════════
+
 function renderScene() {
-  const cols = CFG.COLS;
-  const rows = CFG.ROWS;
-  const halfRows = rows / 2;
-  const buf = state.charBuf;
-  const col = state.colorBuf;
+  const cols = CFG.COLS, rows = CFG.ROWS, half = rows / 2;
+  const buf = state.charBuf, col = state.colorBuf;
+  const shake = Math.round(state.screenShake * (Math.random() > 0.5 ? 1 : -1));
 
-  // Clear buffers
-  for (let i = 0; i < cols * rows; i++) {
-    buf[i] = ' ';
-    col[i] = '#111';
-  }
+  for (let i = 0; i < cols * rows; i++) { buf[i] = ' '; col[i] = '#111'; }
 
-  // Depth buffer for sprite clipping
   const depthBuf = new Float32Array(cols);
-
-  // Head bob offset
   const bob = Math.sin(state.bobPhase) * state.bobAmount;
 
-  // Cast rays for each column
   for (let c = 0; c < cols; c++) {
     const rayAngle = (state.angle - CFG.FOV / 2) + (c / cols) * CFG.FOV;
     const hit = castRay(rayAngle);
-
-    // Fix fisheye
     const corrDist = hit.dist * Math.cos(rayAngle - state.angle);
     depthBuf[c] = corrDist;
 
-    // Wall height on screen
     const wallH = Math.min(rows, Math.round(rows / corrDist));
-    const wallTop = Math.round(halfRows - wallH / 2 + bob);
+    const wallTop = Math.round(half - wallH / 2 + bob + shake);
     const wallBot = wallTop + wallH;
-
-    // Wall color based on type and distance
     const wallColor = getWallColor(hit.wallType, hit.side, corrDist);
 
     for (let r = 0; r < rows; r++) {
       const idx = r * cols + c;
-
       if (r >= wallTop && r < wallBot) {
-        // Wall
-        const charIdx = Math.min(
-          CFG.WALL_CHARS.length - 1,
-          Math.floor((corrDist / CFG.MAX_DEPTH) * CFG.WALL_CHARS.length)
-        );
-        buf[idx] = CFG.WALL_CHARS[charIdx];
+        buf[idx] = getWallChar(hit.wallType, hit.wallX, (r - wallTop) / wallH, corrDist);
         col[idx] = wallColor;
       } else if (r < wallTop) {
-        // Ceiling
-        const ceilDist = (halfRows - r) / halfRows;
-        const ci = Math.min(
-          CFG.CEILING_CHARS.length - 1,
-          Math.floor((1 - ceilDist) * CFG.CEILING_CHARS.length)
-        );
-        buf[idx] = CFG.CEILING_CHARS[ci];
-        col[idx] = `hsl(0, 0%, ${Math.round(5 + ceilDist * 8)}%)`;
+        const d = (half - r) / half;
+        buf[idx] = d > 0.7 ? '·' : d > 0.4 ? '.' : ' ';
+        col[idx] = `hsl(220, 10%, ${Math.round(3 + d * 6)}%)`;
       } else {
-        // Floor
-        const floorDist = (r - halfRows) / halfRows;
-        const fi = Math.min(
-          CFG.FLOOR_CHARS.length - 1,
-          Math.floor((1 - floorDist) * CFG.FLOOR_CHARS.length)
-        );
-        buf[idx] = CFG.FLOOR_CHARS[fi];
-        const brightness = Math.round(12 + floorDist * 18);
-        col[idx] = `hsl(25, 15%, ${brightness}%)`;
+        const d = (r - half) / half;
+        const checker = ((Math.floor(c * corrDist * 0.1) + Math.floor(r * 0.5)) & 1);
+        buf[idx] = d > 0.7 ? (checker ? '·' : '∙') : d > 0.4 ? (checker ? ':' : '.') : '.';
+        col[idx] = `hsl(25, ${checker ? 20 : 10}%, ${Math.round(10 + d * 20)}%)`;
       }
     }
   }
 
-  // Render sprites (enemies + pickups)
   renderSprites(depthBuf);
-
-  // Shooting flash
-  if (state.shootTimer > 0) {
-    renderMuzzleFlash();
-  }
-
-  // Weapon
+  renderDeathParticles();
+  if (state.shootTimer > 0) renderMuzzleFlash();
   renderWeapon();
-
-  // HUD
   renderHUD();
+  if (state.damageFlash > 0) applyDamageOverlay();
+}
 
-  // Damage flash overlay
-  if (state.damageFlash > 0) {
-    applyDamageOverlay();
+// ─── Wall Characters (pseudo-texture) ───────────────────────
+
+function getWallChar(wType, wallX, wallY, dist) {
+  const distIdx = Math.min(8, Math.floor((dist / CFG.MAX_DEPTH) * 9));
+  const far = '█▓▓▒▒░░·. ';
+
+  switch (wType) {
+    case 1: { // Stone — brick-like grid
+      const bx = (wallX * 4) % 1, by = (wallY * 8) % 1;
+      if (bx < 0.08 || by < 0.06) return distIdx < 4 ? '▒' : '░';
+      return far[distIdx];
+    }
+    case 2: { // Brick — grid with accent
+      const bx = (wallX * 3) % 1, by = (wallY * 6) % 1;
+      if (bx < 0.1 && by < 0.1) return '╬';
+      if (bx < 0.1) return '║';
+      if (by < 0.08) return '═';
+      return far[distIdx];
+    }
+    case 3: { // Tech — panels with accents
+      const bx = (wallX * 5) % 1, by = (wallY * 5) % 1;
+      if (bx > 0.45 && bx < 0.55 && by > 0.45 && by < 0.55) return '◊';
+      if (bx < 0.05 || bx > 0.95 || by < 0.05 || by > 0.95) return '░';
+      return far[distIdx];
+    }
+    case 4: { // Door — vertical stripes
+      const stripe = (wallX * 8) % 1;
+      return stripe < 0.5 ? '▐' : '▌';
+    }
+    default: return far[distIdx];
   }
 }
 
-// ─── Wall Colors ────────────────────────────────────────────
-
 function getWallColor(wType, side, dist) {
-  const brightness = Math.max(20, Math.round(100 - dist * 5));
-  const sideMod = side === 1 ? 0.7 : 1.0;
-  const b = Math.round(brightness * sideMod);
-
+  const b = Math.max(20, Math.round((100 - dist * 5) * (side === 1 ? 0.7 : 1.0)));
   switch (wType) {
-    case 1: return `hsl(0, 0%, ${b}%)`;           // Stone — grey
-    case 2: return `hsl(15, 50%, ${b * 0.6}%)`;    // Brick — dark red
-    case 3: return `hsl(200, 60%, ${b * 0.5}%)`;   // Tech — blue
-    case 4: return `hsl(40, 80%, ${b * 0.7}%)`;    // Door — gold
+    case 1: return `hsl(0, 0%, ${b}%)`;
+    case 2: return `hsl(15, 50%, ${Math.round(b * 0.6)}%)`;
+    case 3: return `hsl(200, 60%, ${Math.round(b * 0.5)}%)`;
+    case 4: return `hsl(40, 80%, ${Math.round(b * 0.7)}%)`;
     default: return `hsl(0, 0%, ${b}%)`;
   }
 }
@@ -348,78 +332,62 @@ function getWallColor(wType, side, dist) {
 // ─── Sprites ────────────────────────────────────────────────
 
 function renderSprites(depthBuf) {
-  const cols = CFG.COLS;
-  const rows = CFG.ROWS;
-  const halfRows = rows / 2;
-
-  // Collect all visible sprites
+  const cols = CFG.COLS, rows = CFG.ROWS, half = rows / 2;
   const sprites = [];
+  const now = performance.now();
 
   for (const e of state.enemies) {
     if (!e.alive) continue;
-    const dx = e.x - state.px;
-    const dy = e.y - state.py;
+    const dx = e.x - state.px, dy = e.y - state.py;
     const dist = Math.sqrt(dx * dx + dy * dy);
-    const angle = Math.atan2(dy, dx) - state.angle;
-    // Normalize angle
-    let a = angle;
+    let a = Math.atan2(dy, dx) - state.angle;
     while (a < -Math.PI) a += 2 * Math.PI;
     while (a > Math.PI) a -= 2 * Math.PI;
-
     if (Math.abs(a) < CFG.FOV / 2 + 0.1) {
-      const screenX = Math.round((0.5 + a / CFG.FOV) * cols);
-      e.dist = dist;
-      e.screenX = screenX;
-      e.visible = true;
-      sprites.push({ type: 'enemy', obj: e, dist, screenX, char: e.hitFlash > 0 ? '╬' : e.char });
-    } else {
-      e.visible = false;
-    }
+      const sx = Math.round((0.5 + a / CFG.FOV) * cols);
+      e.dist = dist; e.screenX = sx; e.visible = true;
+      // Spectres flicker
+      let ch = e.hitFlash > 0 ? '╬' : e.char;
+      if (e.type === 'spectre' && Math.sin(now / 80) > 0.3) ch = '░';
+      sprites.push({ type: 'enemy', obj: e, dist, screenX: sx, char: ch });
+    } else { e.visible = false; }
   }
 
   for (const p of state.pickups) {
     if (!p.active) continue;
-    const dx = p.x - state.px;
-    const dy = p.y - state.py;
+    const dx = p.x - state.px, dy = p.y - state.py;
     const dist = Math.sqrt(dx * dx + dy * dy);
-    const angle = Math.atan2(dy, dx) - state.angle;
-    let a = angle;
+    let a = Math.atan2(dy, dx) - state.angle;
     while (a < -Math.PI) a += 2 * Math.PI;
     while (a > Math.PI) a -= 2 * Math.PI;
-
     if (Math.abs(a) < CFG.FOV / 2 + 0.1) {
-      const screenX = Math.round((0.5 + a / CFG.FOV) * cols);
-      sprites.push({ type: 'pickup', obj: p, dist, screenX, char: p.char });
+      sprites.push({ type: 'pickup', obj: p, dist, screenX: Math.round((0.5 + a / CFG.FOV) * cols), char: p.char });
     }
   }
 
-  // Sort back to front
   sprites.sort((a, b) => b.dist - a.dist);
 
-  // Draw sprites
   for (const sp of sprites) {
     if (sp.dist < 0.3) continue;
     const size = Math.min(rows, Math.round(rows / sp.dist));
     const spriteH = Math.max(1, Math.round(size * 0.6));
     const spriteW = Math.max(1, Math.round(size * 0.3));
-    const topR = Math.round(halfRows - spriteH / 2 + Math.sin(state.bobPhase) * state.bobAmount);
+    const topR = Math.round(half - spriteH / 2 + Math.sin(state.bobPhase) * state.bobAmount);
     const leftC = sp.screenX - Math.floor(spriteW / 2);
 
     let color;
     if (sp.type === 'enemy') {
-      color = sp.obj.hitFlash > 0
-        ? 'hsl(0, 100%, 80%)'
-        : `hsl(0, 70%, ${Math.max(30, Math.round(70 - sp.dist * 3))}%)`;
-    } else if (sp.obj.type === 'health') {
-      color = 'hsl(120, 80%, 60%)';
+      const e = sp.obj;
+      color = e.hitFlash > 0 ? 'hsl(0, 100%, 80%)'
+        : `hsl(${e.color}, 70%, ${Math.max(30, Math.round(70 - sp.dist * 3))}%)`;
     } else {
-      color = 'hsl(50, 90%, 65%)';
+      color = sp.obj.type === 'health' ? 'hsl(120, 80%, 60%)' : 'hsl(50, 90%, 65%)';
     }
 
     for (let r = topR; r < topR + spriteH; r++) {
       for (let c = leftC; c < leftC + spriteW; c++) {
         if (r < 0 || r >= rows || c < 0 || c >= cols) continue;
-        if (depthBuf[c] < sp.dist) continue;  // Behind a wall
+        if (depthBuf[c] < sp.dist) continue;
         const idx = r * cols + c;
         state.charBuf[idx] = sp.char;
         state.colorBuf[idx] = color;
@@ -428,16 +396,28 @@ function renderSprites(depthBuf) {
   }
 }
 
-// ─── Muzzle Flash ───────────────────────────────────────────
+// ─── Death Particles ────────────────────────────────────────
+
+function renderDeathParticles() {
+  const cols = CFG.COLS, rows = CFG.ROWS;
+  for (const dp of state.deathParticles) {
+    if (dp.life <= 0) continue;
+    const r = Math.round(dp.r), c = Math.round(dp.c);
+    if (r >= 0 && r < rows && c >= 0 && c < cols) {
+      const idx = r * cols + c;
+      state.charBuf[idx] = dp.char;
+      state.colorBuf[idx] = `hsl(${dp.hue}, 80%, ${Math.round(dp.life * 70)}%)`;
+    }
+  }
+}
+
+// ─── Muzzle Flash / Weapon / HUD / Damage ───────────────────
 
 function renderMuzzleFlash() {
-  const cols = CFG.COLS;
-  const rows = CFG.ROWS;
-  const cx = Math.floor(cols / 2);
-  const cy = Math.floor(rows * 0.55);
+  const cols = CFG.COLS, rows = CFG.ROWS;
+  const cx = Math.floor(cols / 2), cy = Math.floor(rows * 0.55);
   const flashChars = '*+×•';
   const radius = Math.round(3 * state.shootTimer / 0.1);
-
   for (let dr = -radius; dr <= radius; dr++) {
     for (let dc = -radius; dc <= radius; dc++) {
       const r = cy + dr, c = cx + dc;
@@ -450,14 +430,11 @@ function renderMuzzleFlash() {
   }
 }
 
-// ─── Weapon Display ─────────────────────────────────────────
-
 function renderWeapon() {
-  const cols = CFG.COLS;
-  const rows = CFG.ROWS;
+  const cols = CFG.COLS, rows = CFG.ROWS;
   const bob = Math.sin(state.bobPhase * 2) * state.bobAmount * 0.5;
+  const recoilOffset = Math.round(state.recoil * -3); // kick up on shoot
 
-  // Simple shotgun ASCII art at bottom center
   const weapon = [
     '  ║║  ',
     '  ║║  ',
@@ -466,54 +443,40 @@ function renderWeapon() {
     ' ╚══╝ ',
   ];
 
-  const startR = rows - weapon.length - 1 + Math.round(bob);
+  const startR = rows - weapon.length - 1 + Math.round(bob) + recoilOffset;
   const startC = Math.floor(cols / 2) - 3;
-
   for (let r = 0; r < weapon.length; r++) {
     for (let c = 0; c < weapon[r].length; c++) {
-      const gr = startR + r;
-      const gc = startC + c;
+      const gr = startR + r, gc = startC + c;
       if (gr < 0 || gr >= rows || gc < 0 || gc >= cols) continue;
       if (weapon[r][c] === ' ') continue;
-      const idx = gr * cols + gc;
-      state.charBuf[idx] = weapon[r][c];
-      state.colorBuf[idx] = 'hsl(35, 20%, 55%)';
+      state.charBuf[gr * cols + gc] = weapon[r][c];
+      state.colorBuf[gr * cols + gc] = 'hsl(35, 20%, 55%)';
     }
   }
 }
 
-// ─── HUD ────────────────────────────────────────────────────
-
 function renderHUD() {
-  const cols = CFG.COLS;
-  const rows = CFG.ROWS;
-  const lastRow = rows - 1;
-
-  // Build HUD string
+  const cols = CFG.COLS, rows = CFG.ROWS, last = rows - 1;
   const healthStr = `♥ ${state.health}`;
   const ammoStr = `◆ ${state.ammo}`;
+  const lvlStr = `LVL ${state.level + 1}`;
   const scoreStr = `SCORE: ${state.score}`;
+  const killStr = `KILLS: ${state.kills}/${state.totalEnemies}`;
   const fpsStr = `${state.fps}fps`;
-  const killStr = `KILLS: ${state.kills}`;
 
-  // Background bar
-  for (let c = 0; c < cols; c++) {
-    const idx = lastRow * cols + c;
-    state.charBuf[idx] = '─';
-    state.colorBuf[idx] = '#333';
-  }
+  for (let c = 0; c < cols; c++) { state.charBuf[last * cols + c] = '─'; state.colorBuf[last * cols + c] = '#333'; }
 
-  // Write HUD elements
-  writeText(lastRow, 1, healthStr, state.health > 30 ? 'hsl(120, 80%, 55%)' : 'hsl(0, 90%, 55%)');
-  writeText(lastRow, healthStr.length + 3, ammoStr, 'hsl(50, 80%, 60%)');
-  writeText(lastRow, Math.floor(cols / 2) - Math.floor(scoreStr.length / 2), scoreStr, '#aaa');
-  writeText(lastRow, cols - killStr.length - fpsStr.length - 4, killStr, '#888');
-  writeText(lastRow, cols - fpsStr.length - 1, fpsStr, '#555');
+  writeText(last, 1, healthStr, state.health > 30 ? 'hsl(120, 80%, 55%)' : 'hsl(0, 90%, 55%)');
+  writeText(last, healthStr.length + 3, ammoStr, 'hsl(50, 80%, 60%)');
+  writeText(last, healthStr.length + ammoStr.length + 6, lvlStr, 'hsl(200, 60%, 55%)');
+  writeText(last, Math.floor(cols / 2) - Math.floor(scoreStr.length / 2), scoreStr, '#aaa');
+  writeText(last, cols - killStr.length - fpsStr.length - 4, killStr, '#888');
+  writeText(last, cols - fpsStr.length - 1, fpsStr, '#555');
 
   // Crosshair
-  const cx = Math.floor(cols / 2);
-  const cy = Math.floor(rows / 2);
-  if (cy > 0 && cy < rows - 1 && cx > 0 && cx < cols - 1) {
+  const cx = Math.floor(cols / 2), cy = Math.floor(rows / 2);
+  if (cy > 0 && cy < rows - 1) {
     state.charBuf[cy * cols + cx] = '+';
     state.colorBuf[cy * cols + cx] = 'hsl(0, 0%, 90%)';
   }
@@ -523,31 +486,19 @@ function writeText(row, startCol, text, color) {
   const cols = CFG.COLS;
   for (let i = 0; i < text.length; i++) {
     const c = startCol + i;
-    if (c < 0 || c >= cols) continue;
-    const idx = row * cols + c;
-    state.charBuf[idx] = text[i];
-    state.colorBuf[idx] = color;
+    if (c >= 0 && c < cols) { state.charBuf[row * cols + c] = text[i]; state.colorBuf[row * cols + c] = color; }
   }
 }
 
-// ─── Damage Overlay ─────────────────────────────────────────
-
 function applyDamageOverlay() {
-  const cols = CFG.COLS;
-  const rows = CFG.ROWS;
-  const alpha = state.damageFlash;
-
-  // Tint edges red
+  const cols = CFG.COLS, rows = CFG.ROWS, a = state.damageFlash;
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
-      const edgeDist = Math.min(c, cols - 1 - c, r, rows - 1 - r);
-      if (edgeDist < 4) {
-        const intensity = (1 - edgeDist / 4) * alpha;
-        if (Math.random() < intensity * 0.5) {
-          const idx = r * cols + c;
-          state.charBuf[idx] = '░';
-          state.colorBuf[idx] = `hsl(0, 90%, ${30 + intensity * 40}%)`;
-        }
+      const d = Math.min(c, cols - 1 - c, r, rows - 1 - r);
+      if (d < 4 && Math.random() < (1 - d / 4) * a * 0.5) {
+        const idx = r * cols + c;
+        state.charBuf[idx] = '░';
+        state.colorBuf[idx] = `hsl(0, 90%, ${30 + (1 - d / 4) * a * 40}%)`;
       }
     }
   }
@@ -562,132 +513,126 @@ function update(dt) {
   if (state.dead) return;
 
   const s = state;
-
-  // Mouse rotation
-  s.angle += s.mouseDX * CFG.MOUSE_SENS;
-  s.mouseDX = 0;
-
-  // Keyboard rotation
+  s.angle += s.mouseDX * CFG.MOUSE_SENS; s.mouseDX = 0;
   if (s.keys['ArrowLeft'] || s.keys['q']) s.angle -= CFG.ROT_SPEED * dt;
   if (s.keys['ArrowRight'] || s.keys['e']) s.angle += CFG.ROT_SPEED * dt;
 
-  // Movement
-  let moveX = 0, moveY = 0;
-  const cos = Math.cos(s.angle);
-  const sin = Math.sin(s.angle);
+  let mx = 0, my = 0;
+  const cos = Math.cos(s.angle), sin = Math.sin(s.angle);
+  if (s.keys['w'] || s.keys['ArrowUp']) { mx += cos * CFG.MOVE_SPEED * dt; my += sin * CFG.MOVE_SPEED * dt; }
+  if (s.keys['s'] || s.keys['ArrowDown']) { mx -= cos * CFG.MOVE_SPEED * dt; my -= sin * CFG.MOVE_SPEED * dt; }
+  if (s.keys['a']) { mx += sin * CFG.STRAFE_SPEED * dt; my -= cos * CFG.STRAFE_SPEED * dt; }
+  if (s.keys['d']) { mx -= sin * CFG.STRAFE_SPEED * dt; my += cos * CFG.STRAFE_SPEED * dt; }
 
-  if (s.keys['w'] || s.keys['ArrowUp']) {
-    moveX += cos * CFG.MOVE_SPEED * dt;
-    moveY += sin * CFG.MOVE_SPEED * dt;
-  }
-  if (s.keys['s'] || s.keys['ArrowDown']) {
-    moveX -= cos * CFG.MOVE_SPEED * dt;
-    moveY -= sin * CFG.MOVE_SPEED * dt;
-  }
-  if (s.keys['a']) {
-    moveX += sin * CFG.STRAFE_SPEED * dt;
-    moveY -= cos * CFG.STRAFE_SPEED * dt;
-  }
-  if (s.keys['d']) {
-    moveX -= sin * CFG.STRAFE_SPEED * dt;
-    moveY += cos * CFG.STRAFE_SPEED * dt;
-  }
-
-  // Collision detection — slide along walls
   const margin = 0.2;
-  if (!isWall(s.px + moveX + Math.sign(moveX) * margin, s.py)) s.px += moveX;
-  if (!isWall(s.px, s.py + moveY + Math.sign(moveY) * margin)) s.py += moveY;
+  if (!isWall(s.px + mx + Math.sign(mx) * margin, s.py)) s.px += mx;
+  if (!isWall(s.px, s.py + my + Math.sign(my) * margin)) s.py += my;
 
-  // Head bob when moving
-  const moving = Math.abs(moveX) + Math.abs(moveY) > 0.001;
-  if (moving) {
-    s.bobPhase += dt * 8;
-    s.bobAmount = Math.min(1.5, s.bobAmount + dt * 6);
-  } else {
-    s.bobAmount = Math.max(0, s.bobAmount - dt * 4);
-  }
+  const moving = Math.abs(mx) + Math.abs(my) > 0.001;
+  if (moving) { s.bobPhase += dt * 8; s.bobAmount = Math.min(1.5, s.bobAmount + dt * 6); }
+  else { s.bobAmount = Math.max(0, s.bobAmount - dt * 4); }
 
-  // Shooting
   s.shootCooldown = Math.max(0, s.shootCooldown - dt);
   s.shootTimer = Math.max(0, s.shootTimer - dt);
   s.damageFlash = Math.max(0, s.damageFlash - dt * 3);
+  s.screenShake = Math.max(0, s.screenShake - dt * 8);
+  s.recoil = Math.max(0, s.recoil - dt * 8);
 
   if (s.shooting && s.shootCooldown <= 0 && s.ammo > 0) {
-    shoot();
-    s.shootCooldown = 0.4;
-    s.shootTimer = 0.1;
-    s.ammo--;
+    shoot(); s.shootCooldown = 0.4; s.shootTimer = 0.1; s.ammo--; s.recoil = 1.0;
+    sfxShoot();
   }
 
-  // Enemies
   updateEnemies(dt);
-
-  // Pickups
   updatePickups();
+  updateDeathParticles(dt);
+
+  // Win condition
+  const alive = s.enemies.filter(e => e.alive).length;
+  if (alive === 0 && s.enemies.length > 0) {
+    s.screen = 'victory'; s.victoryTimer = 0;
+  }
 }
 
 function shoot() {
-  // Check if crosshair ray hits an enemy
   const hit = castRay(state.angle);
   for (const e of state.enemies) {
     if (!e.alive || !e.visible) continue;
-    // Check if enemy is roughly centered and closer than the wall
-    const dx = e.x - state.px;
-    const dy = e.y - state.py;
+    const dx = e.x - state.px, dy = e.y - state.py;
     const dist = Math.sqrt(dx * dx + dy * dy);
     if (dist > hit.dist) continue;
-
-    const enemyAngle = Math.atan2(dy, dx) - state.angle;
-    let a = enemyAngle;
+    let a = Math.atan2(dy, dx) - state.angle;
     while (a < -Math.PI) a += 2 * Math.PI;
     while (a > Math.PI) a -= 2 * Math.PI;
-
-    // Wider hit detection for shotgun spread
     if (Math.abs(a) < 0.15) {
-      e.health--;
-      e.hitFlash = 0.15;
+      e.health--; e.hitFlash = 0.15; sfxHit();
       if (e.health <= 0) {
-        e.alive = false;
-        state.score += 100;
-        state.kills++;
+        e.alive = false; state.score += 100; state.kills++;
+        sfxEnemyDeath();
+        spawnDeathParticles(e);
       }
       break;
     }
   }
 }
 
+function spawnDeathParticles(enemy) {
+  // Project enemy position to screen coords
+  const dx = enemy.x - state.px, dy = enemy.y - state.py;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+  let a = Math.atan2(dy, dx) - state.angle;
+  while (a < -Math.PI) a += 2 * Math.PI;
+  while (a > Math.PI) a -= 2 * Math.PI;
+  const sc = (0.5 + a / CFG.FOV) * CFG.COLS;
+  const sr = CFG.ROWS / 2;
+  const chars = 'Ψ*+×•░▒';
+  for (let i = 0; i < 12; i++) {
+    state.deathParticles.push({
+      r: sr + (Math.random() - 0.5) * 4,
+      c: sc + (Math.random() - 0.5) * 6,
+      vr: (Math.random() - 0.5) * 15,
+      vc: (Math.random() - 0.5) * 20,
+      char: chars[Math.floor(Math.random() * chars.length)],
+      hue: enemy.color,
+      life: 0.5 + Math.random() * 0.5,
+    });
+  }
+}
+
+function updateDeathParticles(dt) {
+  for (let i = state.deathParticles.length - 1; i >= 0; i--) {
+    const dp = state.deathParticles[i];
+    dp.r += dp.vr * dt; dp.c += dp.vc * dt;
+    dp.vr += 15 * dt; // gravity
+    dp.life -= dt * 2;
+    if (dp.life <= 0) state.deathParticles.splice(i, 1);
+  }
+}
+
 function updateEnemies(dt) {
   for (const e of state.enemies) {
     if (!e.alive) continue;
-
     e.hitFlash = Math.max(0, e.hitFlash - dt);
     e.attackTimer += dt;
-    e.moveTimer += dt;
-
-    const dx = state.px - e.x;
-    const dy = state.py - e.y;
+    const dx = state.px - e.x, dy = state.py - e.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
 
-    // Move toward player if they can see the player
     if (dist < 12 && dist > 1.5) {
       const speed = e.speed * dt;
-      const nx = e.x + (dx / dist) * speed;
-      const ny = e.y + (dy / dist) * speed;
+      const nx = e.x + (dx / dist) * speed, ny = e.y + (dy / dist) * speed;
       if (!isWall(nx, e.y)) e.x = nx;
       if (!isWall(e.x, ny)) e.y = ny;
     }
 
-    // Attack player when close
-    if (dist < 2.5 && e.attackTimer > 1.5) {
+    const atkCooldown = e.type === 'demon' ? 2.0 : e.type === 'spectre' ? 1.0 : 1.5;
+    if (dist < 2.5 && e.attackTimer > atkCooldown) {
       e.attackTimer = 0;
-      const damage = 5 + Math.floor(Math.random() * 10);
-      state.health -= damage;
+      const dmg = e.damage[0] + Math.floor(Math.random() * (e.damage[1] - e.damage[0]));
+      state.health -= dmg;
       state.damageFlash = 1.0;
-      if (state.health <= 0) {
-        state.health = 0;
-        state.dead = true;
-        state.screen = 'dead';
-      }
+      state.screenShake = 1.0;
+      sfxDamage();
+      if (state.health <= 0) { state.health = 0; state.dead = true; state.screen = 'dead'; }
     }
   }
 }
@@ -695,44 +640,103 @@ function updateEnemies(dt) {
 function updatePickups() {
   for (const p of state.pickups) {
     if (!p.active) continue;
-    const dx = state.px - p.x;
-    const dy = state.py - p.y;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-    if (dist < 0.6) {
+    const dx = state.px - p.x, dy = state.py - p.y;
+    if (Math.sqrt(dx * dx + dy * dy) < 0.6) {
       p.active = false;
-      if (p.type === 'health') {
-        state.health = Math.min(100, state.health + 25);
-      } else if (p.type === 'ammo') {
-        state.ammo += 12;
-      }
+      if (p.type === 'health') state.health = Math.min(100, state.health + 25);
+      else state.ammo += 12;
       state.score += 25;
+      sfxPickup();
     }
   }
 }
 
 // ═══════════════════════════════════════════════════════════════
-// Title & Death Screens
+// Pretext Integration
+// ═══════════════════════════════════════════════════════════════
+
+async function loadPretext() {
+  try {
+    state.pt = await import('https://esm.sh/pretext@0.3.0');
+    state.ptReady = true;
+  } catch (e) { console.warn('Pretext unavailable:', e); }
+}
+
+function ptPrepare(text, font) {
+  if (!state.ptReady) return null;
+  const fn = state.pt.prepareWithSegments || state.pt.prepare;
+  if (!fn) return null;
+  try { return fn(text, font); } catch { return null; }
+}
+
+function ptLayoutLine(prepared, offset, maxW, lh) {
+  if (!state.ptReady || !prepared || !state.pt.layoutNextLine) return null;
+  try {
+    const r = state.pt.layoutNextLine(prepared, offset, maxW, lh);
+    if (!r) return null;
+    const l = r.line || r;
+    const text = typeof l === 'string' ? l : (l.text || l.content || '');
+    const next = r.nextOffset != null ? r.nextOffset : offset + text.length;
+    return next > offset ? { text: text.replace(/\n$/, ''), next } : null;
+  } catch { return null; }
+}
+
+// ─── Title Particles ────────────────────────────────────────
+
+function initTitleParticles() {
+  state.titleParticles = [];
+  const chars = 'DOOM█▓▒░ΨΩΦ×+◊•';
+  for (let i = 0; i < 60; i++) {
+    state.titleParticles.push({
+      x: Math.random() * CFG.COLS,
+      y: Math.random() * CFG.ROWS,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: (Math.random() - 0.5) * 0.2,
+      char: chars[i % chars.length],
+      hue: Math.random() * 360,
+      hueSpeed: 0.1 + Math.random() * 0.3,
+      alpha: 0.15 + Math.random() * 0.25,
+    });
+  }
+}
+
+function updateTitleParticles() {
+  for (const p of state.titleParticles) {
+    p.x += p.vx; p.y += p.vy;
+    if (p.x < -1) p.x = CFG.COLS + 1;
+    if (p.x > CFG.COLS + 1) p.x = -1;
+    if (p.y < -1) p.y = CFG.ROWS + 1;
+    if (p.y > CFG.ROWS + 1) p.y = -1;
+    p.hue = (p.hue + p.hueSpeed) % 360;
+  }
+}
+
+function drawTitleParticles() {
+  for (const p of state.titleParticles) {
+    const r = Math.round(p.y), c = Math.round(p.x);
+    if (r >= 0 && r < CFG.ROWS && c >= 0 && c < CFG.COLS) {
+      const idx = r * CFG.COLS + c;
+      state.charBuf[idx] = p.char;
+      state.colorBuf[idx] = `hsl(${p.hue}, 60%, ${Math.round(20 + p.alpha * 40)}%)`;
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Title Screen (with Pretext wave displacement)
 // ═══════════════════════════════════════════════════════════════
 
 function renderTitleScreen() {
-  const cols = CFG.COLS;
-  const rows = CFG.ROWS;
-  const buf = state.charBuf;
-  const col = state.colorBuf;
+  const cols = CFG.COLS, rows = CFG.ROWS;
+  for (let i = 0; i < cols * rows; i++) { state.charBuf[i] = ' '; state.colorBuf[i] = '#111'; }
 
-  for (let i = 0; i < cols * rows; i++) {
-    buf[i] = ' ';
-    col[i] = '#111';
-  }
+  updateTitleParticles();
+  drawTitleParticles();
 
-  // Background noise
-  for (let i = 0; i < cols * rows; i++) {
-    if (Math.random() < 0.03) {
-      buf[i] = '·.,:;'[Math.floor(Math.random() * 5)];
-      col[i] = `hsl(0, 70%, ${5 + Math.random() * 15}%)`;
-    }
-  }
+  const now = performance.now();
+  const t = now / 2000;
 
+  // DOOM title — each character displaced by sine wave
   const title = [
     '██████   ██████   ██████  ███    ███',
     '██   ██ ██    ██ ██    ██ ████  ████',
@@ -741,32 +745,81 @@ function renderTitleScreen() {
     '██████   ██████   ██████  ██      ██',
   ];
 
-  const titleStartR = Math.floor(rows * 0.2);
-  const titleStartC = Math.floor(cols / 2) - Math.floor(title[0].length / 2);
+  const titleStartR = Math.floor(rows * 0.15);
+  const baseTitleC = Math.floor(cols / 2) - Math.floor(title[0].length / 2);
 
   for (let r = 0; r < title.length; r++) {
+    // Wave displacement per line — Pretext-style flowing text
+    const wave = Math.sin(t + r * 0.8) * 3;
+    const offsetC = Math.round(wave);
+
     for (let c = 0; c < title[r].length; c++) {
       if (title[r][c] === ' ') continue;
       const gr = titleStartR + r;
-      const gc = titleStartC + c;
+      const gc = baseTitleC + c + offsetC;
       if (gr >= 0 && gr < rows && gc >= 0 && gc < cols) {
         const idx = gr * cols + gc;
-        buf[idx] = title[r][c];
-        const hue = (performance.now() / 20 + c * 3) % 360;
-        col[idx] = `hsl(${hue > 30 && hue < 330 ? 0 : hue}, 80%, 55%)`;
+        state.charBuf[idx] = title[r][c];
+        // Flowing hue gradient
+        const hue = (now / 25 + c * 4 + r * 20) % 360;
+        const light = 45 + Math.sin(now / 500 + c * 0.2) * 15;
+        state.colorBuf[idx] = `hsl(${hue > 40 && hue < 320 ? 0 : hue}, 85%, ${Math.round(light)}%)`;
       }
     }
   }
 
-  // Subtitle
+  // Subtitle with wave
   const sub = '── TEXT EDITION ──';
-  writeText(titleStartR + 7, Math.floor(cols / 2) - Math.floor(sub.length / 2), sub, '#666');
+  const subR = titleStartR + 7;
+  const subBaseC = Math.floor(cols / 2) - Math.floor(sub.length / 2);
+  for (let i = 0; i < sub.length; i++) {
+    const waveOff = Math.round(Math.sin(t * 1.3 + i * 0.3) * 1.5);
+    const gc = subBaseC + i + waveOff;
+    if (gc >= 0 && gc < cols) {
+      state.charBuf[subR * cols + gc] = sub[i];
+      state.colorBuf[subR * cols + gc] = `hsl(0, 0%, ${40 + Math.sin(now / 400 + i * 0.4) * 15}%)`;
+    }
+  }
+
+  // Pretext-rendered tagline (if available)
+  const tagline = 'DOOM runs on everything. Even text. Powered by Pretext.';
+  const tagR = titleStartR + 10;
+  if (state.ptReady) {
+    // Use Pretext to lay out text with variable width per line (circular/wave)
+    const fontSize = Math.max(6, Math.floor(state.W / cols));
+    const font = `400 ${fontSize}px "${CFG.FONT}", monospace`;
+    const prep = ptPrepare(tagline, font);
+    if (prep) {
+      let offset = 0, line = 0;
+      while (offset < tagline.length && line < 3) {
+        // Variable width per line — sinusoidal
+        const maxW = (cols * 0.5 + Math.sin(t + line * 1.2) * cols * 0.15) * state.charW;
+        const result = ptLayoutLine(prep, offset, maxW, fontSize * 1.3);
+        if (!result) break;
+        const text = result.text;
+        const lineC = Math.floor(cols / 2) - Math.floor(text.length / 2);
+        const waveOff = Math.round(Math.sin(t * 0.8 + line * 1.5) * 2);
+        for (let i = 0; i < text.length; i++) {
+          const gc = lineC + i + waveOff;
+          if (gc >= 0 && gc < cols) {
+            state.charBuf[(tagR + line) * cols + gc] = text[i];
+            const h = (180 + now / 50 + i * 3) % 360;
+            state.colorBuf[(tagR + line) * cols + gc] = `hsl(${h}, 50%, 55%)`;
+          }
+        }
+        offset = result.next; line++;
+      }
+    }
+  } else {
+    // Fallback: simple centered text
+    writeText(tagR, Math.floor(cols / 2) - Math.floor(tagline.length / 2), tagline, '#444');
+  }
 
   // Blinking prompt
   state.titleBlink += state.dt;
   if (Math.sin(state.titleBlink * 3) > 0) {
-    const prompt = 'CLICK TO START';
-    writeText(titleStartR + 11, Math.floor(cols / 2) - Math.floor(prompt.length / 2), prompt, '#ccc');
+    const prompt = '[ CLICK TO START ]';
+    writeText(titleStartR + 15, Math.floor(cols / 2) - Math.floor(prompt.length / 2), prompt, '#ccc');
   }
 
   // Controls
@@ -774,190 +827,245 @@ function renderTitleScreen() {
     'WASD — Move    Mouse — Look    Click — Shoot',
     'Q/E  — Rotate  Arrow Keys — Also work',
   ];
-  const ctrlStart = titleStartR + 15;
   for (let i = 0; i < controls.length; i++) {
-    writeText(ctrlStart + i, Math.floor(cols / 2) - Math.floor(controls[i].length / 2), controls[i], '#555');
+    writeText(titleStartR + 18 + i, Math.floor(cols / 2) - Math.floor(controls[i].length / 2), controls[i], '#444');
   }
 
-  // Attribution
-  const attr = 'DOOM runs on everything. Even text.';
-  writeText(rows - 3, Math.floor(cols / 2) - Math.floor(attr.length / 2), attr, '#333');
+  // Glow effect on canvas (drawn directly, not through char buffer)
+  state._titleGlow = true;
 }
 
-function renderDeathScreen() {
-  const cols = CFG.COLS;
-  const rows = CFG.ROWS;
+// ═══════════════════════════════════════════════════════════════
+// Death Screen
+// ═══════════════════════════════════════════════════════════════
 
-  // Keep the last game frame but tint it red
+function renderDeathScreen() {
+  const cols = CFG.COLS, rows = CFG.ROWS;
+  const now = performance.now();
+
+  // Corrupt the last game frame
   for (let i = 0; i < cols * rows; i++) {
-    if (Math.random() < 0.4) {
+    if (Math.random() < 0.3) {
       state.charBuf[i] = '░▒▓█'[Math.floor(Math.random() * 4)];
-      state.colorBuf[i] = `hsl(0, ${40 + Math.random() * 40}%, ${10 + Math.random() * 20}%)`;
+      state.colorBuf[i] = `hsl(0, ${40 + Math.random() * 40}%, ${8 + Math.random() * 15}%)`;
     }
   }
 
-  const deathMsg = 'YOU DIED';
-  const scoreMsg = `SCORE: ${state.score}  KILLS: ${state.kills}`;
-  const restartMsg = 'CLICK TO RESTART';
-
   const cy = Math.floor(rows / 2);
-  writeText(cy - 1, Math.floor(cols / 2) - Math.floor(deathMsg.length / 2), deathMsg, 'hsl(0, 90%, 50%)');
+
+  // "YOU DIED" with scatter displacement
+  const deathMsg = 'YOU DIED';
+  for (let i = 0; i < deathMsg.length; i++) {
+    const scatter = Math.sin(now / 200 + i * 1.5) * 1.5;
+    const r = cy - 1 + Math.round(Math.sin(now / 300 + i) * 0.5);
+    const c = Math.floor(cols / 2) - Math.floor(deathMsg.length / 2) + i + Math.round(scatter);
+    if (r >= 0 && r < rows && c >= 0 && c < cols) {
+      state.charBuf[r * cols + c] = deathMsg[i];
+      state.colorBuf[r * cols + c] = `hsl(0, 90%, ${40 + Math.sin(now / 100 + i) * 15}%)`;
+    }
+  }
+
+  const scoreMsg = `SCORE: ${state.score}  KILLS: ${state.kills}`;
   writeText(cy + 1, Math.floor(cols / 2) - Math.floor(scoreMsg.length / 2), scoreMsg, '#aaa');
 
   state.titleBlink += state.dt;
   if (Math.sin(state.titleBlink * 3) > 0) {
-    writeText(cy + 3, Math.floor(cols / 2) - Math.floor(restartMsg.length / 2), restartMsg, '#888');
+    const msg = '[ CLICK TO RESTART ]';
+    writeText(cy + 3, Math.floor(cols / 2) - Math.floor(msg.length / 2), msg, '#888');
   }
 }
 
 // ═══════════════════════════════════════════════════════════════
-// Canvas Rendering — Pretext or direct fillText
+// Victory Screen (with Pretext circular text)
 // ═══════════════════════════════════════════════════════════════
 
-function measureFont() {
-  const ctx = state.ctx;
-  const testSize = getFontSize();
-  ctx.font = `${testSize}px "${CFG.FONT}", "${CFG.FONT_FALLBACK}", monospace`;
-  const m = ctx.measureText('M');
-  state.charW = m.width;
-  state.charH = testSize * 1.15;
-}
+function renderVictoryScreen() {
+  const cols = CFG.COLS, rows = CFG.ROWS;
+  const now = performance.now();
 
-function getFontSize() {
-  // Scale font to fill the canvas
-  const byW = Math.floor(state.W / CFG.COLS);
-  const byH = Math.floor(state.H / CFG.ROWS);
-  return Math.max(6, Math.min(byW, byH));
-}
+  for (let i = 0; i < cols * rows; i++) { state.charBuf[i] = ' '; state.colorBuf[i] = '#111'; }
 
-function renderToCanvas() {
-  const ctx = state.ctx;
-  const dpr = state.dpr;
-  const fontSize = getFontSize();
+  // Background particles
+  updateTitleParticles();
+  drawTitleParticles();
 
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  state.victoryTimer += state.dt;
 
-  // Black background
-  ctx.fillStyle = '#050505';
-  ctx.fillRect(0, 0, state.W, state.H);
-
-  ctx.font = `${fontSize}px "${CFG.FONT}", "${CFG.FONT_FALLBACK}", monospace`;
-  ctx.textBaseline = 'top';
-  ctx.textAlign = 'left';
-
-  const cw = state.charW;
-  const ch = state.charH;
-  const cols = CFG.COLS;
-  const rows = CFG.ROWS;
-
-  // Offset to center the grid
-  const offsetX = Math.max(0, (state.W - cols * cw) / 2);
-  const offsetY = Math.max(0, (state.H - rows * ch) / 2);
-
-  // Batch characters by color to reduce context switches
-  const colorGroups = {};
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      const idx = r * cols + c;
-      const ch2 = state.charBuf[idx];
-      if (ch2 === ' ') continue;
-      const color = state.colorBuf[idx];
-      if (!colorGroups[color]) colorGroups[color] = [];
-      colorGroups[color].push({ ch: ch2, x: offsetX + c * cw, y: offsetY + r * ch });
+  // "LEVEL COMPLETE" with pulsing glow
+  const title = 'LEVEL COMPLETE';
+  const titleR = Math.floor(rows * 0.2);
+  for (let i = 0; i < title.length; i++) {
+    const c = Math.floor(cols / 2) - Math.floor(title.length / 2) + i;
+    if (c >= 0 && c < cols) {
+      state.charBuf[titleR * cols + c] = title[i];
+      const h = (120 + now / 30 + i * 10) % 360;
+      state.colorBuf[titleR * cols + c] = `hsl(${h}, 70%, ${50 + Math.sin(now / 300 + i * 0.5) * 15}%)`;
     }
   }
 
-  for (const color in colorGroups) {
-    ctx.fillStyle = color;
-    for (const item of colorGroups[color]) {
-      ctx.fillText(item.ch, item.x, item.y);
+  // Stats in circular layout (Pretext-style)
+  const stats = `SCORE: ${state.score} · KILLS: ${state.kills}/${state.totalEnemies} · HEALTH: ${state.health} · AMMO: ${state.ammo}`;
+  const centerR = Math.floor(rows * 0.55);
+  const centerC = Math.floor(cols / 2);
+  const radius = Math.min(12, Math.floor(rows * 0.25));
+  const pulse = Math.sin(now / 2000) * 1.5;
+  const r = radius + pulse;
+
+  // Lay out stats text in a circle
+  let charIdx = 0;
+  const totalChars = stats.length;
+  for (let lineR = centerR - Math.ceil(r); lineR <= centerR + Math.ceil(r); lineR++) {
+    if (lineR < 0 || lineR >= rows || charIdx >= totalChars) continue;
+    const dy = lineR - centerR;
+    if (Math.abs(dy) > r) continue;
+    const halfChord = Math.sqrt(r * r - dy * dy);
+    const lineW = Math.round(halfChord * 2);
+    if (lineW < 2) continue;
+    const startC = centerC - Math.floor(lineW / 2);
+
+    // Fill this line with characters from stats
+    for (let dc = 0; dc < lineW && charIdx < totalChars; dc++, charIdx++) {
+      const gc = startC + dc;
+      if (gc >= 0 && gc < cols) {
+        state.charBuf[lineR * cols + gc] = stats[charIdx];
+        const h = (180 + now / 40 + charIdx * 5) % 360;
+        state.colorBuf[lineR * cols + gc] = `hsl(${h}, 60%, 65%)`;
+      }
     }
+  }
+
+  // "Next level" / "You win" prompt
+  if (state.victoryTimer > 2) {
+    const hasNext = state.level + 1 < MAPS.length;
+    const msg = hasNext ? '[ CLICK FOR NEXT LEVEL ]' : '[ YOU WIN — CLICK TO REPLAY ]';
+    if (Math.sin(state.titleBlink * 3) > 0) {
+      writeText(rows - 4, Math.floor(cols / 2) - Math.floor(msg.length / 2), msg, '#ccc');
+    }
+    state.titleBlink += state.dt;
   }
 }
 
 // ═══════════════════════════════════════════════════════════════
-// Minimap (rendered into the char buffer)
+// Minimap
 // ═══════════════════════════════════════════════════════════════
 
 function renderMinimap() {
   if (state.screen !== 'game') return;
-  const cols = CFG.COLS;
-  const rows = CFG.ROWS;
-  const mapScale = 1; // 1 map tile = 1 character
-  const mmW = Math.min(state.mapW, 20);
-  const mmH = Math.min(state.mapH, 14);
-
-  // Position in top-right corner
-  const startC = cols - mmW - 2;
-  const startR = 1;
-
-  // Viewport of the map centered on player
+  const cols = CFG.COLS, rows = CFG.ROWS;
+  const mmW = Math.min(state.mapW, 20), mmH = Math.min(state.mapH, 14);
+  const startC = cols - mmW - 2, startR = 1;
   const camX = Math.floor(state.px) - Math.floor(mmW / 2);
   const camY = Math.floor(state.py) - Math.floor(mmH / 2);
 
   for (let r = 0; r < mmH; r++) {
     for (let c = 0; c < mmW; c++) {
-      const mapX = camX + c;
-      const mapY = camY + r;
-      const gr = startR + r;
-      const gc = startC + c;
+      const mx = camX + c, my = camY + r;
+      const gr = startR + r, gc = startC + c;
       if (gr >= rows || gc >= cols) continue;
-
       const idx = gr * cols + gc;
-
-      if (mapX < 0 || mapY < 0 || mapX >= state.mapW || mapY >= state.mapH) {
-        state.charBuf[idx] = ' ';
-        state.colorBuf[idx] = '#111';
-        continue;
+      if (mx < 0 || my < 0 || mx >= state.mapW || my >= state.mapH) {
+        state.charBuf[idx] = ' '; state.colorBuf[idx] = '#111'; continue;
       }
-
-      const tile = state.map[mapY][mapX];
-      if (tile > 0) {
-        state.charBuf[idx] = '█';
-        state.colorBuf[idx] = '#334';
-      } else {
-        state.charBuf[idx] = '·';
-        state.colorBuf[idx] = '#1a1a1a';
-      }
+      const tile = state.map[my][mx];
+      if (tile > 0) { state.charBuf[idx] = '█'; state.colorBuf[idx] = '#334'; }
+      else { state.charBuf[idx] = '·'; state.colorBuf[idx] = '#1a1a1a'; }
     }
   }
 
-  // Player dot
-  const pScreenC = startC + Math.floor(state.px) - camX;
-  const pScreenR = startR + Math.floor(state.py) - camY;
-  if (pScreenR >= 0 && pScreenR < rows && pScreenC >= 0 && pScreenC < cols) {
-    // Direction arrow
-    const arrows = '→↗↑↖←↙↓↘→';
+  // Player direction arrow — fixed for screen-coord Y-down
+  const pC = startC + Math.floor(state.px) - camX;
+  const pR = startR + Math.floor(state.py) - camY;
+  if (pR >= 0 && pR < rows && pC >= 0 && pC < cols) {
+    const arrows = '→↘↓↙←↖↑↗→';
     const aIdx = Math.round(((state.angle % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI)) / (Math.PI / 4));
-    state.charBuf[pScreenR * cols + pScreenC] = arrows[aIdx] || '○';
-    state.colorBuf[pScreenR * cols + pScreenC] = '#0f0';
+    state.charBuf[pR * cols + pC] = arrows[aIdx] || '○';
+    state.colorBuf[pR * cols + pC] = '#0f0';
   }
 
-  // Enemy dots on minimap
+  // Enemy dots
   for (const e of state.enemies) {
     if (!e.alive) continue;
-    const ec = startC + Math.floor(e.x) - camX;
-    const er = startR + Math.floor(e.y) - camY;
+    const ec = startC + Math.floor(e.x) - camX, er = startR + Math.floor(e.y) - camY;
     if (er >= startR && er < startR + mmH && ec >= startC && ec < startC + mmW) {
       state.charBuf[er * cols + ec] = '•';
-      state.colorBuf[er * cols + ec] = '#f44';
+      state.colorBuf[er * cols + ec] = e.type === 'demon' ? '#c4f' : e.type === 'spectre' ? '#4cf' : '#f44';
     }
   }
 
   // Border
   for (let c = startC - 1; c <= startC + mmW; c++) {
     if (c >= 0 && c < cols) {
-      const topIdx = (startR - 1) * cols + c;
-      const botIdx = (startR + mmH) * cols + c;
-      if (startR - 1 >= 0 && topIdx >= 0) { state.charBuf[topIdx] = '─'; state.colorBuf[topIdx] = '#333'; }
-      if (startR + mmH < rows && botIdx < cols * rows) { state.charBuf[botIdx] = '─'; state.colorBuf[botIdx] = '#333'; }
+      if (startR - 1 >= 0) { state.charBuf[(startR - 1) * cols + c] = '─'; state.colorBuf[(startR - 1) * cols + c] = '#333'; }
+      if (startR + mmH < rows) { state.charBuf[(startR + mmH) * cols + c] = '─'; state.colorBuf[(startR + mmH) * cols + c] = '#333'; }
     }
   }
   for (let r = startR; r < startR + mmH; r++) {
-    const lc = startC - 1;
-    const rc = startC + mmW;
-    if (lc >= 0) { state.charBuf[r * cols + lc] = '│'; state.colorBuf[r * cols + lc] = '#333'; }
-    if (rc < cols) { state.charBuf[r * cols + rc] = '│'; state.colorBuf[r * cols + rc] = '#333'; }
+    if (startC - 1 >= 0) { state.charBuf[r * cols + startC - 1] = '│'; state.colorBuf[r * cols + startC - 1] = '#333'; }
+    if (startC + mmW < cols) { state.charBuf[r * cols + startC + mmW] = '│'; state.colorBuf[r * cols + startC + mmW] = '#333'; }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Canvas Rendering
+// ═══════════════════════════════════════════════════════════════
+
+function measureFont() {
+  const ctx = state.ctx;
+  const s = getFontSize();
+  ctx.font = `${s}px "${CFG.FONT}", "${CFG.FONT_FALLBACK}", monospace`;
+  state.charW = ctx.measureText('M').width;
+  state.charH = s * 1.15;
+}
+
+function getFontSize() {
+  return Math.max(6, Math.min(Math.floor(state.W / CFG.COLS), Math.floor(state.H / CFG.ROWS)));
+}
+
+function renderToCanvas() {
+  const ctx = state.ctx, dpr = state.dpr;
+  const fontSize = getFontSize();
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = '#050505';
+  ctx.fillRect(0, 0, state.W, state.H);
+
+  // Title glow effect
+  if (state._titleGlow || state.screen === 'victory') {
+    const now = performance.now();
+    const gx = state.W * 0.5 + Math.sin(now / 3000) * state.W * 0.1;
+    const gy = state.H * 0.3 + Math.cos(now / 2500) * state.H * 0.05;
+    const hue = (now / 30) % 360;
+    const g = ctx.createRadialGradient(gx, gy, 0, gx, gy, state.W * 0.4);
+    g.addColorStop(0, `hsla(${hue}, 80%, 50%, 0.06)`);
+    g.addColorStop(0.5, `hsla(${hue}, 80%, 50%, 0.02)`);
+    g.addColorStop(1, 'hsla(0, 0%, 0%, 0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, state.W, state.H);
+    state._titleGlow = false;
+  }
+
+  ctx.font = `${fontSize}px "${CFG.FONT}", "${CFG.FONT_FALLBACK}", monospace`;
+  ctx.textBaseline = 'top';
+  ctx.textAlign = 'left';
+
+  const cw = state.charW, ch = state.charH;
+  const cols = CFG.COLS, rows = CFG.ROWS;
+  const ox = Math.max(0, (state.W - cols * cw) / 2);
+  const oy = Math.max(0, (state.H - rows * ch) / 2);
+
+  const groups = {};
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const idx = r * cols + c;
+      const ch2 = state.charBuf[idx];
+      if (ch2 === ' ') continue;
+      const color = state.colorBuf[idx];
+      if (!groups[color]) groups[color] = [];
+      groups[color].push({ ch: ch2, x: ox + c * cw, y: oy + r * ch });
+    }
+  }
+  for (const color in groups) {
+    ctx.fillStyle = color;
+    for (const item of groups[color]) ctx.fillText(item.ch, item.x, item.y);
   }
 }
 
@@ -967,37 +1075,23 @@ function renderMinimap() {
 
 function gameLoop(timestamp) {
   requestAnimationFrame(gameLoop);
-
   if (!state.lastTime) state.lastTime = timestamp;
   state.dt = Math.min(0.05, (timestamp - state.lastTime) / 1000);
   state.lastTime = timestamp;
 
-  // FPS counter
   state.frameCount++;
   state.fpsTimer += state.dt;
-  if (state.fpsTimer >= 1) {
-    state.fps = state.frameCount;
-    state.frameCount = 0;
-    state.fpsTimer = 0;
-  }
+  if (state.fpsTimer >= 1) { state.fps = state.frameCount; state.frameCount = 0; state.fpsTimer = 0; }
 
   update(state.dt);
 
-  // Render to char buffer
   switch (state.screen) {
-    case 'title':
-      renderTitleScreen();
-      break;
-    case 'game':
-      renderScene();
-      renderMinimap();
-      break;
-    case 'dead':
-      renderDeathScreen();
-      break;
+    case 'title': renderTitleScreen(); break;
+    case 'game': renderScene(); renderMinimap(); break;
+    case 'dead': renderDeathScreen(); break;
+    case 'victory': renderVictoryScreen(); break;
   }
 
-  // Draw char buffer to canvas
   renderToCanvas();
 }
 
@@ -1008,87 +1102,75 @@ function gameLoop(timestamp) {
 function setupInput() {
   document.addEventListener('keydown', (e) => {
     state.keys[e.key.toLowerCase()] = true;
-    // Prevent scrolling with arrow keys and WASD
-    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
-      e.preventDefault();
-    }
-    // Also store original case for arrow keys
     if (e.key.startsWith('Arrow')) state.keys[e.key] = true;
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) e.preventDefault();
   });
-
   document.addEventListener('keyup', (e) => {
     state.keys[e.key.toLowerCase()] = false;
     if (e.key.startsWith('Arrow')) state.keys[e.key] = false;
   });
 
   state.canvas.addEventListener('click', () => {
-    if (state.screen === 'title') {
-      startGame();
-      return;
-    }
-    if (state.screen === 'dead') {
-      resetGame();
-      return;
-    }
-    // Request pointer lock (may fail in iframe)
-    if (!state.pointerLocked) {
-      try { state.canvas.requestPointerLock(); } catch {}
-    }
+    initAudio();
+    if (state.screen === 'title') { startGame(); return; }
+    if (state.screen === 'dead') { resetGame(state.level); return; }
+    if (state.screen === 'victory') { advanceLevel(); return; }
+    if (!state.pointerLocked) { try { state.canvas.requestPointerLock(); } catch {} }
   });
 
   document.addEventListener('pointerlockchange', () => {
     state.pointerLocked = document.pointerLockElement === state.canvas;
   });
-
   document.addEventListener('mousemove', (e) => {
-    if (state.pointerLocked) {
-      state.mouseDX += e.movementX;
-    }
+    if (state.pointerLocked) state.mouseDX += e.movementX;
   });
-
   state.canvas.addEventListener('mousedown', (e) => {
-    if (state.screen === 'game' && e.button === 0) {
-      state.shooting = true;
-    }
+    if (state.screen === 'game' && e.button === 0) state.shooting = true;
   });
-
-  document.addEventListener('mouseup', (e) => {
-    if (e.button === 0) {
-      state.shooting = false;
-    }
-  });
-
-  window.addEventListener('resize', () => {
-    sizeCanvas();
-    measureFont();
-  });
+  document.addEventListener('mouseup', (e) => { if (e.button === 0) state.shooting = false; });
+  window.addEventListener('resize', () => { sizeCanvas(); measureFont(); });
 }
 
 // ═══════════════════════════════════════════════════════════════
-// Game Start / Reset
+// Game Flow
 // ═══════════════════════════════════════════════════════════════
 
 function startGame() {
   state.screen = 'game';
-  resetGame();
+  state.level = 0;
+  resetGame(0);
   try { state.canvas.requestPointerLock(); } catch {}
 }
 
-function resetGame() {
-  parseMap();
-  state.health = 100;
-  state.ammo = 25;
-  state.score = 0;
-  state.kills = 0;
-  state.dead = false;
-  state.shooting = false;
-  state.shootTimer = 0;
-  state.shootCooldown = 0;
-  state.bobPhase = 0;
-  state.bobAmount = 0;
-  state.damageFlash = 0;
-  state.screen = 'game';
-  state.titleBlink = 0;
+function resetGame(level) {
+  parseMap(level);
+  state.health = 100; state.ammo = 25; state.score = 0; state.kills = 0;
+  state.dead = false; state.shooting = false;
+  state.shootTimer = 0; state.shootCooldown = 0;
+  state.bobPhase = 0; state.bobAmount = 0;
+  state.damageFlash = 0; state.screenShake = 0; state.recoil = 0;
+  state.screen = 'game'; state.titleBlink = 0;
+}
+
+function advanceLevel() {
+  if (state.level + 1 < MAPS.length) {
+    const prevScore = state.score, prevKills = state.kills;
+    state.level++;
+    parseMap(state.level);
+    state.health = Math.min(100, state.health + 25); // Bonus health
+    state.ammo += 10;
+    state.score = prevScore; state.kills = prevKills;
+    state.dead = false; state.shooting = false;
+    state.shootTimer = 0; state.shootCooldown = 0;
+    state.bobPhase = 0; state.bobAmount = 0;
+    state.damageFlash = 0; state.screenShake = 0; state.recoil = 0;
+    state.screen = 'game'; state.titleBlink = 0;
+    try { state.canvas.requestPointerLock(); } catch {}
+  } else {
+    // All levels complete — restart
+    state.level = 0;
+    resetGame(0);
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1096,35 +1178,29 @@ function resetGame() {
 // ═══════════════════════════════════════════════════════════════
 
 function sizeCanvas() {
-  state.W = window.innerWidth;
-  state.H = window.innerHeight;
-  state.canvas.width = state.W * state.dpr;
-  state.canvas.height = state.H * state.dpr;
+  state.W = window.innerWidth; state.H = window.innerHeight;
+  state.canvas.width = state.W * state.dpr; state.canvas.height = state.H * state.dpr;
 }
 
 async function init() {
   state.canvas = document.getElementById('canvas');
   state.ctx = state.canvas.getContext('2d');
   state.dpr = window.devicePixelRatio || 1;
-
   sizeCanvas();
 
-  // Allocate buffers
   const total = CFG.COLS * CFG.ROWS;
   state.charBuf = new Array(total).fill(' ');
   state.colorBuf = new Array(total).fill('#111');
 
-  // Wait for font
   await document.fonts.ready;
   measureFont();
-
-  // Parse map
-  parseMap();
-
-  // Set up input
+  parseMap(0);
+  initTitleParticles();
   setupInput();
 
-  // Start game loop
+  // Load Pretext in background (non-blocking)
+  loadPretext();
+
   requestAnimationFrame(gameLoop);
 }
 
