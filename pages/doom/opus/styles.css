@@ -1,0 +1,457 @@
+:root {
+  --bg: #000000;
+  --accent: #ff4400;
+  --accent-bright: #ff8800;
+  --text-primary: #cccccc;
+  --text-secondary: #888888;
+  --panel-bg: rgba(20, 0, 0, 0.85);
+  --panel-border: #551100;
+  --doom-red: #cc0000;
+  --doom-orange: #ff6600;
+  --doom-yellow: #ffcc00;
+  --doom-gold: #bb8800;
+  --stat-green: #00cc00;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: 'Share Tech Mono', monospace;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+#fireCanvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+#content {
+  position: relative;
+  z-index: 1;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+/* DOOM Title */
+#hero {
+  text-align: center;
+  padding: 3rem 1rem 2rem;
+  margin-bottom: 2rem;
+}
+
+.doom-title {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 3rem;
+  color: var(--doom-red);
+  text-shadow:
+    0 0 10px rgba(255, 68, 0, 0.8),
+    0 0 30px rgba(255, 68, 0, 0.4),
+    0 4px 0 #440000,
+    0 5px 0 #330000,
+    0 6px 0 #220000;
+  letter-spacing: 4px;
+  line-height: 1.3;
+  animation: titlePulse 3s ease-in-out infinite;
+}
+
+@keyframes titlePulse {
+  0%, 100% { text-shadow: 0 0 10px rgba(255,68,0,0.8), 0 0 30px rgba(255,68,0,0.4), 0 4px 0 #440000, 0 5px 0 #330000, 0 6px 0 #220000; }
+  50% { text-shadow: 0 0 20px rgba(255,68,0,1), 0 0 60px rgba(255,68,0,0.6), 0 4px 0 #550000, 0 5px 0 #440000, 0 6px 0 #330000; }
+}
+
+.doom-subtitle {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.7rem;
+  color: var(--doom-orange);
+  margin-top: 1.5rem;
+  letter-spacing: 2px;
+  text-shadow: 0 0 8px rgba(255, 102, 0, 0.5);
+}
+
+.doom-tagline {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  margin-top: 1rem;
+  font-style: italic;
+}
+
+.skull-divider {
+  font-size: 1.5rem;
+  margin-top: 1.5rem;
+  color: var(--doom-red);
+  letter-spacing: 1rem;
+  text-shadow: 0 0 10px rgba(204, 0, 0, 0.5);
+}
+
+/* Panels */
+.doom-panel {
+  background: var(--panel-bg);
+  border: 2px solid var(--panel-border);
+  border-radius: 2px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow:
+    inset 0 0 30px rgba(255, 68, 0, 0.05),
+    0 0 15px rgba(255, 68, 0, 0.1);
+}
+
+.section-title {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.85rem;
+  color: var(--doom-orange);
+  margin-bottom: 1.2rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--panel-border);
+  text-shadow: 0 0 8px rgba(255, 102, 0, 0.4);
+  letter-spacing: 2px;
+}
+
+/* Stats Grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  text-align: center;
+}
+
+.stat-block {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--panel-border);
+  padding: 1rem 0.5rem;
+}
+
+.stat-label {
+  display: block;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.6rem;
+  color: var(--doom-gold);
+  margin-bottom: 0.5rem;
+}
+
+.stat-value {
+  display: block;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 1.5rem;
+  color: var(--stat-green);
+  text-shadow: 0 0 10px rgba(0, 204, 0, 0.5);
+  margin-bottom: 0.3rem;
+}
+
+.stat-desc {
+  display: block;
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+  letter-spacing: 1px;
+}
+
+/* Weapons */
+.weapons-grid {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.weapon {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid rgba(85, 17, 0, 0.4);
+}
+
+.weapon:last-child {
+  border-bottom: none;
+}
+
+.weapon-key {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.7rem;
+  color: var(--doom-yellow);
+  background: rgba(0, 0, 0, 0.6);
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--doom-gold);
+  min-width: 2rem;
+  text-align: center;
+}
+
+.weapon-name {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  flex: 1;
+  letter-spacing: 1px;
+}
+
+.weapon-ammo {
+  color: var(--doom-orange);
+  font-size: 0.7rem;
+  letter-spacing: 2px;
+}
+
+/* Levels */
+.level-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.level {
+  display: flex;
+  gap: 1rem;
+  padding: 0.8rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-left: 3px solid var(--panel-border);
+}
+
+.level.current-level {
+  border-left-color: var(--doom-orange);
+  background: rgba(255, 68, 0, 0.08);
+}
+
+.level-num {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.65rem;
+  color: var(--doom-red);
+  white-space: nowrap;
+  padding-top: 0.2rem;
+}
+
+.level-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.level-name {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.65rem;
+  color: var(--doom-yellow);
+  letter-spacing: 1px;
+}
+
+.level-detail {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.level-achievement {
+  font-size: 0.75rem;
+  color: var(--doom-gold);
+}
+
+/* Achievements */
+.achievement-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.achievement {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.achievement-icon {
+  font-size: 1.5rem;
+  color: var(--doom-red);
+  text-shadow: 0 0 8px rgba(204, 0, 0, 0.5);
+  flex-shrink: 0;
+}
+
+.achievement-name {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--doom-orange);
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.achievement-desc {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-top: 0.2rem;
+}
+
+/* Education */
+.edu-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.edu-school {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.6rem;
+  color: var(--doom-yellow);
+  letter-spacing: 1px;
+  line-height: 1.6;
+}
+
+.edu-degree {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.edu-focus {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+/* Links */
+.links-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+}
+
+.doom-link {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--text-primary);
+  text-decoration: none;
+  font-size: 0.85rem;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--panel-border);
+  background: rgba(0, 0, 0, 0.4);
+  transition: all 0.2s;
+}
+
+.doom-link:hover {
+  border-color: var(--doom-orange);
+  background: rgba(255, 68, 0, 0.15);
+  color: var(--doom-orange);
+  text-shadow: 0 0 8px rgba(255, 102, 0, 0.5);
+}
+
+.link-key {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.55rem;
+  color: var(--doom-gold);
+}
+
+/* Cheat Panel */
+.cheat-panel {
+  text-align: center;
+  border-style: dashed;
+  opacity: 0.5;
+  transition: opacity 0.3s;
+}
+
+.cheat-panel:hover {
+  opacity: 1;
+}
+
+.cheat-hint {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.cheat-hint kbd {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.65rem;
+  color: var(--doom-yellow);
+  background: rgba(0, 0, 0, 0.5);
+  padding: 0.2rem 0.5rem;
+  border: 1px solid var(--doom-gold);
+}
+
+/* GOD MODE */
+body.god-mode {
+  --doom-red: #00ccff;
+  --doom-orange: #00ffcc;
+  --doom-yellow: #ccff00;
+  --doom-gold: #00cc88;
+  --panel-border: #004455;
+  --accent: #00ccff;
+}
+
+body.god-mode .doom-title {
+  color: #00ccff;
+  text-shadow:
+    0 0 10px rgba(0, 204, 255, 0.8),
+    0 0 30px rgba(0, 204, 255, 0.4),
+    0 4px 0 #003344,
+    0 5px 0 #002233,
+    0 6px 0 #001122;
+}
+
+body.god-mode .cheat-hint {
+  color: var(--doom-yellow);
+}
+
+body.god-mode .cheat-hint::after {
+  content: ' — GOD MODE ACTIVE';
+  color: #00ffcc;
+}
+
+/* Footer */
+footer {
+  text-align: center;
+  padding: 2rem 0;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  border-top: 1px solid var(--panel-border);
+  margin-top: 1rem;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .doom-title {
+    font-size: 2.2rem;
+  }
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  #content {
+    padding: 1rem;
+  }
+  .doom-title {
+    font-size: 1.5rem;
+    letter-spacing: 2px;
+  }
+  .doom-subtitle {
+    font-size: 0.5rem;
+  }
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+  .stat-value {
+    font-size: 1.1rem;
+  }
+  .weapon {
+    gap: 0.5rem;
+  }
+  .level {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .links-grid {
+    flex-direction: column;
+  }
+  .doom-panel {
+    padding: 1rem;
+  }
+}
+
+/* Dark mode already default, light mode override */
+@media (prefers-color-scheme: light) {
+  :root {
+    --panel-bg: rgba(40, 5, 5, 0.9);
+  }
+}
