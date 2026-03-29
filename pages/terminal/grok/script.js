@@ -1,5 +1,5 @@
 const profile = {
-    name: "Fadi Al Zuabi",
+    name: "Fadi Zuabi",
     role: "Senior Firmware Engineer & AI Champion",
     company: "Solidigm (SK Hynix)",
     location: "Roseville, CA",
@@ -195,7 +195,7 @@ input.addEventListener('keydown', (e) => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
-    const welcomeText = 'Welcome to Fadi Al Zuabi\'s Terminal Portfolio\nType \'help\' for available commands.\n\n';
+    const welcomeText = 'Welcome to Fadi Zuabi\'s Terminal Portfolio\nType \'help\' for available commands.\n\n';
     typeText(welcomeText, () => {
         appendOutput(promptText, 'prompt');
     });

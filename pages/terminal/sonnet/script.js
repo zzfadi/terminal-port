@@ -1,9 +1,9 @@
-// Terminal Portfolio - Fadi Al Zuabi
+// Terminal Portfolio - Fadi Zuabi
 const output = document.getElementById('output');
 const input = document.getElementById('command-input');
 
 const profile = {
-    name: 'Fadi Al Zuabi',
+    name: 'Fadi Zuabi',
     role: 'Senior Firmware Engineer & AI Champion',
     company: 'Solidigm (SK Hynix)',
     location: 'Roseville, CA',
@@ -268,7 +268,7 @@ document.addEventListener('click', () => {
 window.addEventListener('load', () => {
     printOutput([
         { text: '╔═══════════════════════════════════════════════════════════╗', class: 'accent' },
-        { text: '║  Welcome to Fadi Al Zuabi\'s Terminal Portfolio           ║', class: 'accent' },
+        { text: '║  Welcome to Fadi Zuabi\'s Terminal Portfolio           ║', class: 'accent' },
         { text: '║  Senior Firmware Engineer & AI Champion                  ║', class: 'accent' },
         { text: '╚═══════════════════════════════════════════════════════════╝', class: 'accent' },
         { text: '' },

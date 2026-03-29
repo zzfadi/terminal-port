@@ -18,7 +18,7 @@ const commands = {
     bio: {
         description: 'Display profile summary',
         execute: () => {
-            return `<h1>Fadi Al Zuabi</h1>
+            return `<h1>Fadi Zuabi</h1>
 Senior Firmware Engineer & AI Champion @ Solidigm
 Roseville, CA
 
@@ -139,7 +139,7 @@ document.addEventListener('click', () => {
 
 // Initial welcome message
 window.addEventListener('DOMContentLoaded', () => {
-    const welcomeMsg = `Welcome to Fadi Al Zuabi's terminal portfolio v1.0.
+    const welcomeMsg = `Welcome to Fadi Zuabi's terminal portfolio v1.0.
 Type <span style="color: var(--text-warning)">help</span> to see available commands.
 `;
     printOutput(welcomeMsg);

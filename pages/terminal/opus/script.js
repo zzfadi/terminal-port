@@ -23,15 +23,15 @@
   // ============================================
 
   const FADI_CONTEXT = {
-    name: 'Fadi Al Zuabi',
+    name: 'Fadi Zuabi',
     role: 'Senior Firmware Engineer & AI Champion',
     location: 'Roseville, CA',
     company: 'Solidigm (SK Hynix)',
     links: {
       github: 'https://github.com/zzfadi',
-      linkedin: 'https://linkedin.com/in/fadialzuabi',
-      x: 'https://x.com/fadialzuabi',
-      email: 'fadi@alzuabi.dev'
+      linkedin: 'https://linkedin.com/in/fadi-zuabi',
+      x: 'https://x.com/fadi_zuabi',
+      email: 'fadi.b.zuabi@gmail.com'
     }
   };
 
@@ -200,8 +200,8 @@
     const contacts = [
       { label: 'email', value: FADI_CONTEXT.links.email, href: 'mailto:' + FADI_CONTEXT.links.email },
       { label: 'github', value: '@zzfadi', href: FADI_CONTEXT.links.github },
-      { label: 'linkedin', value: '/in/fadialzuabi', href: FADI_CONTEXT.links.linkedin },
-      { label: 'x', value: '@fadialzuabi', href: FADI_CONTEXT.links.x }
+      { label: 'linkedin', value: '/in/fadi-zuabi', href: FADI_CONTEXT.links.linkedin },
+      { label: 'x', value: '@fadi_zuabi', href: FADI_CONTEXT.links.x }
     ];
 
     contacts.forEach(c => {
@@ -272,11 +272,11 @@
       'hello': "Hey! I'm Fadi. Type 'help' to see what you can explore, or just ask me anything.",
       'hi': "Hey! I'm Fadi. Type 'help' to see what you can explore, or just ask me anything.",
       'hey': "Hey! I'm Fadi. Type 'help' to see what you can explore, or just ask me anything.",
-      'who are you': "I'm Fadi Al Zuabi — a firmware engineer who builds AI systems. I work at Solidigm where I train engineers on AI tools. Type 'skills' or 'projects' to learn more.",
+      'who are you': "I'm Fadi Zuabi — a firmware engineer who builds AI systems. I work at Solidigm where I train engineers on AI tools. Type 'skills' or 'projects' to learn more.",
       'what do you do': "I build bridges between hardware and AI. Day job: firmware engineering at Solidigm. Side quest: training 60+ engineers on AI tools and building systems that make firmware development smarter.",
       'where do you work': "Solidigm — it's SK Hynix's SSD division in Silicon Valley. I'm a Senior Firmware Engineer and AI Champion there.",
-      'are you available': "Depends what for. I'm currently employed at Solidigm, but always interested in interesting conversations. Email me: fadi@alzuabi.dev",
-      'can i hire you': "I'm currently at Solidigm, but open to conversations about interesting opportunities. Email me: fadi@alzuabi.dev",
+      'are you available': "Depends what for. I'm currently employed at Solidigm, but always interested in interesting conversations. Email me: fadi.b.zuabi@gmail.com",
+      'can i hire you': "I'm currently at Solidigm, but open to conversations about interesting opportunities. Email me: fadi.b.zuabi@gmail.com",
       'why ai': "AI is the biggest leverage multiplier I've seen in 10 years of engineering. I watched junior engineers become 2-3x more productive with the right tools. That's why I do it."
     };
 
