@@ -237,6 +237,20 @@
           ]
         },
         {
+          "id": "doom",
+          "label": "DOOM",
+          "description": "Classic DOOM fire effect rendered as colored ASCII text with interactive flames",
+          "prompt": "designs/doom/prompt.md",
+          "models": [
+            {
+              "id": "doom-opus",
+              "model": "Claude Opus 4.6",
+              "path": "pages/doom/opus/",
+              "date": "2026-03"
+            }
+          ]
+        },
+        {
           "id": "game-of-life",
           "label": "Game of Life",
           "description": "Conway's Game of Life cellular automaton with interactive simulation",
