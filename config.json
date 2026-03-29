@@ -146,9 +146,21 @@
               "date": "2026-03"
             },
             {
+              "id": "pretext-gpt",
+              "model": "GPT-5.4",
+              "path": "pages/pretext/gpt/",
+              "date": "2026-03"
+            },
+            {
               "id": "pretext-copilot",
               "model": "GitHub Copilot (Opus 4.6)",
               "path": "pages/pretext/copilot/",
+              "date": "2026-03"
+            },
+            {
+              "id": "pretext-gemini",
+              "model": "Gemini 3.1 Pro (Preview)",
+              "path": "pages/pretext/gemini/",
               "date": "2026-03"
             }
           ]
