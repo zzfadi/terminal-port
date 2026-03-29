@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fadi Zuabi | Pretext Systems Field</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <canvas id="fieldCanvas" aria-hidden="true"></canvas>
+
+  <header class="site-header">
+    <nav class="top-nav" aria-label="Primary">
+      <p class="brand">Zuabi.dev / Pretext Systems Field</p>
+      <ul class="link-list">
+        <li><a href="https://github.com/zzfadi" target="_blank" rel="noreferrer">GitHub</a></li>
+        <li><a href="https://linkedin.com/in/fadi-zuabi" target="_blank" rel="noreferrer">LinkedIn</a></li>
+        <li><a href="https://x.com/fadi_zuabi" target="_blank" rel="noreferrer">X</a></li>
+        <li><a href="mailto:fadi.b.zuabi@gmail.com">Email</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <article class="layout-grid" aria-label="Fadi Zuabi Portfolio">
+      <section class="panel hero-panel" aria-labelledby="heroTitle">
+        <div class="hero-copy">
+          <p class="eyebrow">Senior Firmware Engineer &amp; AI Champion</p>
+          <h1 id="heroTitle">Fadi Zuabi</h1>
+          <p class="location">Roseville, CA · Solidigm (SK Hynix)</p>
+          <p class="hero-note">Real systems. Real constraints. Pretext doing the text geometry before the DOM ever has to.</p>
+          <ul class="proof-grid" aria-label="Pretext proof points">
+            <li>Canvas text with deterministic measurement</li>
+            <li>Obstacle-aware flow with per-line widths</li>
+            <li>Shrink-wrap balancing before DOM render</li>
+            <li>Virtualized rows predicted from layout() in JS</li>
+          </ul>
+        </div>
+        <canvas id="heroCanvas" class="text-canvas" aria-label="Kinetic headline rendered on canvas using Pretext line layout"></canvas>
+      </section>
+
+      <section class="panel flow-panel" aria-labelledby="flowTitle">
+        <div class="section-head">
+          <h2 id="flowTitle">Obstacle-Aware Narrative</h2>
+          <p>Paragraph routing recomputes each row in motion space with layoutNextLine().</p>
+        </div>
+        <canvas id="flowCanvas" class="text-canvas" aria-label="Paragraph flow around kinetic nodes"></canvas>
+        <p id="flowMetrics" class="metrics" aria-live="polite"></p>
+      </section>
+
+      <section class="panel radar-panel" aria-labelledby="radarTitle">
+        <div class="section-head">
+          <h2 id="radarTitle">Predictive Layout Radar</h2>
+          <p>Height + line behavior profiled across widths with no hidden DOM measurement.</p>
+        </div>
+        <canvas id="radarCanvas" class="text-canvas" aria-label="Width-to-height predictive graph"></canvas>
+        <p id="radarMetrics" class="metrics"></p>
+      </section>
+
+      <section class="panel virtual-panel" aria-labelledby="virtualTitle">
+        <div class="section-head">
+          <h2 id="virtualTitle">Virtualization Forecast</h2>
+          <p>Rows are measured in JS first, then only the visible window is painted to canvas.</p>
+        </div>
+        <canvas id="virtualCanvas" class="text-canvas" aria-label="Virtualized feed preview with predicted row heights"></canvas>
+        <p id="virtualMetrics" class="metrics"></p>
+      </section>
+
+      <section class="panel balance-panel" aria-labelledby="balanceTitle">
+        <div class="section-head">
+          <h2 id="balanceTitle">Balanced Statement</h2>
+          <p>Best-fit multiline block selected in JS with walkLineRanges() and rendered on canvas.</p>
+        </div>
+        <canvas id="balanceCanvas" class="text-canvas" aria-label="Balanced multiline statement with shrink-wrapped width"></canvas>
+        <p id="balanceMetrics" class="metrics"></p>
+      </section>
+
+      <section class="panel timeline-panel" aria-labelledby="timelineTitle">
+        <h2 id="timelineTitle">Career</h2>
+        <ol id="careerTimeline" class="timeline" aria-label="Career timeline"></ol>
+      </section>
+
+      <section class="panel skills-panel" aria-labelledby="skillsTitle">
+        <h2 id="skillsTitle">Skills + Impact</h2>
+        <ul id="skillTags" class="skill-tags" aria-label="Core skill tags"></ul>
+        <dl id="statGrid" class="stat-grid" aria-label="Key metrics"></dl>
+      </section>
+    </article>
+  </main>
+
+  <footer>
+    Built with GPT-5.3-Codex — Part of the Zuabi.dev Gallery experiment
+  </footer>
+
+  <script type="module" src="script.js"></script>
+</body>
+</html>

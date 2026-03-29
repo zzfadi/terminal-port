@@ -3,25 +3,58 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fadi Zuabi | Pretext Portfolio</title>
+  <title>Fadi Zuabi | Pretext Flux Atlas</title>
+  <meta name="description" content="A canvas-native Pretext portfolio showing text flow, forecasting, and balanced layout.">
+  <script>
+    (function () {
+      const path = window.location.pathname;
+      if (/\/index$/.test(path)) {
+        window.location.replace(path.slice(0, -5) + '/' + window.location.search + window.location.hash);
+        return;
+      }
+      if (!path.endsWith('/') && !path.endsWith('.html')) {
+        window.location.replace(path + '/' + window.location.search + window.location.hash);
+      }
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div class="ui-layer">
-    <nav>
-      <div class="logo">FZ</div>
-      <div class="controls">
-        <button data-section="intro" class="active">Intro</button>
-        <button data-section="focus">Focus</button>
-        <button data-section="skills">Skills</button>
-        <button data-section="projects">Work</button>
-      </div>
-    </nav>
-    <div class="pointer-hint">Hover to disturb text field</div>
-  </div>
+  <canvas id="pretext-canvas" aria-hidden="true"></canvas>
 
-  <canvas id="pretext-canvas"></canvas>
+  <div class="ui-layer">
+    <header class="topbar">
+      <div class="brand-block">
+        <p class="kicker">Pretext / Gemini 3.1 Pro</p>
+        <p class="logo">Flux Atlas</p>
+      </div>
+
+      <nav class="controls" aria-label="Section navigation">
+        <button data-section="intro" class="active">Intro</button>
+        <button data-section="flow">Flow</button>
+        <button data-section="forecast">Forecast</button>
+        <button data-section="balance">Balance</button>
+      </nav>
+    </header>
+
+    <aside class="metrics-panel" aria-live="polite">
+      <p class="metric-kicker" id="metricTitle">Canvas text without DOM probes</p>
+      <p class="metric-value" id="sectionLabel">Intro</p>
+      <p class="metric-copy" id="metricText">layoutWithLines() drives the centered headline and measured pill widths.</p>
+    </aside>
+
+    <div class="capability-strip">
+      <span>Canvas-native text</span>
+      <span>Flow around shapes</span>
+      <span>Predict before render</span>
+      <span>Balanced in JS</span>
+    </div>
+
+    <div class="pointer-hint">hover / drag / switch sections</div>
+  </div>
 
   <footer>
     Built with Gemini 3.1 Pro (Preview) — Part of the Zuabi.dev Gallery experiment
