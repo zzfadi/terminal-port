@@ -1,0 +1,148 @@
+:root {
+  --bg: #0a0a0f;
+  --bg-secondary: #12121c;
+  --accent: #00d4aa;
+  --accent-b: #7c5cff;
+  --accent-c: #ff6b4a;
+  --text-primary: #e8e8f0;
+  --text-secondary: #7a7a8e;
+  --text-dim: #3a3a4e;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f4f4f8;
+    --bg-secondary: #eaeaf0;
+    --accent: #009975;
+    --accent-b: #5a3ed4;
+    --accent-c: #d94a2a;
+    --text-primary: #1a1a2e;
+    --text-secondary: #5a5a6e;
+    --text-dim: #b0b0c0;
+  }
+}
+
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: 'Space Grotesk', sans-serif;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+#canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  cursor: crosshair;
+}
+
+#scroll-spacer {
+  position: relative;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Hint */
+.hint {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  letter-spacing: 0.08em;
+  text-transform: lowercase;
+  opacity: 1;
+  transition: opacity 0.8s ease;
+  pointer-events: none;
+}
+
+.hint.hidden {
+  opacity: 0;
+}
+
+.hint-pulse {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.4); }
+}
+
+/* Footer */
+#footer {
+  position: relative;
+  z-index: 10;
+  padding: 40px 24px;
+  text-align: center;
+  background: var(--bg);
+  border-top: 1px solid var(--text-dim);
+}
+
+.footer-links {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.footer-links a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  transition: color 0.3s;
+}
+
+.footer-links a:hover {
+  color: var(--accent);
+}
+
+.attribution {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.attribution a {
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+@media (max-width: 640px) {
+  .hint {
+    bottom: 16px;
+    font-size: 11px;
+  }
+
+  #footer {
+    padding: 28px 16px;
+  }
+
+  .footer-links {
+    gap: 16px;
+  }
+}

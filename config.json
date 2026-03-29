@@ -144,6 +144,12 @@
               "model": "Claude Opus 4.6",
               "path": "pages/pretext/opus/",
               "date": "2026-03"
+            },
+            {
+              "id": "pretext-copilot",
+              "model": "GitHub Copilot (Opus 4.6)",
+              "path": "pages/pretext/copilot/",
+              "date": "2026-03"
             }
           ]
         }
