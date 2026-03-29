@@ -198,7 +198,8 @@ function makeEnemy(x, y, type) {
 function isWall(x, y) {
   const mx = Math.floor(x), my = Math.floor(y);
   if (mx < 0 || my < 0 || mx >= state.mapW || my >= state.mapH) return true;
-  return state.map[my][mx] > 0;
+  const t = state.map[my][mx];
+  return t > 0 && t !== 4; // type 4 = door (walkable)
 }
 
 // ═══════════════════════════════════════════════════════════════
