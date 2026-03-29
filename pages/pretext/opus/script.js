@@ -11,7 +11,7 @@ const NUM_PARTICLES = 90;
 // ─── Content ─────────────────────────────────────────
 
 const HERO = [
-  { key: 'name', text: 'Fadi Al Zuabi', sizeRatio: 1, weight: 800, lh: 1.05, gap: 0.18 },
+  { key: 'name', text: 'Fadi Zuabi', sizeRatio: 1, weight: 800, lh: 1.05, gap: 0.18 },
   { key: 'role', text: 'Firmware Engineer. AI Champion. Builder.', sizeRatio: 0.3, weight: 500, lh: 1.35, gap: 0.4 },
   { key: 'bio', text: "I'm a firmware engineer who builds AI systems. UIUC grad, worked at GE Aerospace and Intel, now at Solidigm where I train engineers on AI tools and build systems that make firmware development smarter.", sizeRatio: 0.19, weight: 400, lh: 1.7, gap: 0 },
 ];

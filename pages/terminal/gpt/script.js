@@ -4,7 +4,7 @@ const inputEl = document.getElementById("terminal-input");
 const shortcutButtons = document.querySelectorAll("[data-command]");
 
 const profile = {
-  name: "Fadi Al Zuabi",
+  name: "Fadi Zuabi",
   role: "Senior Firmware Engineer & AI Champion",
   location: "Roseville, CA",
   company: "Solidigm (SK Hynix)",

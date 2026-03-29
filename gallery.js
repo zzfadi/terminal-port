@@ -644,7 +644,7 @@
     const banner = document.createElement('div');
     banner.className = 'welcome-banner';
     banner.id = 'welcome-banner';
-    banner.innerHTML = '<p>Hi, I\'m <strong>Fadi Al Zuabi</strong> and welcome to my site! Explore different designs made by different AI models and compare yourself!</p>';
+    banner.innerHTML = '<p>Hi, I\'m <strong>Fadi Zuabi</strong> and welcome to my site! Explore different designs made by different AI models and compare yourself!</p>';
     
     // Insert after header
     const header = palette.querySelector('.palette-header');

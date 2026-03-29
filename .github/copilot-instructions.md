@@ -84,7 +84,7 @@ For zero-integration deployment, AI-generated pages must:
 
 Two-level navigation: **Design tabs** (terminal, minimal, etc.) + **Model radios** (opus, gemini, gpt)
 
-- **URL routing**: `fadi.dev/#page-id` maps to `pages/{design}/{model}/`
+- **URL routing**: `zuabi.dev/#page-id` maps to `pages/{design}/{model}/`
 - **Keyboard**: `G` toggles selector, `←/→` switch designs, `↑/↓` switch models, `Escape` closes
 - **Prompt viewer**: Click "View design prompt" to see the prompt used for current design
 - **Config-driven**: `gallery.js` reads `config.json` with `designs[].models[]` hierarchy

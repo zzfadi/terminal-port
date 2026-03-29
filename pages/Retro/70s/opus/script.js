@@ -1,5 +1,5 @@
 /**
- * 70s Retro Portfolio — Fadi Al Zuabi
+ * 70s Retro Portfolio — Fadi Zuabi
  * Smooth scroll and intersection observer animations
  */
 

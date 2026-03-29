@@ -169,7 +169,7 @@
             {
               "id": "pac-man-grok",
               "model": "Grok Code Fast 1",
-              "path": "pages/pac-man/grok/",
+              "path": "pages/PAC-MAN/grok/",
               "date": "2025-11"
             },
             {
@@ -312,7 +312,7 @@
     "concept": "Three-layer architecture: content → design prompts → model implementations",
     "structure": "categories[] → designs[] → models[] hierarchy for nested navigation",
     "addPage": "1. Find or create design entry in appropriate category. 2. Add model to its models array. 3. Paste output to pages/{design}/{model}/",
-    "urlFormat": "fadi.dev/#page-id",
+    "urlFormat": "zuabi.dev/#page-id",
     "naming": "{design}-{model} e.g., terminal-opus, minimal-gemini"
   }
 }

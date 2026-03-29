@@ -1,10 +1,10 @@
-# Fadi Al Zuabi — Profile v1.0
+# Fadi Zuabi — Profile v1.0
 
 > Source of truth for all AI-generated landing pages. Update here, regenerate pages.
 
 ## Identity
 
-- **Name**: Fadi Al Zuabi
+- **Name**: Fadi Zuabi
 - **Role**: Senior Firmware Engineer & AI Champion
 - **Company**: Solidigm (SK Hynix)
 - **Location**: Roseville, CA

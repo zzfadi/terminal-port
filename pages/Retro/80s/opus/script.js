@@ -1,6 +1,6 @@
 /**
  * 80s Retro Synthwave Portfolio - Interactive Enhancements
- * Fadi Al Zuabi
+ * Fadi Zuabi
  */
 
 (function() {
@@ -286,7 +286,7 @@
 %c╚██████╔╝╚██████╔╝   ███████║
 %c ╚═════╝  ╚═════╝    ╚══════╝
 %c
-SYNTHWAVE PORTFOLIO - FADI AL ZUABI
+SYNTHWAVE PORTFOLIO - FADI ZUABI
 Try the Konami Code for a surprise! ↑↑↓↓←→←→BA
   `, 
   'color: #ff2a6d', 
