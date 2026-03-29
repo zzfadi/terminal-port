@@ -4,109 +4,122 @@ Create a portfolio page for the person in the attached `profile.md`.
 
 ## Concept
 
-"Measured Typography"
+"Liquid Typography"
 
-Aesthetic: Text-as-canvas, kinetic typography powered by real-time text measurement
+Aesthetic: Full-canvas kinetic text — every word rendered algorithmically, flowing and alive.
 
-The Insight: This design showcases the **Pretext** library (https://github.com/chenglou/pretext) — a pure JS text measurement engine that calculates text dimensions without DOM reflows. The page itself becomes a demonstration of what Pretext enables: text that knows its own geometry, reflows dynamically, and renders on canvas with pixel-perfect awareness.
+The Insight: This design uses the **Pretext** library (https://github.com/chenglou/pretext) to lay out text with **per-line variable widths** — something impossible with DOM layout. Instead of static paragraphs, text becomes a living medium: it waves, wraps around your cursor, forms shapes, and reflows at 60fps. The entire page is a single `<canvas>` experience where scrolling reveals different Pretext-powered text effects.
 
-Visual Direction:
+Don't just explain Pretext — USE it. The page should feel like text is a physical material that moves, breathes, and responds to interaction.
 
-- Layout: Canvas-rendered typography as hero, with traditional DOM sections below. The contrast between canvas-rendered text (powered by Pretext) and normal HTML text is intentional.
-- Typography: Use a clean, measurable font like **Inter** or **Space Grotesk** for all text. The font choice matters because Pretext measures it — use a single named font (not `system-ui`) for reliable measurement.
-- Color: Light mode primary, dark mode supported. Minimal palette — off-white background (#fafaf9), near-black text (#1c1917), one accent color (#2563eb blue) used to visualize measurement data (bounding boxes, baselines, line widths).
-- The Hook: The hero section is a full-width `<canvas>` where the user's name, tagline, and bio are rendered using Pretext's layout engine. As the browser resizes, text reflows in real-time on canvas — visually showing line breaks recalculating, bounding boxes adjusting, and text metrics updating.
+## Visual Direction
 
-Visual Elements:
+- **Full-screen canvas** — All text rendered on canvas, not DOM. The canvas is `position: fixed` and covers the viewport. Scroll position drives which content section is visible.
+- **Dark background** — Near-black (#050505) with colorful text and ambient glow effects.
+- **Gradient-colored text** — Each line gets a different HSL hue. Use a spectrum (violet → cyan → emerald) that shifts with scroll and time. Only possible on canvas.
+- **Floating character particles** — Background filled with drifting single characters from the profile data, each with its own hue cycling through the spectrum. Characters scatter when cursor approaches.
+- **Color-shifting glow** — Radial gradients with rotating hues that follow the cursor or orbit when idle. Use dual complementary-color glows for depth.
+- **Font**: Use a single bold, geometric display font like **Syne** (Google Fonts). Not a generic font — something with character.
 
-- **Measurement overlays**: Subtle visualization of text bounding boxes, baseline positions, and line-height guides drawn on canvas alongside the text — like looking at typography through an engineer's lens
-- **Live metrics panel**: A small floating panel showing real-time Pretext output: `lineCount`, `height`, `layout time (ms)` — updating as the viewport changes
-- **Reflow animation**: When the window resizes, text on the canvas visibly reflows with a brief highlight animation on changed lines
-- **Width scrubber**: An interactive slider that controls the `maxWidth` parameter passed to Pretext's `layout()`, letting visitors see how text reflows at different widths — this is the key interactive demo
+## Sections (scroll-driven)
 
-Motion: Purposeful and data-driven. Text reflow is the animation. No decorative motion — every visual change reflects an actual Pretext computation. Line breaks should feel precise and mechanical, not bouncy.
+The page is one continuous canvas. A spacer div provides scroll height (~400vh). Scroll position determines which section is visible, with smooth crossfade transitions.
 
-The Hero Experience:
+### 1. Hero (scroll 0–1vh)
+Name rendered LARGE (80–100px, weight 800). Tagline below. Bio paragraph below that.
 
-- Full-width canvas fills the viewport
-- Name rendered large (48-64px) with visible bounding box overlay
-- Tagline below with baseline guides shown
-- Bio paragraph demonstrating multi-line layout with line-break indicators
-- Width scrubber at the bottom of the hero lets visitors drag to see reflow
-- Tiny metrics readout: "3 lines · 127px height · 0.04ms layout"
+**Effect: Sinusoidal wave + cursor force field.**
+- Each line's `maxWidth` is modulated by `sin(lineY + time)`, creating a flowing wave that continuously reshapes the text.
+- When the cursor hovers, a circular force field pushes text away — lines near the cursor get shorter maxWidths and shift laterally. The displacement uses cubic easing for a snappy feel.
+- Use `layoutNextLine()` (or fallback) with a DIFFERENT `maxWidth` for every single line on every frame. This is the core Pretext capability.
+- When idle (no cursor), the wave is the primary animation — text flows organically without interaction.
 
-Sections flow:
+### 2. Career (scroll 1–2.5vh)
+Career entries revealed progressively as you scroll deeper.
 
-1. **Hero**: Canvas-rendered name + tagline + bio with measurement overlays and width scrubber
-2. **How It Works**: Brief explanation of Pretext — "Text measured without touching the DOM" — with before/after comparison (DOM reflow cost vs Pretext cost)
-3. **Career**: Timeline rendered using Pretext to pre-calculate card heights for a masonry-style layout (cards are DOM elements, but heights are pre-computed)
-4. **Skills**: Tag cloud where Pretext measures each tag's width to pack them efficiently (no CSS flexbox wrapping — manual Pretext-powered bin packing)
-5. **Connect**: Contact links with a footer
+**Effect: Zigzag / diagonal wave.**
+- Each line's x-offset follows a triangular wave pattern, creating text that flows diagonally.
+- Each career entry has a different phase offset so they don't move in sync.
+- Dates rendered in muted color, titles in warm accent (orange-gold), descriptions in muted text.
+
+### 3. Skills (scroll 2–3.5vh)
+All skills concatenated with `·` separators into a single paragraph.
+
+**Effect: Circular text shape.**
+- The `maxWidth` for each line is calculated as the chord of a circle: `2 * sqrt(R² - dy²)`.
+- Text fills a circle — narrow at top/bottom, wide in the middle.
+- The radius pulsates with `sin(time)`.
+- Lines outside the circle radius get `maxWidth: 0` and are skipped.
+- Text centered horizontally within the circle.
+
+### 4. Connect (DOM, after canvas)
+Simple DOM section at the bottom with contact links. Appears after canvas fades out.
 
 ## Technical Requirements
 
 ### Pretext Integration
 
-Load Pretext from CDN. Use ES module import:
-
-```html
-<script type="module">
-import { prepare, layout, prepareWithSegments, layoutWithLines } from 'https://esm.sh/pretext@0.3.0';
-</script>
+Load from CDN via ES module:
+```js
+const pt = await import('https://esm.sh/pretext@0.3.0');
 ```
 
-Key Pretext APIs to use:
+**Core pattern** — for each text block, on each frame:
+1. `prepareWithSegments(text, fontString)` — one-time preparation (cache the result)
+2. For each line: compute a `maxWidth` from the effect function (wave, zigzag, circle)
+3. `layoutNextLine(prepared, offset, maxWidth, lineHeight)` — Pretext calculates where this line breaks
+4. Draw the line text at the computed position with `ctx.fillText()`
+5. Advance `offset` to `nextOffset`, repeat until text is consumed
 
-- `prepare(text, font)` + `layout(prepared, maxWidth, lineHeight)` — for height-only measurement (career cards, skill tags)
-- `prepareWithSegments(text, font)` + `layoutWithLines(prepared, maxWidth, lineHeight)` — for the hero canvas rendering (need individual line data)
+**Graceful fallback** — if Pretext fails to load, implement manual word-wrapping using `ctx.measureText()`. The visual effects should work identically; Pretext just does the line-breaking faster and more accurately.
 
-### Canvas Rendering
+### Particle System
 
-The hero section should use an HTML `<canvas>` element. Use Pretext to compute line breaks and positions, then draw text with `ctx.fillText()` at the computed coordinates. This demonstrates that Pretext decouples measurement from rendering.
+~80–100 floating characters. Each has: position, velocity, character, font size, alpha (very low: 0.02–0.08), hue. Update each frame:
+- Drift with velocity, wrap at screen edges
+- Repel from cursor (force inversely proportional to distance)
+- Dampen velocity to prevent chaos
+- Slowly cycle hue for color variation
 
-### Measurement Overlays
+### Render Loop
 
-Draw semi-transparent rectangles showing:
-- Line bounding boxes (light accent color, ~10% opacity)
-- Baseline positions (thin horizontal lines)
-- Total paragraph bounding box (dashed outline)
+Use `requestAnimationFrame` continuously. On each frame:
+1. Clear canvas, fill background
+2. Draw particles (behind text)
+3. Draw ambient glow (color-shifting radial gradients)
+4. Calculate section visibility from `scrollY` — each section fades in/out
+5. Render visible section's text with its unique displacement effect
+6. All text uses per-line gradient color via `ctx.fillStyle = hsl(...)` before each `fillText`
 
-These overlays should be toggleable via a small "Show measurements" checkbox.
+### Responsive
 
-### Width Scrubber
+Scale all font sizes proportionally to viewport width:
+- `< 500px`: 50% of base sizes
+- `500–800px`: 70% of base sizes
+- `> 800px`: full sizes
 
-An `<input type="range">` that controls the `maxWidth` parameter. Range: 200px to canvas width. On change, re-run `layout()` and re-render the canvas. Display the current maxWidth value.
-
-### Performance Display
-
-Show Pretext's performance characteristics visibly:
-- `prepare()` time (one-time cost)
-- `layout()` time (per-reflow cost)
-- Compare against equivalent DOM measurement (use `performance.now()` around a hidden element measurement for comparison)
+Touch support: `touchmove` updates cursor position (enables displacement on mobile). `touchend` clears it. Use `{ passive: true }` to not block scrolling.
 
 ## Tech Stack
 
 - Vanilla HTML/CSS/JS (ES modules, no bundler)
-- Google Fonts: Inter
+- Google Fonts: Syne (weights 400–800)
 - External dependency: Pretext via `https://esm.sh/pretext@0.3.0`
-- CSS variables in `:root` for colors
-- Canvas API for hero text rendering
-- Responsive at 640px and 900px breakpoints
+- Canvas API for all text rendering
+- Responsive at all viewport sizes
 
 ## Output
 
 Self-contained folder with `index.html`, `styles.css`, `script.js`.
 
-The `script.js` should use ES module imports (loaded via `<script type="module" src="script.js">`).
+## Footer
 
-## Integration
-
-- Footer: "Built with {Model} — Part of the Zuabi.dev Gallery experiment"
-- External dependencies: Google Fonts + Pretext (via esm.sh CDN)
+Include: `Built with {Model} — Part of the Zuabi.dev Gallery experiment`
 
 ## Important Notes
 
-- Use a **named font** (Inter), not `system-ui` — Pretext measurement is unreliable with system-ui on macOS
-- The page should gracefully degrade if Pretext fails to load — show the same content as regular HTML text
-- The canvas should be high-DPI aware (use `devicePixelRatio` for sharp text on retina displays)
-- Keep the "How It Works" section brief — this is a portfolio page, not Pretext documentation
+- Use a **named font** (Syne), not `system-ui` — Pretext needs reliable font metrics
+- The page must gracefully degrade if Pretext fails to load — use canvas `measureText` for fallback line-breaking
+- Canvas must be high-DPI aware (use `devicePixelRatio`)
+- The wave animation should run continuously — the page should look impressive even without hovering
+- DON'T build a tech demo with labels and metrics — build something beautiful where the effects speak for themselves
