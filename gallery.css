@@ -667,6 +667,26 @@ body {
     0 0 12px rgba(255, 79, 216, 0.6);
 }
 
+.design-tile-preview[data-design="pretext"] {
+  background: #050505;
+}
+
+.design-tile-preview[data-design="pretext"] .design-tile-preview-inner {
+  align-items: center;
+  justify-content: center;
+}
+
+.design-tile-preview[data-design="pretext"] .design-tile-preview-inner::before {
+  content: 'Aa';
+  font-weight: 800;
+  font-size: 14px;
+  background: linear-gradient(135deg, #a78bfa 0%, #22d3ee 50%, #34d399 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.5px;
+}
+
 /* Tile Label (Compact) */
 .design-tile-label {
   display: flex;
