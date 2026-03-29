@@ -132,6 +132,20 @@
               "date": "2025-11"
             }
           ]
+        },
+        {
+          "id": "pretext",
+          "label": "Pretext",
+          "description": "Canvas-rendered kinetic typography powered by Pretext text measurement engine",
+          "prompt": "designs/pretext/prompt.md",
+          "models": [
+            {
+              "id": "pretext-opus",
+              "model": "Claude Opus 4.6",
+              "path": "pages/pretext/opus/",
+              "date": "2026-03"
+            }
+          ]
         }
       ]
     },
