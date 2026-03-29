@@ -111,8 +111,19 @@ No build step required — vanilla HTML/CSS/JS only.
      "models": []
    }
    ```
-3. **Test with one model** first
-4. **Generate variants** with other AI models
+3. **Add a tile preview** in `gallery.css` — every design MUST have a CSS-based tile preview or the gallery tile will be blank:
+   ```css
+   .design-tile-preview[data-design="{design-id}"] {
+     background: #0a0a0a; /* match design aesthetic */
+   }
+   .design-tile-preview[data-design="{design-id}"] .design-tile-preview-inner::before {
+     content: '...'; /* short visual hint */
+     /* style to match design aesthetic */
+   }
+   ```
+   See existing tiles in `gallery.css` for examples (terminal, pac-man, retro-80s, etc.)
+4. **Test with one model** first
+5. **Generate variants** with other AI models
 
 ---
 

@@ -687,6 +687,24 @@ body {
   letter-spacing: -0.5px;
 }
 
+.design-tile-preview[data-design="doom"] {
+  background: #0a0a0a;
+}
+
+.design-tile-preview[data-design="doom"] .design-tile-preview-inner {
+  align-items: center;
+  justify-content: center;
+  font-family: 'Courier New', monospace;
+}
+
+.design-tile-preview[data-design="doom"] .design-tile-preview-inner::before {
+  content: '█▓▒░';
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: #c33;
+  text-shadow: 0 0 6px rgba(204, 51, 51, 0.6);
+}
+
 /* Tile Label (Compact) */
 .design-tile-label {
   display: flex;
