@@ -185,6 +185,20 @@
       "description": "Retro arcade and game-inspired designs",
       "designs": [
         {
+          "id": "doom",
+          "label": "DOOM",
+          "description": "Playable DOOM-style raycaster rendered entirely as ASCII text",
+          "prompt": "designs/doom/prompt.md",
+          "models": [
+            {
+              "id": "doom-opus",
+              "model": "Claude Opus 4.6",
+              "path": "pages/doom/opus/",
+              "date": "2026-03"
+            }
+          ]
+        },
+        {
           "id": "pac-man",
           "label": "PAC-MAN",
           "description": "Retro arcade game inspired layout with maze navigation",
