@@ -20,6 +20,28 @@ const profile = {
     "GEN5 SSD",
     "CI/CD acceleration",
   ],
+  forecastCards: [
+    {
+      title: "AI adoption feed",
+      tag: "70% usage lift",
+      body: "Paragraph height is predicted in JavaScript before render, so a list can schedule the card without hidden probes or layout shift.",
+    },
+    {
+      title: "Firmware debug queue",
+      tag: "multi-LLM routing",
+      body: "Long issue summaries can be measured, windowed, and painted only when they enter the viewport, while scroll math stays deterministic.",
+    },
+    {
+      title: "Training digest",
+      tag: "60+ engineers",
+      body: "Instruction cards keep stable heights across widths because layout is known before the browser needs DOM text nodes for measurement.",
+    },
+    {
+      title: "GEN5 execution log",
+      tag: "cross-functional delivery",
+      body: "The visible slice of the feed is rendered from a predicted total height, making virtualization a geometry problem instead of a reflow loop.",
+    },
+  ],
 };
 
 const canvas = document.getElementById("stage");
@@ -33,7 +55,23 @@ const colorSchemeQuery = window.matchMedia("(prefers-color-scheme: dark)");
 
 const DISPLAY_FONT = '"Bricolage Grotesque", sans-serif';
 const BODY_FONT = '"Literata", serif';
-const glyphPool = Array.from("FADI ZUABI AI FIRMWARE NVME PCIE DEBUG GPT CLAUDE GEMINI SOLIDIGM ");
+const fieldTokens = [
+  "Firmware",
+  "AI",
+  "NVMe",
+  "PCIe Gen5",
+  "Copilot",
+  "DataIku",
+  "Snowflake",
+  "GNN",
+  "Systems",
+  "Storage",
+  "Mentorship",
+  "Automation",
+  "Predictive",
+  "RAG",
+  "Delivery",
+];
 const preparedCache = new Map();
 const widthCache = new Map();
 
@@ -57,6 +95,7 @@ const state = {
   engineMode: "loading",
   currentSection: "origin",
   particles: [],
+  forecastCache: { key: "", rows: [], totalHeight: 0, viewportHeight: 0 },
 };
 
 bootstrap();
@@ -194,17 +233,16 @@ function updateSectionMetrics() {
 }
 
 function buildParticles() {
-  const particleCount = state.width < 640 ? 40 : state.width < 900 ? 58 : 82;
+  const particleCount = state.width < 640 ? 18 : state.width < 900 ? 24 : 32;
   const random = mulberry32(Math.floor(state.width * 13 + state.height * 17));
 
   state.particles = Array.from({ length: particleCount }, (_, index) => ({
-    char: glyphPool[index % glyphPool.length],
+    word: fieldTokens[index % fieldTokens.length],
     x: random() * state.width,
     y: random() * state.height,
-    vx: (random() - 0.5) * 0.38,
-    vy: (random() - 0.5) * 0.38,
-    size: lerp(12, 28, random()),
-    alpha: lerp(0.06, 0.18, random()),
+    vx: (random() - 0.5) * 0.28,
+    vy: (random() - 0.5) * 0.28,
+    alpha: lerp(0.08, 0.16, random()),
     phase: random() * Math.PI * 2,
   }));
 }
@@ -242,11 +280,13 @@ function drawScene(time) {
   const hero = influences.find(entry => entry.id === "origin")?.amount || 0;
   const trajectory = influences.find(entry => entry.id === "trajectory")?.amount || 0;
   const systems = influences.find(entry => entry.id === "systems")?.amount || 0;
+  const forecast = influences.find(entry => entry.id === "forecast")?.amount || 0;
   const connect = influences.find(entry => entry.id === "connect")?.amount || 0;
 
   renderHero(hero, time);
   renderTrajectory(trajectory, time);
   renderSystems(systems, time);
+  renderForecast(forecast, time);
   renderConnect(connect, time);
 }
 
@@ -287,9 +327,12 @@ function drawBackground(time) {
 function updateAndDrawParticles(time) {
   const focus = getFocusOrb();
   const radius = focus.radius * 1.15;
+  const fieldFont = getFieldFont();
+  const pillHeight = Math.max(26, getFontSize(fieldFont) + 14);
 
   ctx.save();
   ctx.textBaseline = "middle";
+  ctx.font = fieldFont;
   state.particles.forEach((particle, index) => {
     const dx = particle.x - focus.x;
     const dy = particle.y - focus.y;
@@ -307,10 +350,23 @@ function updateAndDrawParticles(time) {
     particle.x = wrap(particle.x + particle.vx, state.width);
     particle.y = wrap(particle.y + particle.vy, state.height);
 
-    ctx.font = `${particle.size}px ${DISPLAY_FONT}`;
-    ctx.fillStyle = index % 3 === 0 ? state.theme.accent : index % 3 === 1 ? state.theme.accent2 : state.theme.accent3;
-    ctx.globalAlpha = particle.alpha;
-    ctx.fillText(particle.char, particle.x, particle.y);
+    const pillWidth = measureSingleLine(particle.word, fieldFont) + 18;
+    const drawX = particle.x - pillWidth / 2;
+    const drawY = particle.y - pillHeight / 2;
+    const hueColor = index % 3 === 0 ? state.theme.accent : index % 3 === 1 ? state.theme.accent2 : state.theme.accent3;
+
+    ctx.globalAlpha = particle.alpha * 0.42;
+    ctx.fillStyle = hueColor;
+    drawRoundRect(drawX, drawY, pillWidth, pillHeight, pillHeight / 2);
+    ctx.fill();
+
+    ctx.globalAlpha = particle.alpha * 0.65;
+    ctx.strokeStyle = state.theme.lineStrong;
+    ctx.stroke();
+
+    ctx.globalAlpha = particle.alpha + 0.18;
+    ctx.fillStyle = state.theme.ink;
+    ctx.fillText(particle.word, drawX + 9, drawY + pillHeight / 2);
   });
   ctx.restore();
 }
@@ -595,6 +651,143 @@ function renderConnect(amount, time) {
   });
 }
 
+function renderForecast(amount, time) {
+  if (amount <= 0.01) return;
+
+  const scale = getScale();
+  const labelFont = `700 ${Math.round(12 * scale)}px ${DISPLAY_FONT}`;
+  const titleFont = `800 ${Math.round(34 * scale)}px ${DISPLAY_FONT}`;
+  const titleLineHeight = Math.round(38 * scale);
+  const bodyFont = `500 ${Math.round(17 * scale)}px ${BODY_FONT}`;
+  const bodyLineHeight = Math.round(27 * scale);
+  const pillFont = `700 ${Math.round(12 * scale)}px ${DISPLAY_FONT}`;
+
+  const x = state.width < 900 ? state.width * 0.09 : state.width * 0.12;
+  const y = state.height * 0.16;
+  const width = state.width < 900 ? state.width * 0.82 : state.width * 0.56;
+
+  drawMeasuredTag("FORECAST", x, y - 40 * scale, labelFont, amount);
+  const heading = layoutParagraph(
+    "Measure first. Paint later.",
+    titleFont,
+    titleLineHeight,
+    { x, y, width, height: 96 * scale },
+    () => ({ x, width: width * 0.9, align: "left" }),
+  );
+
+  renderLines(heading, {
+    font: titleFont,
+    lineHeight: titleLineHeight,
+    alpha: amount,
+    barOpacity: 0.12,
+    textColor: index => (index === 0 ? state.theme.accent3 : state.theme.ink),
+  });
+
+  const noteY = y + heading.length * titleLineHeight + 18 * scale;
+  const noteLines = layoutParagraph(
+    "This viewport predicts row heights with layout() in JavaScript, then renders only the visible slice of a scrolling feed.",
+    bodyFont,
+    bodyLineHeight,
+    { x, y: noteY, width, height: 90 * scale },
+    () => ({ x, width: width * 0.94, align: "left" }),
+  );
+
+  renderLines(noteLines, {
+    font: bodyFont,
+    lineHeight: bodyLineHeight,
+    alpha: amount,
+    barOpacity: 0,
+    textColor: () => state.theme.ink,
+  });
+
+  const viewportY = noteY + noteLines.length * bodyLineHeight + 22 * scale;
+  const viewportWidth = width * 0.94;
+  const forecast = buildForecastCache(viewportWidth, scale);
+  const viewportHeight = forecast.viewportHeight;
+  const viewportX = x;
+  const maxScroll = Math.max(0, forecast.totalHeight - viewportHeight);
+  const virtualScroll = maxScroll * (0.5 + 0.5 * Math.sin(time * 0.32));
+
+  ctx.save();
+  ctx.globalAlpha = amount;
+  drawRoundRect(viewportX, viewportY, viewportWidth, viewportHeight, 22);
+  const shell = ctx.createLinearGradient(viewportX, viewportY, viewportX + viewportWidth, viewportY + viewportHeight);
+  shell.addColorStop(0, state.theme.pill);
+  shell.addColorStop(1, state.theme.surfaceStrong || state.theme.pill);
+  ctx.fillStyle = shell;
+  ctx.fill();
+  ctx.strokeStyle = state.theme.lineStrong;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.rect(viewportX + 8, viewportY + 8, viewportWidth - 16, viewportHeight - 16);
+  ctx.clip();
+
+  const visibleRows = forecast.rows.filter(
+    row => row.y + row.height >= virtualScroll && row.y <= virtualScroll + viewportHeight,
+  );
+
+  visibleRows.forEach((row, index) => {
+    const rowX = viewportX + 14;
+    const rowY = viewportY + 14 + row.y - virtualScroll;
+    const rowWidth = viewportWidth - 38;
+
+    ctx.fillStyle = index % 2 === 0 ? state.theme.surfaceStrong || state.theme.pill : state.theme.pill;
+    drawRoundRect(rowX, rowY, rowWidth, row.height - 10, 16);
+    ctx.fill();
+    ctx.strokeStyle = state.theme.line;
+    ctx.stroke();
+
+    const tagX = rowX + rowWidth - row.tagWidth - 10;
+    ctx.fillStyle = state.theme.pill;
+    drawRoundRect(tagX, rowY + 10, row.tagWidth, 22 * scale, 11 * scale);
+    ctx.fill();
+
+    ctx.font = pillFont;
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = state.theme.accentStrong;
+    ctx.fillText(row.tag, tagX + 9, rowY + 21 * scale);
+
+    ctx.font = `700 ${Math.round(16 * scale)}px ${DISPLAY_FONT}`;
+    ctx.textBaseline = "top";
+    ctx.fillStyle = state.theme.ink;
+    row.titleLines.forEach((line, lineIndex) => {
+      ctx.fillText(line.text, rowX + 12, rowY + 12 + lineIndex * row.titleLineHeight);
+    });
+
+    ctx.font = bodyFont;
+    ctx.fillStyle = state.theme.muted;
+    const bodyStart = rowY + 16 + row.titleLines.length * row.titleLineHeight + 10 * scale;
+    row.bodyLines.forEach((line, lineIndex) => {
+      ctx.fillText(line.text, rowX + 12, bodyStart + lineIndex * row.bodyLineHeight);
+    });
+  });
+
+  ctx.restore();
+
+  const barHeight = Math.max(34 * scale, (viewportHeight / (forecast.totalHeight || 1)) * viewportHeight);
+  const barY = viewportY + 8 + (virtualScroll / (forecast.totalHeight || 1)) * Math.max(0, viewportHeight - 16 - barHeight);
+  ctx.save();
+  ctx.globalAlpha = amount;
+  ctx.fillStyle = state.theme.accent2;
+  drawRoundRect(viewportX + viewportWidth - 12, barY, 4, barHeight, 2);
+  ctx.fill();
+  ctx.restore();
+
+  const metricsY = viewportY + viewportHeight + 16 * scale;
+  ctx.save();
+  ctx.globalAlpha = amount;
+  ctx.font = `500 ${Math.round(12 * scale)}px ${DISPLAY_FONT}`;
+  ctx.textBaseline = "top";
+  ctx.fillStyle = state.theme.muted;
+  ctx.fillText(
+    `Predicted feed height ${Math.round(forecast.totalHeight)}px · Visible rows ${visibleRows.length}/${forecast.rows.length} · No DOM probes`,
+    viewportX,
+    metricsY,
+  );
+  ctx.restore();
+}
+
 function drawFocusOrb(focus, alpha) {
   ctx.save();
   ctx.globalAlpha = alpha * 0.5;
@@ -829,6 +1022,70 @@ function measureSingleLine(text, font) {
   return width;
 }
 
+function buildForecastCache(regionWidth, scale) {
+  const key = `${Math.round(regionWidth)}:${Math.round(scale * 100)}:${state.engineMode}:${state.fontsReady}`;
+  if (state.forecastCache.key === key) return state.forecastCache;
+
+  const titleFont = `700 ${Math.round(16 * scale)}px ${DISPLAY_FONT}`;
+  const bodyFont = `500 ${Math.round(17 * scale)}px ${BODY_FONT}`;
+  const pillFont = `700 ${Math.round(12 * scale)}px ${DISPLAY_FONT}`;
+  const titleLineHeight = Math.round(20 * scale);
+  const bodyLineHeight = Math.round(27 * scale);
+  const viewportHeight = Math.round(clamp(state.height * (state.width < 900 ? 0.28 : 0.34), 220, 320));
+  const rows = [];
+  let totalHeight = 0;
+  const innerWidth = regionWidth - 28;
+
+  profile.forecastCards.forEach(card => {
+    const tagWidth = measureSingleLine(card.tag, pillFont) + 20;
+    const titleWidth = Math.max(140 * scale, innerWidth - tagWidth - 16);
+    const titleLines = layoutFixedParagraph(card.title, titleFont, titleLineHeight, titleWidth);
+    const bodyLines = layoutFixedParagraph(card.body, bodyFont, bodyLineHeight, innerWidth - 14);
+    const predictedTitle = predictHeight(card.title, titleFont, titleWidth, titleLineHeight);
+    const predictedBody = predictHeight(card.body, bodyFont, innerWidth - 14, bodyLineHeight);
+    const height = 40 * scale + predictedTitle + predictedBody + 16;
+
+    rows.push({
+      title: card.title,
+      tag: card.tag,
+      titleLines,
+      bodyLines,
+      titleLineHeight,
+      bodyLineHeight,
+      tagWidth,
+      y: totalHeight,
+      height,
+    });
+    totalHeight += height + 12;
+  });
+
+  state.forecastCache = { key, rows, totalHeight, viewportHeight };
+  return state.forecastCache;
+}
+
+function layoutFixedParagraph(text, font, lineHeight, maxWidth) {
+  const prepared = getPrepared(text, font);
+  if (prepared && state.pretext?.layoutWithLines) {
+    return state.pretext.layoutWithLines(prepared, maxWidth, lineHeight).lines;
+  }
+
+  return layoutParagraphFallback(
+    text,
+    font,
+    lineHeight,
+    { x: 0, y: 0, width: maxWidth, height: lineHeight * 20 },
+    () => ({ x: 0, width: maxWidth, align: "left" }),
+  ).map(line => ({ text: line.text, width: line.width }));
+}
+
+function predictHeight(text, font, maxWidth, lineHeight) {
+  const prepared = getPrepared(text, font);
+  if (prepared && state.pretext?.layout) {
+    return state.pretext.layout(prepared, maxWidth, lineHeight).height;
+  }
+  return layoutFixedParagraph(text, font, lineHeight, maxWidth).length * lineHeight;
+}
+
 function resolveLineX(slot, lineWidth) {
   if (slot.align === "center") {
     return slot.x + (slot.width - lineWidth) / 2;
@@ -845,6 +1102,11 @@ function getFocusOrb() {
     y: state.pointer.y,
     radius: Math.min(state.width, state.height) * (state.width < 640 ? 0.16 : 0.14),
   };
+}
+
+function getFieldFont() {
+  const size = state.width < 640 ? 11 : state.width < 900 ? 12 : 13;
+  return `700 ${size}px ${DISPLAY_FONT}`;
 }
 
 function drawRadialGlow(x, y, radius, color) {

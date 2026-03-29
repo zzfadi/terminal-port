@@ -168,6 +168,12 @@
               "model": "GPT-5.3-Codex",
               "path": "pages/pretext/gpt53-codex/",
               "date": "2026-03"
+            },
+            {
+              "id": "pretext-sonnet",
+              "model": "GitHub Copilot (Sonnet 4.6)",
+              "path": "pages/pretext/sonnet/",
+              "date": "2026-03"
             }
           ]
         }

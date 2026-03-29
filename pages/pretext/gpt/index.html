@@ -8,6 +8,18 @@
       name="description"
       content="A kinetic typography portfolio for Fadi Zuabi, built with GPT-5.4 and powered by Pretext-driven canvas layout."
     >
+    <script>
+      (function () {
+        const path = window.location.pathname;
+        if (/\/index$/.test(path)) {
+          window.location.replace(path.slice(0, -5) + '/' + window.location.search + window.location.hash);
+          return;
+        }
+        if (!path.endsWith('/') && !path.endsWith('.html')) {
+          window.location.replace(path + '/' + window.location.search + window.location.hash);
+        }
+      })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -35,6 +47,7 @@
         <button type="button" data-target="origin">Origin</button>
         <button type="button" data-target="trajectory">Trajectory</button>
         <button type="button" data-target="systems">Systems</button>
+        <button type="button" data-target="forecast">Forecast</button>
         <button type="button" data-target="connect">Connect</button>
       </nav>
 
@@ -43,7 +56,8 @@
         <h1>Text routed like a system diagram.</h1>
         <p class="panel-copy">
           This page turns Fadi Zuabi's profile into a moving field of measured text. Scroll to switch chapters. Move the
-          pointer or drag on touch devices and the hero paragraph reroutes itself live.
+          pointer or drag on touch devices and the hero paragraph reroutes itself live while labels, heights, and row
+          windows are measured before any DOM text layout is needed.
         </p>
         <dl class="panel-stats">
           <div>
@@ -95,9 +109,20 @@
           </div>
         </section>
 
+        <section id="forecast" class="chapter" data-label="Forecast">
+          <div class="chapter-card">
+            <p class="chapter-index">04 / Forecast</p>
+            <h2>Predict the paragraph before you paint the viewport.</h2>
+            <p>
+              This chapter turns Pretext into a practical UI primitive: measure rows in JavaScript first, then only draw
+              the visible slice of a scrolling feed with stable height math.
+            </p>
+          </div>
+        </section>
+
         <section id="connect" class="chapter chapter-connect" data-label="Connect">
           <div class="chapter-card">
-            <p class="chapter-index">04 / Connect</p>
+            <p class="chapter-index">05 / Connect</p>
             <h2>Make AI useful for people who build real systems.</h2>
             <p>
               That goal shows up in training, debugging, product delivery, and the tools behind them. The final cards
