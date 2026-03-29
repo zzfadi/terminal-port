@@ -92,6 +92,38 @@ body {
   50% { opacity: 1; transform: scale(1.4); }
 }
 
+/* Capability badges */
+#badges {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.cap-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  padding: 4px 10px;
+  border-radius: 3px;
+  background: rgba(0,212,170,0.08);
+  border: 1px solid rgba(0,212,170,0.15);
+  color: var(--accent);
+  opacity: 0;
+  transform: translateX(20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  white-space: nowrap;
+}
+
+.cap-badge.visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
 /* Footer */
 #footer {
   position: relative;
@@ -136,6 +168,16 @@ body {
   .hint {
     bottom: 16px;
     font-size: 11px;
+  }
+
+  #badges {
+    top: 8px;
+    right: 8px;
+  }
+
+  .cap-badge {
+    font-size: 8px;
+    padding: 3px 7px;
   }
 
   #footer {
