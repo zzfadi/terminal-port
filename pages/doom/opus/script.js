@@ -55,18 +55,6 @@ function layoutLines(text, font, maxWidth) {
   return lines.length > 0 ? lines : fallbackLayout(text, font, maxWidth);
 }
 
-// Predict paragraph height using pretext
-function predictHeight(text, font, maxWidth, lineHeight) {
-  const prepared = getPrepared(text, font);
-  if (prepared && pt.layout) {
-    try {
-      const result = pt.layout(prepared, maxWidth, lineHeight);
-      return result.height || result.lineCount * lineHeight;
-    } catch { /* fallback below */ }
-  }
-  return fallbackLayout(text, font, maxWidth).length * lineHeight;
-}
-
 // Canvas-based fallback when pretext unavailable
 function fallbackLayout(text, font, maxWidth) {
   const measureCtx = document.createElement('canvas').getContext('2d');
@@ -148,16 +136,18 @@ function resizeFire() {
 }
 
 function spreadFire() {
-  for (let y = 1; y < rows; y++) {
+  // Classic DOOM: iterate top-down, sample from the row below
+  for (let y = 0; y < rows - 1; y++) {
     for (let x = 0; x < cols; x++) {
-      const below = firePixels[y * cols + x];
+      const belowIdx = (y + 1) * cols + x;
+      const below = firePixels[belowIdx];
       if (below === 0) {
-        firePixels[(y - 1) * cols + x] = 0;
+        firePixels[y * cols + x] = 0;
       } else {
         const rand = Math.random() * 3.0 | 0;
         const wind = rand & 1;
         const destX = Math.min(Math.max(x - wind + (Math.random() > 0.5 ? 1 : 0), 0), cols - 1);
-        firePixels[(y - 1) * cols + destX] = Math.max(0, below - (rand & 1));
+        firePixels[y * cols + destX] = Math.max(0, below - (rand & 1));
       }
     }
   }
@@ -484,7 +474,6 @@ function layoutAllContent() {
     // Text, title, subtitle, heading, divider — all use pretext layout
     const font = section.font;
     const lines = layoutLines(section.text, font, W);
-    // Use pretext predictHeight for accurate vertical spacing
     const lineHeight = parseInt(font) * 1.4;
 
     for (const line of lines) {
@@ -599,7 +588,7 @@ window.addEventListener('scroll', () => {
   scrollY = window.scrollY;
   const hint = document.getElementById('scroll-hint');
   if (hint) hint.style.opacity = scrollY > 100 ? '0' : '';
-});
+}, { passive: true });
 
 // ── Main Loop ───────────────────────────────────────────────────
 function animate() {
@@ -612,6 +601,10 @@ function animate() {
 async function init() {
   resizeFire();
   const loaded = await loadPretext();
+
+  // Wait for web fonts before measuring text
+  await document.fonts.ready;
+
   document.getElementById('loading').classList.add('hidden');
 
   if (loaded) {
