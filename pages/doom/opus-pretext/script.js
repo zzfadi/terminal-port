@@ -349,117 +349,87 @@ function renderViewportPretext() {
   ctx.fillStyle = '#050505';
   ctx.fillRect(0, 0, W, H);
 
-  const fontSize = Math.max(8, Math.min(Math.floor(W / (cols * 0.7)), Math.floor(H / (rows * 1.2))));
-  const lh = Math.round(fontSize * 1.15);
+  // Ambient glow behind viewport
+  const now = performance.now();
+  const glowHue = (now / 50) % 360;
+  const g = ctx.createRadialGradient(W*.5, H*.4, 0, W*.5, H*.4, W*.5);
+  g.addColorStop(0, `hsla(${glowHue}, 40%, 20%, 0.04)`);
+  g.addColorStop(1, 'hsla(0,0%,0%,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+
+  const fontSize = Math.max(8, Math.min(Math.floor(W / (cols * 0.65)), Math.floor((H * 0.88) / (rows * 1.1))));
+  const lh = Math.round(fontSize * 1.1);
   const font = mkFont(400, fontSize);
-  const baseMaxW = Math.min(W * 0.95, cols * fontSize * 0.65);
+  const baseMaxW = Math.min(W * 0.92, cols * fontSize * 0.62);
   const marginX = Math.max(10, (W - baseMaxW) / 2);
+  const topMargin = sz(8);
 
-  // Build the full scene text — one row per line, separated by newlines
-  let sceneText = '';
-  const rowTexts = [];
-  const rowColorMaps = []; // maps char index in row → color
-
+  // Build row texts and color maps
+  const rowTexts = [], rowColorMaps = [];
   for (let r = 0; r < rows; r++) {
     let rowStr = '';
     const colors = [];
     for (let c = 0; c < cols; c++) {
-      const ch = state.charBuf[r * cols + c];
-      rowStr += ch;
+      rowStr += state.charBuf[r * cols + c];
       colors.push(state.colorBuf[r * cols + c]);
     }
-    // Trim trailing spaces for Pretext (it measures actual content)
-    const trimmed = rowStr.replace(/\s+$/, '');
-    rowTexts.push(trimmed);
+    rowTexts.push(rowStr.replace(/\s+$/, ''));
     rowColorMaps.push(colors);
   }
 
-  // Prepare each row with Pretext for variable-width layout
-  const now = performance.now();
+  ctx.font = font;
+  ctx.textBaseline = 'top';
 
   for (let r = 0; r < rows; r++) {
     const text = rowTexts[r];
     if (!text || text.trim().length === 0) continue;
 
-    const lineY = marginX * 0.3 + r * lh;
-
-    // Game displacement function — text flows around elements
+    const lineY = topMargin + r * lh;
     const d = gameViewportDisplace(lineY, r, rows, baseMaxW, now);
+    if (d.w < 15) continue;
 
-    if (d.w < 10) continue;
+    // Render row: one Pretext-prepared layout per row, no sub-line wrapping
+    let drawX = marginX + d.x;
+    const drawY = lineY;
 
-    // Use Pretext to measure and lay out this row
-    const prep = ptPrepare(text, font);
+    // Color-batch the row for performance (group consecutive same-color chars)
+    let batchStart = 0;
+    let prevColor = rowColorMaps[r][0] || '#333';
 
-    if (prep) {
-      // Pretext layout — handles variable character widths
-      let offset = 0;
-      let subLine = 0;
-      const maxSubLines = 3; // Allow text to wrap if displaced too narrow
+    for (let i = 0; i <= text.length; i++) {
+      const color = i < text.length ? (rowColorMaps[r][i] || '#333') : null;
 
-      while (offset < text.length && subLine < maxSubLines) {
-        const lineW = subLine === 0 ? d.w : d.w * 0.9;
-        const result = ptLayout(prep, offset, lineW, lh);
-        if (!result) break;
-
-        const layoutText = result.text;
-        const drawY = lineY + subLine * lh;
-
-        // Draw each character with its color from the raycaster
-        ctx.font = font;
-        ctx.textBaseline = 'top';
-        let drawX = marginX + d.x;
-
-        for (let i = 0; i < layoutText.length; i++) {
-          const ch = layoutText[i];
-          const origIdx = offset + i;
-          const color = origIdx < rowColorMaps[r].length ? rowColorMaps[r][origIdx] : '#333';
-
-          ctx.fillStyle = color;
-          ctx.fillText(ch, drawX, drawY);
-
-          // Pretext-measured character advance (variable width!)
-          drawX += ctx.measureText(ch).width;
+      if (color !== prevColor || i === text.length) {
+        // Flush batch
+        if (batchStart < i) {
+          const batch = text.slice(batchStart, i);
+          const batchW = ctx.measureText(batch).width;
+          if (drawX + batchW > marginX + d.x + d.w + 5) {
+            // Clip to available width
+            ctx.fillStyle = prevColor;
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(marginX + d.x - 2, drawY - 1, d.w + 4, lh + 2);
+            ctx.clip();
+            ctx.fillText(batch, drawX, drawY);
+            ctx.restore();
+            break;
+          }
+          ctx.fillStyle = prevColor;
+          ctx.fillText(batch, drawX, drawY);
+          drawX += batchW;
         }
-
-        offset = result.next;
-        subLine++;
-      }
-    } else {
-      // Fallback: manual layout with measureText (still variable-width via Syne)
-      ctx.font = font;
-      ctx.textBaseline = 'top';
-      let drawX = marginX + d.x;
-      const drawY = lineY;
-
-      for (let i = 0; i < text.length; i++) {
-        const ch = text[i];
-        const color = rowColorMaps[r][i] || '#333';
-        const cw = ctx.measureText(ch).width;
-
-        // Stop if we exceed available width
-        if (drawX + cw > marginX + d.x + d.w) break;
-
-        ctx.fillStyle = color;
-        ctx.fillText(ch, drawX, drawY);
-        drawX += cw;
+        prevColor = color;
+        batchStart = i;
       }
     }
   }
 
-  // Render weapon as separate text block (not in the flowing text)
+  // Overlays
   renderWeaponOverlay(ctx, fontSize, lh, marginX, baseMaxW, now);
-
-  // Render HUD as Pretext text block at bottom
   renderHUDPretext(ctx, fontSize, lh, W, H);
-
-  // Render minimap directly on canvas (spatial data, not text)
-  renderMinimapCanvas(ctx, W);
-
-  // Muzzle flash overlay
+  renderMinimapCanvas(ctx, W, H);
   if (state.shootTimer > 0) renderMuzzleFlashCanvas(ctx, W, H);
-
-  // Damage glow
   if (state.damageFlash > 0) renderDamageGlow(ctx, W, H);
 }
 
@@ -471,149 +441,151 @@ function gameViewportDisplace(lineY, row, totalRows, baseW, now) {
   let x = 0, w = baseW;
   const t = now / 2000;
 
-  // Sinusoidal edge wave — text breathes
-  const breathe = Math.sin(t + row * 0.15) * sz(15);
-  x += breathe * 0.3;
-  w -= Math.abs(breathe) * 0.5;
+  // Breathing wave — left edge undulates organically
+  const wave1 = Math.sin(t * 0.8 + row * 0.12) * sz(25);
+  const wave2 = Math.sin(t * 1.3 - row * 0.08) * sz(12);
+  const breathe = wave1 + wave2;
+  x += Math.max(0, breathe);
+  w -= Math.abs(breathe) * 0.7;
 
-  // Minimap exclusion zone (top-right area, first ~40% of rows)
-  if (row < totalRows * 0.45) {
-    const minimapShrink = sz(120) + Math.sin(t * 1.3 + row * 0.2) * sz(10);
-    w -= minimapShrink;
+  // Minimap exclusion — smooth elliptical curve, not hard cutoff
+  const mmCenterRow = totalRows * 0.2;
+  const mmRadiusR = totalRows * 0.3;
+  const mmDist = (row - mmCenterRow) / mmRadiusR;
+  if (mmDist < 1 && mmDist > -1) {
+    // Elliptical: more shrink at center, smoothly fades at edges
+    const curve = Math.sqrt(1 - mmDist * mmDist);
+    const shrink = curve * (sz(140) + Math.sin(t * 1.5 + row * 0.15) * sz(8));
+    w -= shrink;
   }
 
-  // Weapon exclusion zone (bottom-center)
-  if (row > totalRows * 0.7) {
-    const proximity = (row - totalRows * 0.7) / (totalRows * 0.3);
-    const weaponIndent = proximity * proximity * sz(80);
-    // Push from center — indent from both sides
-    x += weaponIndent * 0.3;
-    w -= weaponIndent * 0.6;
+  // Weapon zone — smooth parabolic indent from bottom-center
+  const weaponStart = totalRows * 0.75;
+  if (row > weaponStart) {
+    const p = (row - weaponStart) / (totalRows - weaponStart);
+    const indent = p * p * sz(60);
+    // Center the narrowing with slight wave
+    const sway = Math.sin(t * 2 + p * 3) * indent * 0.15;
+    x += indent * 0.25 + sway;
+    w -= indent * 0.5;
   }
 
-  // Damage scatter — Pretext-powered live text reflow!
+  // Damage scatter — dramatic text reflow on hit
   if (state.damageFlash > 0) {
-    const scatter = Math.sin(row * 0.8 + now / 80) * state.damageFlash * sz(30);
+    const df = state.damageFlash;
+    const scatter = Math.sin(row * 0.6 + now / 60) * df * sz(40);
+    const jitter = Math.cos(row * 1.1 + now / 40) * df * sz(15);
     x += scatter;
-    // Width jitter on damage
-    w += Math.cos(row * 1.3 + now / 60) * state.damageFlash * sz(20);
+    w += jitter; // Width fluctuates
   }
 
-  // Shoot recoil — brief upward squeeze
+  // Shoot recoil — vertical compression wave
   if (state.recoil > 0) {
-    const recoilWave = Math.sin(row * 0.3 + now / 50) * state.recoil * sz(8);
-    x += recoilWave;
+    x += Math.sin(row * 0.4 + now / 40) * state.recoil * sz(12);
   }
 
-  // Cursor interaction — text pushes away from mouse (like pretext portfolio)
+  // Cursor interaction — bubble pushes text
   if (state.smoothX > -1000 && state.screen === 'game') {
     const dy = Math.abs(lineY - state.smoothY);
     if (dy < BUBBLE_R) {
       const p = 1 - dy / BUBBLE_R;
-      const cursorPush = p * p * sz(40);
-      const bias = Math.max(-1, Math.min(1, (state.smoothX - state.W / 2) / (baseW / 2)));
-      x += cursorPush * (0.5 - bias * 0.3);
-      w -= cursorPush * 0.5;
+      const push = p * p * p * sz(50);
+      const bias = (state.smoothX - state.W / 2) / (baseW / 2);
+      x += push * Math.max(0, 0.5 - bias * 0.4);
+      w -= push * 0.6;
     }
   }
 
-  return { x, w: Math.max(sz(30), w) };
+  return { x, w: Math.max(sz(25), w) };
 }
 
 // ─── Weapon Overlay (Pretext text block) ────────────────────
 
 function renderWeaponOverlay(ctx, fontSize, lh, marginX, baseW, now) {
-  const weaponText = '║║ ╔╩╩╗ ║██║ ╚══╝';
   const bob = Math.sin(state.bobPhase * 2) * state.bobAmount * 2;
-  const recoilY = state.recoil * -8;
+  const recoilY = state.recoil * -12;
+  const weaponSize = Math.round(fontSize * 1.4);
+  const weaponFont = mkFont(600, weaponSize);
+  const weaponLh = Math.round(weaponSize * 1.05);
 
-  const wx = marginX + baseW * 0.42;
-  const wy = state.H * 0.78 + bob + recoilY;
+  const wx = state.W * 0.47;
+  const wy = state.H * 0.76 + bob + recoilY;
 
-  const weaponFont = mkFont(600, Math.round(fontSize * 1.2));
+  const weapon = ['  ║║  ', ' ╔╩╩╗ ', ' ║██║ ', ' ╚══╝ '];
+  ctx.font = weaponFont;
+  ctx.textBaseline = 'top';
 
-  // Use Pretext for weapon text with tight layout
-  const prep = ptPrepare(weaponText, weaponFont);
-  if (prep) {
-    let offset = 0, line = 0;
-    while (offset < weaponText.length && line < 4) {
-      const result = ptLayout(prep, offset, sz(80), lh * 1.2);
-      if (!result) break;
-      ctx.font = weaponFont;
-      ctx.textBaseline = 'top';
-      ctx.fillStyle = `hsl(35, 20%, ${45 + Math.sin(now / 500) * 10}%)`;
-      ctx.fillText(result.text, wx, wy + line * lh * 1.1);
-      offset = result.next; line++;
-    }
-  } else {
-    ctx.font = weaponFont;
-    ctx.fillStyle = 'hsl(35, 20%, 55%)';
-    ctx.textBaseline = 'top';
-    ctx.fillText('║║', wx + 5, wy);
-    ctx.fillText('╔╩╩╗', wx, wy + lh);
-    ctx.fillText('║██║', wx, wy + lh * 2);
-    ctx.fillText('╚══╝', wx, wy + lh * 3);
+  // Weapon glow
+  const glow = ctx.createRadialGradient(wx + weaponSize, wy + weaponSize * 2, 0, wx + weaponSize, wy + weaponSize * 2, weaponSize * 3);
+  glow.addColorStop(0, 'hsla(35, 30%, 40%, 0.06)');
+  glow.addColorStop(1, 'hsla(0,0%,0%,0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(wx - weaponSize * 2, wy - weaponSize, weaponSize * 6, weaponSize * 5);
+
+  for (let i = 0; i < weapon.length; i++) {
+    const sway = Math.sin(now / 800 + i * 0.5) * 1;
+    ctx.fillStyle = `hsl(35, ${15 + i * 5}%, ${48 + Math.sin(now / 500 + i) * 8}%)`;
+    ctx.fillText(weapon[i], wx + sway, wy + i * weaponLh);
   }
 }
 
 // ─── HUD as Pretext Text Block ──────────────────────────────
 
 function renderHUDPretext(ctx, fontSize, lh, W, H) {
-  const hudText = `♥ ${state.health}  ◆ ${state.ammo}  LVL ${state.level+1}  ·  SCORE: ${state.score}  ·  KILLS: ${state.kills}/${state.totalEnemies}  ·  ${state.fps}fps`;
-  const hudFont = mkFont(600, Math.round(fontSize * 0.85));
-  const hudY = H - lh * 1.5;
+  const hudFont = mkFont(600, Math.round(fontSize * 0.9));
+  const hudY = H - lh * 1.6;
 
-  // Separator line
-  ctx.strokeStyle = '#333';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(20, hudY - 4);
-  ctx.lineTo(W - 20, hudY - 4);
-  ctx.stroke();
+  // Gradient separator line
+  const grad = ctx.createLinearGradient(W * 0.1, 0, W * 0.9, 0);
+  grad.addColorStop(0, 'transparent');
+  grad.addColorStop(0.2, '#333');
+  grad.addColorStop(0.8, '#333');
+  grad.addColorStop(1, 'transparent');
+  ctx.strokeStyle = grad; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(W*0.1, hudY - 6); ctx.lineTo(W*0.9, hudY - 6); ctx.stroke();
 
-  // Use Pretext for HUD layout — variable-width stat labels
-  const prep = ptPrepare(hudText, hudFont);
-  if (prep) {
-    const result = ptLayout(prep, 0, W * 0.9, lh);
-    if (result) {
-      ctx.font = hudFont;
-      ctx.textBaseline = 'top';
-      let drawX = (W - ctx.measureText(result.text).width) / 2;
+  // Build HUD segments with individual colors
+  const segments = [
+    { text: '♥ ' + state.health, color: state.health > 30 ? 'hsl(120,80%,55%)' : 'hsl(0,90%,60%)' },
+    { text: '  ◆ ' + state.ammo, color: 'hsl(50,80%,60%)' },
+    { text: '  LVL ' + (state.level + 1), color: 'hsl(200,60%,55%)' },
+    { text: '  ·  ', color: '#333' },
+    { text: 'SCORE: ' + state.score, color: '#aaa' },
+    { text: '  ·  ', color: '#333' },
+    { text: 'KILLS: ' + state.kills + '/' + state.totalEnemies, color: '#888' },
+    { text: '  ·  ', color: '#333' },
+    { text: state.fps + 'fps', color: '#555' },
+  ];
 
-      for (let i = 0; i < result.text.length; i++) {
-        const ch = result.text[i];
-        // Color code HUD elements
-        if (ch === '♥') ctx.fillStyle = state.health > 30 ? 'hsl(120,80%,55%)' : 'hsl(0,90%,55%)';
-        else if (ch === '◆') ctx.fillStyle = 'hsl(50,80%,60%)';
-        else if ('0123456789'.includes(ch)) ctx.fillStyle = '#bbb';
-        else if (ch === '·') ctx.fillStyle = '#333';
-        else ctx.fillStyle = '#777';
+  ctx.font = hudFont; ctx.textBaseline = 'top';
+  const fullText = segments.map(s => s.text).join('');
+  const fullW = ctx.measureText(fullText).width;
+  let drawX = (W - fullW) / 2;
 
-        ctx.fillText(ch, drawX, hudY);
-        drawX += ctx.measureText(ch).width;
-      }
-    }
-  } else {
-    ctx.font = hudFont;
-    ctx.fillStyle = '#777';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-    ctx.fillText(hudText, W / 2, hudY);
-    ctx.textAlign = 'left';
+  for (const seg of segments) {
+    ctx.fillStyle = seg.color;
+    ctx.fillText(seg.text, drawX, hudY);
+    drawX += ctx.measureText(seg.text).width;
   }
 }
 
 // ─── Minimap (canvas drawing) ───────────────────────────────
 
-function renderMinimapCanvas(ctx, W) {
-  const mmW = Math.min(state.mapW, 18), mmH = Math.min(state.mapH, 12);
-  const cellSz = sz(6);
-  const ox = W - mmW * cellSz - sz(15), oy = sz(12);
+function renderMinimapCanvas(ctx, W, H) {
+  const mmW = Math.min(state.mapW, 20), mmH = Math.min(state.mapH, 16);
+  const cellSz = sz(8);
+  const totalW = mmW * cellSz, totalH = mmH * cellSz;
+  const ox = W - totalW - sz(12), oy = sz(10);
   const camX = Math.floor(state.px) - Math.floor(mmW/2), camY = Math.floor(state.py) - Math.floor(mmH/2);
 
-  // Background
-  ctx.fillStyle = 'rgba(0,0,0,0.5)';
-  ctx.fillRect(ox - 2, oy - 2, mmW * cellSz + 4, mmH * cellSz + 4);
+  // Background with rounded corners
+  ctx.fillStyle = 'rgba(0,0,0,0.6)';
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx.lineWidth = 1;
+  const pad = 4;
+  ctx.beginPath();
+  ctx.roundRect(ox-pad, oy-pad, totalW+pad*2, totalH+pad*2, 4);
+  ctx.fill(); ctx.stroke();
 
   for (let r = 0; r < mmH; r++) {
     for (let c = 0; c < mmW; c++) {
@@ -621,54 +593,87 @@ function renderMinimapCanvas(ctx, W) {
       if (mx<0||my<0||mx>=state.mapW||my>=state.mapH) continue;
       const tile = state.map[my][mx];
       if (tile > 0) {
-        ctx.fillStyle = tile===4 ? '#554' : '#445';
+        ctx.fillStyle = tile===4 ? 'hsl(40,40%,25%)' : tile===2 ? 'hsl(15,30%,25%)' : tile===3 ? 'hsl(200,30%,25%)' : 'hsl(220,15%,30%)';
+        ctx.fillRect(ox+c*cellSz, oy+r*cellSz, cellSz-1, cellSz-1);
+      } else {
+        ctx.fillStyle = 'rgba(255,255,255,0.02)';
         ctx.fillRect(ox+c*cellSz, oy+r*cellSz, cellSz-1, cellSz-1);
       }
     }
   }
 
-  // Player
-  const px = ox + (state.px - camX) * cellSz, py = oy + (state.py - camY) * cellSz;
-  ctx.fillStyle = '#0f0';
-  ctx.beginPath(); ctx.arc(px, py, cellSz*0.4, 0, Math.PI*2); ctx.fill();
-  // Direction line
-  ctx.strokeStyle = '#0f0'; ctx.lineWidth = 1.5;
+  // Player — green dot with direction
+  const px = ox + (state.px-camX)*cellSz, py = oy + (state.py-camY)*cellSz;
+  ctx.fillStyle = '#0f0'; ctx.shadowColor = '#0f0'; ctx.shadowBlur = 6;
+  ctx.beginPath(); ctx.arc(px, py, cellSz*0.35, 0, Math.PI*2); ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = '#0f0'; ctx.lineWidth = 2;
   ctx.beginPath(); ctx.moveTo(px, py);
-  ctx.lineTo(px + Math.cos(state.angle)*cellSz*1.5, py + Math.sin(state.angle)*cellSz*1.5);
+  ctx.lineTo(px+Math.cos(state.angle)*cellSz*2, py+Math.sin(state.angle)*cellSz*2);
   ctx.stroke();
 
-  // Enemies
+  // FOV cone
+  ctx.strokeStyle = 'rgba(0,255,0,0.15)'; ctx.lineWidth = 1;
+  const fovDist = cellSz * 4;
+  ctx.beginPath(); ctx.moveTo(px, py);
+  ctx.lineTo(px+Math.cos(state.angle-CFG.FOV/2)*fovDist, py+Math.sin(state.angle-CFG.FOV/2)*fovDist);
+  ctx.moveTo(px, py);
+  ctx.lineTo(px+Math.cos(state.angle+CFG.FOV/2)*fovDist, py+Math.sin(state.angle+CFG.FOV/2)*fovDist);
+  ctx.stroke();
+
+  // Enemies — color-coded with glow
   for (const e of state.enemies) {
     if (!e.alive) continue;
-    ctx.fillStyle = e.type==='demon'?'#c4f':e.type==='spectre'?'#4cf':'#f44';
-    ctx.beginPath();
-    ctx.arc(ox+(e.x-camX)*cellSz, oy+(e.y-camY)*cellSz, cellSz*0.3, 0, Math.PI*2);
-    ctx.fill();
+    const ec = ox+(e.x-camX)*cellSz, er = oy+(e.y-camY)*cellSz;
+    if (ec < ox-5 || ec > ox+totalW+5 || er < oy-5 || er > oy+totalH+5) continue;
+    const col = e.type==='demon'?'#c4f':e.type==='spectre'?'#4cf':'#f44';
+    ctx.fillStyle = col; ctx.shadowColor = col; ctx.shadowBlur = 4;
+    ctx.beginPath(); ctx.arc(ec, er, cellSz*0.25, 0, Math.PI*2); ctx.fill();
+  }
+  ctx.shadowBlur = 0;
+
+  // Pickups
+  for (const p of state.pickups) {
+    if (!p.active) continue;
+    const pc = ox+(p.x-camX)*cellSz, pr = oy+(p.y-camY)*cellSz;
+    if (pc < ox-5 || pc > ox+totalW+5 || pr < oy-5 || pr > oy+totalH+5) continue;
+    ctx.fillStyle = p.type==='health'?'#4f4':'#ff4';
+    ctx.fillRect(pc-2, pr-2, 4, 4);
   }
 }
 
 // ─── Muzzle Flash (canvas overlay) ──────────────────────────
 
 function renderMuzzleFlashCanvas(ctx, W, H) {
-  const cx = W * 0.5, cy = H * 0.55;
-  const r = state.shootTimer / 0.1 * sz(30);
-  const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
-  g.addColorStop(0, `hsla(40, 100%, 70%, ${state.shootTimer * 5})`);
-  g.addColorStop(1, 'hsla(40, 100%, 70%, 0)');
-  ctx.fillStyle = g;
+  const cx = W * 0.48, cy = H * 0.52;
+  const intensity = state.shootTimer / 0.1;
+  const r = intensity * sz(50);
+  // Double flash — bright core + wide glow
+  const g1 = ctx.createRadialGradient(cx, cy, 0, cx, cy, r * 0.3);
+  g1.addColorStop(0, `hsla(45, 100%, 90%, ${intensity * 0.6})`);
+  g1.addColorStop(1, `hsla(40, 100%, 60%, 0)`);
+  ctx.fillStyle = g1;
+  ctx.beginPath(); ctx.arc(cx, cy, r * 0.3, 0, Math.PI*2); ctx.fill();
+  const g2 = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+  g2.addColorStop(0, `hsla(30, 100%, 60%, ${intensity * 0.15})`);
+  g2.addColorStop(1, 'hsla(30, 100%, 50%, 0)');
+  ctx.fillStyle = g2;
   ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.fill();
 }
 
-// ─── Damage Glow ────────────────────────────────────────────
-
 function renderDamageGlow(ctx, W, H) {
-  const a = state.damageFlash * 0.3;
-  // Red vignette
-  const g = ctx.createRadialGradient(W/2, H/2, W*0.3, W/2, H/2, W*0.7);
+  const a = state.damageFlash;
+  // Heavy red vignette
+  const g = ctx.createRadialGradient(W/2, H/2, W*0.2, W/2, H/2, W*0.65);
   g.addColorStop(0, 'hsla(0, 0%, 0%, 0)');
-  g.addColorStop(1, `hsla(0, 80%, 30%, ${a})`);
+  g.addColorStop(0.7, `hsla(0, 70%, 20%, ${a * 0.15})`);
+  g.addColorStop(1, `hsla(0, 80%, 15%, ${a * 0.5})`);
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, W, H);
+  // Red flash on edges
+  ctx.fillStyle = `hsla(0, 90%, 40%, ${a * 0.08})`;
+  ctx.fillRect(0, 0, W * 0.03, H); ctx.fillRect(W * 0.97, 0, W * 0.03, H);
+  ctx.fillRect(0, 0, W, H * 0.03); ctx.fillRect(0, H * 0.97, W, H * 0.03);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -677,15 +682,15 @@ function renderDamageGlow(ctx, W, H) {
 
 function initTitleParticles() {
   state.titleParticles = [];
-  const chars = 'DOOM█▓▒░ΨΩΦ×+◊•';
-  for (let i = 0; i < 70; i++) {
+  const chars = 'DOOM█▓▒░ΨΩΦ×+◊•╬═║';
+  for (let i = 0; i < 80; i++) {
     state.titleParticles.push({
       x: Math.random() * state.W, y: Math.random() * state.H,
-      vx: (Math.random()-.5)*.4, vy: (Math.random()-.5)*.3,
+      vx: (Math.random()-.5)*.5, vy: (Math.random()-.5)*.4,
       char: chars[i % chars.length],
-      size: sz(10) + Math.random() * sz(16),
-      hue: Math.random()*360, hueSpeed: .1+Math.random()*.2,
-      alpha: .03 + Math.random()*.06,
+      size: sz(10) + Math.random() * sz(22),
+      hue: Math.random()*360, hueSpeed: .08+Math.random()*.25,
+      alpha: .04 + Math.random()*.1,
     });
   }
 }
@@ -745,48 +750,58 @@ function renderTitlePretext() {
   // Particles
   updateAndDrawParticles(ctx);
 
-  // "DOOM" title with Pretext wave displacement
+  // "DOOM" title — render directly at large size, no wrapping
   const titleText = 'D O O M';
-  const titleSize = sz(88);
+  const titleSize = sz(90);
   const titleFont = mkFont(800, titleSize);
-  const titleLh = Math.round(titleSize * 1.1);
-  const baseW = Math.min(sz(600), W * 0.8);
-  const titleY = H * 0.2;
+  const titleY = H * 0.18;
+  const baseW = Math.min(sz(700), W * 0.85);
 
-  renderPretextBlock(ctx, titleText, titleFont, titleLh, (W-baseW)/2, titleY, baseW,
-    (ly) => titleWaveDisplace(ly, baseW, t),
-    (ly, i) => {
-      const h = (now/25 + i*15) % 360;
-      return `hsl(${h > 40 && h < 320 ? 0 : h}, 85%, ${50+Math.sin(now/500+i*.3)*15}%)`;
-    }
-  );
+  // Per-character title rendering with wave offset
+  ctx.font = titleFont; ctx.textBaseline = 'top';
+  const titleW = ctx.measureText(titleText).width;
+  const titleStartX = (W - titleW) / 2;
+  let tx = titleStartX;
+  for (let i = 0; i < titleText.length; i++) {
+    const ch = titleText[i];
+    const waveY = Math.sin(t * 1.2 + i * 0.8) * sz(8);
+    const h = (now / 25 + i * 25) % 360;
+    ctx.fillStyle = `hsl(${h > 40 && h < 320 ? 0 : h}, 85%, ${50 + Math.sin(now/400+i*.5)*12}%)`;
+    ctx.fillText(ch, tx, titleY + waveY);
+    tx += ctx.measureText(ch).width;
+  }
 
-  // Subtitle with zigzag
+  // Subtitle with wave displacement
   const subText = '── TEXT EDITION · POWERED BY PRETEXT ──';
-  const subSize = sz(14);
+  const subSize = sz(13);
   const subFont = mkFont(600, subSize);
-  const subLh = Math.round(subSize * 1.4);
-  renderPretextBlock(ctx, subText, subFont, subLh, (W-baseW)/2, titleY + titleLh * 1.8, baseW,
-    (ly) => ({ x: Math.sin(t*1.5+ly/50)*sz(20), w: baseW * 0.7 }),
-    () => `hsl(0,0%,${40+Math.sin(now/400)*10}%)`
-  );
+  const subY = titleY + titleSize * 1.3;
+  ctx.font = subFont;
+  const subW = ctx.measureText(subText).width;
+  let sx = (W - subW) / 2;
+  for (let i = 0; i < subText.length; i++) {
+    const wOff = Math.sin(t * 1.5 + i * 0.2) * sz(3);
+    ctx.fillStyle = `hsl(0,0%,${38 + Math.sin(now/300+i*0.3)*12}%)`;
+    ctx.fillText(subText[i], sx + wOff, subY);
+    sx += ctx.measureText(subText[i]).width;
+  }
 
-  // Tagline with circular flow
-  const tagText = 'DOOM runs on everything. Even text. Every character is measured by Pretext — variable-width typography meets first-person shooting.';
-  const tagSize = sz(13);
+  // Tagline in circular flow — Pretext displacement
+  const tagText = 'DOOM runs on everything. Even text. Every character is measured and laid out by Pretext. Variable-width typography meets first-person shooting. The viewport is flowing text.';
+  const tagSize = sz(12);
   const tagFont = mkFont(400, tagSize);
-  const tagLh = Math.round(tagSize * 1.6);
-  const circR = sz(100) + Math.sin(now/3000)*sz(10);
-  const circCy = H * 0.55;
+  const tagLh = Math.round(tagSize * 1.55);
+  const circR = sz(90) + Math.sin(now / 2500) * sz(8);
+  const circCy = H * 0.56;
   renderPretextBlock(ctx, tagText, tagFont, tagLh, (W-baseW)/2, circCy - circR, baseW,
     (ly) => {
       const dy = ly - circCy;
       if (Math.abs(dy) > circR) return { x: 0, w: 0 };
-      const chord = Math.sqrt(circR*circR - dy*dy) * 2;
-      const cw = Math.min(chord, baseW * 0.8);
-      return { x: (baseW - cw) / 2, w: Math.max(sz(30), cw) };
+      const chord = Math.sqrt(circR * circR - dy * dy) * 2;
+      const cw = Math.min(chord, baseW * 0.75);
+      return { x: (baseW - cw) / 2 + Math.sin(t + dy * 0.03) * sz(5), w: Math.max(sz(25), cw) };
     },
-    (ly, i) => { const h = (180+now/50+i*3)%360; return `hsl(${h},50%,55%)`; }
+    (ly, i) => { const h = (200 + now/40 + i*4) % 360; return `hsl(${h}, 55%, ${50+Math.sin(now/500+i*.2)*10}%)`; }
   );
 
   // Blinking prompt
