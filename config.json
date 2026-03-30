@@ -195,6 +195,12 @@
               "model": "Claude Opus 4.6",
               "path": "pages/doom/opus/",
               "date": "2026-03"
+            },
+            {
+              "id": "doom-opus-pretext",
+              "model": "Claude Opus 4.6 (Pretext)",
+              "path": "pages/doom/opus-pretext/",
+              "date": "2026-03"
             }
           ]
         },
