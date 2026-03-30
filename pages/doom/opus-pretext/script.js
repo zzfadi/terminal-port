@@ -349,154 +349,194 @@ function renderViewportPretext() {
   ctx.fillStyle = '#050505';
   ctx.fillRect(0, 0, W, H);
 
-  // Ambient glow behind viewport
   const now = performance.now();
+
+  // Ambient glow
   const glowHue = (now / 50) % 360;
-  const g = ctx.createRadialGradient(W*.5, H*.4, 0, W*.5, H*.4, W*.5);
-  g.addColorStop(0, `hsla(${glowHue}, 40%, 20%, 0.04)`);
+  const g = ctx.createRadialGradient(W*.5, H*.4, 0, W*.5, H*.4, W*.45);
+  g.addColorStop(0, `hsla(${glowHue}, 30%, 15%, 0.05)`);
   g.addColorStop(1, 'hsla(0,0%,0%,0)');
   ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
 
-  const fontSize = Math.max(8, Math.min(Math.floor(W / (cols * 0.65)), Math.floor((H * 0.88) / (rows * 1.1))));
-  const lh = Math.round(fontSize * 1.1);
+  // Calculate character size — use Pretext-measured width for Syne
+  const fontSize = Math.max(8, Math.min(Math.floor(W / (cols * 0.62)), Math.floor((H * 0.85) / (rows * 1.1))));
+  const lh = Math.round(fontSize * 1.08);
   const font = mkFont(400, fontSize);
-  const baseMaxW = Math.min(W * 0.92, cols * fontSize * 0.62);
-  const marginX = Math.max(10, (W - baseMaxW) / 2);
-  const topMargin = sz(8);
-
-  // Build row texts and color maps
-  const rowTexts = [], rowColorMaps = [];
-  for (let r = 0; r < rows; r++) {
-    let rowStr = '';
-    const colors = [];
-    for (let c = 0; c < cols; c++) {
-      rowStr += state.charBuf[r * cols + c];
-      colors.push(state.colorBuf[r * cols + c]);
-    }
-    rowTexts.push(rowStr.replace(/\s+$/, ''));
-    rowColorMaps.push(colors);
-  }
-
   ctx.font = font;
+  const charW = ctx.measureText('█').width; // Reference char width
+  const gridW = cols * charW;
+  const marginX = Math.max(10, (W - gridW) / 2);
+  const topMargin = sz(6);
+
   ctx.textBaseline = 'top';
 
+  // ─── BOUNDARY-BASED RENDERING ─────────────────────
+  // Displacement defines an organic BOUNDARY shape.
+  // Characters keep fixed column positions (col * charW).
+  // Only characters within the boundary are drawn.
+  // This preserves vertical alignment (walls stay straight)
+  // while giving the viewport a flowing, typographic edge.
+
   for (let r = 0; r < rows; r++) {
-    const text = rowTexts[r];
-    if (!text || text.trim().length === 0) continue;
-
     const lineY = topMargin + r * lh;
-    const d = gameViewportDisplace(lineY, r, rows, baseMaxW, now);
-    if (d.w < 15) continue;
+    const bounds = viewportBounds(r, rows, gridW, now);
 
-    // Render row: one Pretext-prepared layout per row, no sub-line wrapping
-    let drawX = marginX + d.x;
+    // Skip row if fully clipped
+    if (bounds.right - bounds.left < charW) continue;
+
+    // Color-batch characters that fall within bounds
     const drawY = lineY;
+    let batchStr = '';
+    let batchX = 0;
+    let batchColor = '';
 
-    // Color-batch the row for performance (group consecutive same-color chars)
-    let batchStart = 0;
-    let prevColor = rowColorMaps[r][0] || '#333';
+    for (let c = 0; c < cols; c++) {
+      const cx = marginX + c * charW;
 
-    for (let i = 0; i <= text.length; i++) {
-      const color = i < text.length ? (rowColorMaps[r][i] || '#333') : null;
+      // Boundary test — organic clipping
+      if (cx + charW < marginX + bounds.left || cx > marginX + bounds.right) continue;
 
-      if (color !== prevColor || i === text.length) {
-        // Flush batch
-        if (batchStart < i) {
-          const batch = text.slice(batchStart, i);
-          const batchW = ctx.measureText(batch).width;
-          if (drawX + batchW > marginX + d.x + d.w + 5) {
-            // Clip to available width
-            ctx.fillStyle = prevColor;
-            ctx.save();
-            ctx.beginPath();
-            ctx.rect(marginX + d.x - 2, drawY - 1, d.w + 4, lh + 2);
-            ctx.clip();
-            ctx.fillText(batch, drawX, drawY);
-            ctx.restore();
-            break;
-          }
-          ctx.fillStyle = prevColor;
-          ctx.fillText(batch, drawX, drawY);
-          drawX += batchW;
+      const idx = r * cols + c;
+      const ch = state.charBuf[idx];
+      if (ch === ' ') { batchStr = ''; continue; }
+      const color = state.colorBuf[idx];
+
+      if (color !== batchColor || !batchStr) {
+        // Flush previous batch
+        if (batchStr) {
+          ctx.fillStyle = batchColor;
+          ctx.fillText(batchStr, batchX, drawY);
         }
-        prevColor = color;
-        batchStart = i;
+        batchColor = color;
+        batchStr = ch;
+        batchX = cx;
+      } else {
+        batchStr += ch;
       }
     }
+    // Flush final batch
+    if (batchStr) {
+      ctx.fillStyle = batchColor;
+      ctx.fillText(batchStr, batchX, drawY);
+    }
+
+    // Edge particles — scatter chars at the boundary edges
+    renderEdgeParticle(ctx, marginX + bounds.left, drawY, lh, now, r, -1);
+    renderEdgeParticle(ctx, marginX + bounds.right, drawY, lh, now, r, 1);
   }
 
+  // Ambient text outside viewport (Pretext-rendered flavor text)
+  renderAmbientText(ctx, W, H, fontSize, now);
+
   // Overlays
-  renderWeaponOverlay(ctx, fontSize, lh, marginX, baseMaxW, now);
+  renderWeaponOverlay(ctx, fontSize, lh, marginX, gridW, now);
   renderHUDPretext(ctx, fontSize, lh, W, H);
   renderMinimapCanvas(ctx, W, H);
   if (state.shootTimer > 0) renderMuzzleFlashCanvas(ctx, W, H);
   if (state.damageFlash > 0) renderDamageGlow(ctx, W, H);
 }
 
-// ─── Game Viewport Displacement ─────────────────────────────
-// This is where Pretext shines: per-line variable width creates
-// organic text flow around game UI elements.
+// ─── Edge Particles — chars dissolving at viewport boundary ──
 
-function gameViewportDisplace(lineY, row, totalRows, baseW, now) {
-  let x = 0, w = baseW;
-  const t = now / 2000;
+function renderEdgeParticle(ctx, edgeX, y, lh, now, row, dir) {
+  const t = now / 1000;
+  const seed = row * 7.3 + dir * 13.7;
+  const phase = (Math.sin(t * 0.7 + seed) + 1) * 0.5;
+  if (phase < 0.3) return; // Only sometimes visible
 
-  // Breathing wave — left edge undulates organically
-  const wave1 = Math.sin(t * 0.8 + row * 0.12) * sz(25);
-  const wave2 = Math.sin(t * 1.3 - row * 0.08) * sz(12);
-  const breathe = wave1 + wave2;
-  x += Math.max(0, breathe);
-  w -= Math.abs(breathe) * 0.7;
+  const chars = '·.░▒:;,+×';
+  const ch = chars[Math.floor((seed * 17) % chars.length)];
+  const offset = dir * (sz(3) + Math.sin(t + seed) * sz(5));
+  const alpha = phase * 0.25;
+  const hue = (now / 30 + row * 8) % 360;
 
-  // Minimap exclusion — smooth elliptical curve, not hard cutoff
-  const mmCenterRow = totalRows * 0.2;
-  const mmRadiusR = totalRows * 0.3;
-  const mmDist = (row - mmCenterRow) / mmRadiusR;
-  if (mmDist < 1 && mmDist > -1) {
-    // Elliptical: more shrink at center, smoothly fades at edges
-    const curve = Math.sqrt(1 - mmDist * mmDist);
-    const shrink = curve * (sz(140) + Math.sin(t * 1.5 + row * 0.15) * sz(8));
-    w -= shrink;
-  }
+  ctx.fillStyle = `hsla(${hue}, 30%, 50%, ${alpha})`;
+  ctx.fillText(ch, edgeX + offset, y);
+}
 
-  // Weapon zone — smooth parabolic indent from bottom-center
-  const weaponStart = totalRows * 0.75;
-  if (row > weaponStart) {
-    const p = (row - weaponStart) / (totalRows - weaponStart);
-    const indent = p * p * sz(60);
-    // Center the narrowing with slight wave
-    const sway = Math.sin(t * 2 + p * 3) * indent * 0.15;
-    x += indent * 0.25 + sway;
-    w -= indent * 0.5;
-  }
+// ─── Ambient Pretext Text — flowing text outside viewport ────
 
-  // Damage scatter — dramatic text reflow on hit
-  if (state.damageFlash > 0) {
-    const df = state.damageFlash;
-    const scatter = Math.sin(row * 0.6 + now / 60) * df * sz(40);
-    const jitter = Math.cos(row * 1.1 + now / 40) * df * sz(15);
-    x += scatter;
-    w += jitter; // Width fluctuates
-  }
+function renderAmbientText(ctx, W, H, fontSize, now) {
+  const t = now / 3000;
+  const ambientTexts = [
+    'DOOM RUNS ON EVERYTHING',
+    'POWERED BY PRETEXT',
+    'VARIABLE WIDTH TYPOGRAPHY',
+    'TEXT IS THE VIEWPORT',
+  ];
 
-  // Shoot recoil — vertical compression wave
-  if (state.recoil > 0) {
-    x += Math.sin(row * 0.4 + now / 40) * state.recoil * sz(12);
-  }
+  const ambSize = Math.round(fontSize * 0.55);
+  const ambFont = mkFont(400, ambSize);
+  ctx.font = ambFont;
 
-  // Cursor interaction — bubble pushes text
-  if (state.smoothX > -1000 && state.screen === 'game') {
-    const dy = Math.abs(lineY - state.smoothY);
-    if (dy < BUBBLE_R) {
-      const p = 1 - dy / BUBBLE_R;
-      const push = p * p * p * sz(50);
-      const bias = (state.smoothX - state.W / 2) / (baseW / 2);
-      x += push * Math.max(0, 0.5 - bias * 0.4);
-      w -= push * 0.6;
+  for (let i = 0; i < ambientTexts.length; i++) {
+    const text = ambientTexts[i];
+    const baseY = H * (0.15 + i * 0.22);
+    const baseX = i % 2 === 0 ? sz(15) : W - ctx.measureText(text).width - sz(15);
+    const wave = Math.sin(t + i * 1.5) * sz(8);
+    const alpha = 0.04 + Math.sin(t * 0.8 + i) * 0.02;
+
+    ctx.fillStyle = `hsla(${(now / 40 + i * 60) % 360}, 25%, 40%, ${Math.max(0.01, alpha)})`;
+
+    // Per-character wave (Pretext-style displacement)
+    let drawX = baseX;
+    for (let j = 0; j < text.length; j++) {
+      const charWave = Math.sin(t * 2 + j * 0.3 + i) * sz(2);
+      ctx.fillText(text[j], drawX, baseY + wave + charWave);
+      drawX += ctx.measureText(text[j]).width;
     }
   }
+}
 
-  return { x, w: Math.max(sz(25), w) };
+// ─── Viewport Boundary Function ─────────────────────────────
+// Returns { left, right } in pixels relative to marginX.
+// The viewport is an organic shape: wavy left edge, curved
+// right edge (minimap zone), narrowing bottom (weapon zone).
+// Content WITHIN stays column-aligned. Only the EDGES flow.
+
+function viewportBounds(row, totalRows, gridW, now) {
+  const t = now / 2000;
+  let left = 0, right = gridW;
+
+  // ── Left edge: breathing wave ──
+  const wave1 = Math.sin(t * 0.7 + row * 0.1) * sz(18);
+  const wave2 = Math.sin(t * 1.2 - row * 0.07) * sz(10);
+  left = Math.max(0, wave1 + wave2);
+
+  // ── Right edge: elliptical curve for minimap ──
+  const mmCenterRow = totalRows * 0.22;
+  const mmRadiusR = totalRows * 0.32;
+  const mmDist = (row - mmCenterRow) / mmRadiusR;
+  if (mmDist > -1 && mmDist < 1) {
+    const curve = Math.sqrt(1 - mmDist * mmDist);
+    const shrink = curve * (sz(150) + Math.sin(t * 1.3 + row * 0.12) * sz(6));
+    right -= shrink;
+  }
+
+  // ── Bottom: weapon zone narrows symmetrically ──
+  const weaponStart = totalRows * 0.78;
+  if (row > weaponStart) {
+    const p = (row - weaponStart) / (totalRows - weaponStart);
+    const narrowing = p * p * sz(50);
+    left += narrowing * 0.4;
+    right -= narrowing * 0.4;
+  }
+
+  // ── Damage: boundary vibrates (edges jitter, content stays) ──
+  if (state.damageFlash > 0) {
+    const df = state.damageFlash;
+    left += Math.sin(row * 0.5 + now / 50) * df * sz(15);
+    right += Math.cos(row * 0.7 + now / 40) * df * sz(12);
+  }
+
+  // ── Recoil: brief boundary squeeze ──
+  if (state.recoil > 0) {
+    const squeeze = Math.sin(row * 0.3 + now / 30) * state.recoil * sz(6);
+    left += Math.abs(squeeze);
+    right -= Math.abs(squeeze);
+  }
+
+  return { left: Math.max(0, left), right: Math.max(left + sz(20), Math.min(gridW, right)) };
 }
 
 // ─── Weapon Overlay (Pretext text block) ────────────────────
